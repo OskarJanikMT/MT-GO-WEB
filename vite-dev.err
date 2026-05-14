@@ -1,0 +1,2126 @@
+[2m14:23:20[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+332|                        </div>
+333|                      </div>
+334|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+335|                    </button>
+336|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m14:39:22[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+332|                        </div>
+333|                      </div>
+334|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+335|                    </button>
+336|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m14:42:02[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+332|                        </div>
+333|                      </div>
+334|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+335|                    </button>
+336|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m14:52:37[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+332|                        </div>
+333|                      </div>
+334|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+335|                    </button>
+336|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m14:53:58[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+332|                        </div>
+333|                      </div>
+334|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+335|                    </button>
+336|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:00:06[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+332|                        </div>
+333|                      </div>
+334|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+335|                    </button>
+336|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:01:30[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+332|                        </div>
+333|                      </div>
+334|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+335|                    </button>
+336|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:05:00[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+332|                        </div>
+333|                      </div>
+334|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+335|                    </button>
+336|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:13:50[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+332|                        </div>
+333|                      </div>
+334|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+335|                    </button>
+336|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:13:58[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+332|                        </div>
+333|                      </div>
+334|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+335|                    </button>
+336|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:14:01[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+332|                        </div>
+333|                      </div>
+334|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+335|                    </button>
+336|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:14:12[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+332|                        </div>
+333|                      </div>
+334|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+335|                    </button>
+336|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:14:18[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+332|                        </div>
+333|                      </div>
+334|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+335|                    </button>
+336|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:14:22[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+332|                        </div>
+333|                      </div>
+334|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+335|                    </button>
+336|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:16:32[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+332|                        </div>
+333|                      </div>
+334|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+335|                    </button>
+336|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:18:32[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+332|                        </div>
+333|                      </div>
+334|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+335|                    </button>
+336|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:18:45[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+332|                        </div>
+333|                      </div>
+334|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+335|                    </button>
+336|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:18:58[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+332|                        </div>
+333|                      </div>
+334|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+335|                    </button>
+336|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:19:08[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+332|                        </div>
+333|                      </div>
+334|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+335|                    </button>
+336|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:19:22[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+332|                        </div>
+333|                      </div>
+334|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+335|                    </button>
+336|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:19:39[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+343|                        Dodaj wiersz
+344|                      </button>
+345|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+346|                    </button>
+347|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:19:49[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+343|                        Dodaj wiersz
+344|                      </button>
+345|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+346|                    </button>
+347|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:21:17[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+343|                        Dodaj wiersz
+344|                      </button>
+345|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+346|                    </button>
+347|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:21:52[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+343|                        Dodaj wiersz
+344|                      </button>
+345|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+346|                    </button>
+347|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:21:55[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+343|                        Dodaj wiersz
+344|                      </button>
+345|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+346|                    </button>
+347|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:21:59[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+343|                        Dodaj wiersz
+344|                      </button>
+345|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+346|                    </button>
+347|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:22:52[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+343|                        Dodaj wiersz
+344|                      </button>
+345|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+346|                    </button>
+347|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:22:52[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+343|                        Dodaj wiersz
+344|                      </button>
+345|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+346|                    </button>
+347|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:25:32[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+343|                        Dodaj wiersz
+344|                      </button>
+345|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+346|                    </button>
+347|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:25:40[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+343|                        Dodaj wiersz
+344|                      </button>
+345|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+346|                    </button>
+347|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:25:56[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+343|                        Dodaj wiersz
+344|                      </button>
+345|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+346|                    </button>
+347|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:26:00[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+343|                        Dodaj wiersz
+344|                      </button>
+345|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+346|                    </button>
+347|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:27:09[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+343|                        Dodaj wiersz
+344|                      </button>
+345|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+346|                    </button>
+347|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:29:09[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+343|                        Dodaj wiersz
+344|                      </button>
+345|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+346|                    </button>
+347|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:29:26[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+332|                        </div>
+333|                      </div>
+334|                      <button
+   |                      ^^^^^^^
+335|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+336|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+337|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+338|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+339|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:29:26[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+338|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+339|                      </button>
+340|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+341|                    </button>
+342|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:29:31[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+332|                        </div>
+333|                      </div>
+334|                      <button
+   |                      ^^^^^^^
+335|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+336|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+337|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+338|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+339|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:29:31[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+338|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+339|                      </button>
+340|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+341|                    </button>
+342|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:29:39[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+332|                        </div>
+333|                      </div>
+334|                      <button
+   |                      ^^^^^^^
+335|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+336|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+337|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+338|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+339|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:29:39[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+338|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+339|                      </button>
+340|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+341|                    </button>
+342|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:34:40[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+332|                        </div>
+333|                      </div>
+334|                      <button
+   |                      ^^^^^^^
+335|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+336|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+337|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+338|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+339|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:34:40[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+338|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+339|                      </button>
+340|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+341|                    </button>
+342|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:34:45[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+332|                        </div>
+333|                      </div>
+334|                      <button
+   |                      ^^^^^^^
+335|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+336|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+337|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+338|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+339|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:34:45[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+338|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+339|                      </button>
+340|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+341|                    </button>
+342|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:34:55[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+375|                        </div>
+376|                      </div>
+377|                      <button
+   |                      ^^^^^^^
+378|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+379|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+380|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+381|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+382|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:34:55[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+381|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+382|                      </button>
+383|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+384|                    </button>
+385|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:35:03[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+375|                        </div>
+376|                      </div>
+377|                      <button
+   |                      ^^^^^^^
+378|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+379|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+380|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+381|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+382|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:35:03[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+381|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+382|                      </button>
+383|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+384|                    </button>
+385|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:35:09[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+375|                        </div>
+376|                      </div>
+377|                      <button
+   |                      ^^^^^^^
+378|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+379|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+380|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+381|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+382|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:35:09[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+381|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+382|                      </button>
+383|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+384|                    </button>
+385|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:35:20[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+375|                        </div>
+376|                      </div>
+377|                      <button
+   |                      ^^^^^^^
+378|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+379|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+380|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+381|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+382|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:35:20[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+381|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+382|                      </button>
+383|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+384|                    </button>
+385|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:35:36[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+375|                        </div>
+376|                      </div>
+377|                      <button
+   |                      ^^^^^^^
+378|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+379|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+380|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+381|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+382|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:35:36[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+381|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+382|                      </button>
+383|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+384|                    </button>
+385|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:35:44[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+375|                        </div>
+376|                      </div>
+377|                      <button
+   |                      ^^^^^^^
+378|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+379|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+380|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+381|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+382|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:35:44[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+381|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+382|                      </button>
+383|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+384|                    </button>
+385|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:36:12[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+378|                        <span v-else class="panel-caption">Elementy dodatkowe</span>
+379|                      </div>
+380|                      <button
+   |                      ^^^^^^^
+381|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+382|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+383|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+384|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+385|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:36:12[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+384|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+385|                      </button>
+386|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+387|                    </button>
+388|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:36:15[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+378|                        <span v-else class="panel-caption">Elementy dodatkowe</span>
+379|                      </div>
+380|                      <button
+   |                      ^^^^^^^
+381|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+382|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+383|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+384|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+385|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:36:15[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+384|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+385|                      </button>
+386|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+387|                    </button>
+388|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:39:45[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+378|                        <span v-else class="panel-caption">Elementy dodatkowe</span>
+379|                      </div>
+380|                      <button
+   |                      ^^^^^^^
+381|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+382|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+383|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+384|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+385|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:39:45[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+384|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+385|                      </button>
+386|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+387|                    </button>
+388|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:40:10[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+395|                        <span v-else class="panel-caption">Elementy dodatkowe</span>
+396|                      </div>
+397|                      <button
+   |                      ^^^^^^^
+398|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+399|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+400|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+401|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+402|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:40:10[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+401|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+402|                      </button>
+403|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+404|                    </button>
+405|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:40:18[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+395|                        <span v-else class="panel-caption">Elementy dodatkowe</span>
+396|                      </div>
+397|                      <button
+   |                      ^^^^^^^
+398|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+399|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+400|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+401|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+402|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:40:18[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+401|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+402|                      </button>
+403|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+404|                    </button>
+405|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:40:22[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+395|                        <span v-else class="panel-caption">Elementy dodatkowe</span>
+396|                      </div>
+397|                      <button
+   |                      ^^^^^^^
+398|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+399|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+400|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+401|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+402|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:40:22[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+401|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+402|                      </button>
+403|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+404|                    </button>
+405|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:40:39[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+395|                        <span v-else class="panel-caption">Elementy dodatkowe</span>
+396|                      </div>
+397|                      <button
+   |                      ^^^^^^^
+398|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+399|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+400|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+401|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+402|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:40:39[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+401|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+402|                      </button>
+403|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+404|                    </button>
+405|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:40:47[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+395|                        <span v-else class="panel-caption">Elementy dodatkowe</span>
+396|                      </div>
+397|                      <button
+   |                      ^^^^^^^
+398|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+399|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+400|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+401|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+402|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:40:47[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+401|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+402|                      </button>
+403|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+404|                    </button>
+405|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:41:14[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+399|                        <span v-else class="panel-caption">Elementy dodatkowe</span>
+400|                      </div>
+401|                      <button
+   |                      ^^^^^^^
+402|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+403|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+404|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+405|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+406|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:41:14[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+405|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+406|                      </button>
+407|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+408|                    </button>
+409|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:43:20[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+399|                        <span v-else class="panel-caption">Elementy dodatkowe</span>
+400|                      </div>
+401|                      <button
+   |                      ^^^^^^^
+402|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+403|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+404|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+405|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+406|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:43:20[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+405|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+406|                      </button>
+407|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+408|                    </button>
+409|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:46:45[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+404|                        <span v-else class="panel-caption">Elementy dodatkowe</span>
+405|                      </div>
+406|                      <button
+   |                      ^^^^^^^
+407|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+408|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+409|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+410|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+411|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:46:45[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+410|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+411|                      </button>
+412|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+413|                    </button>
+414|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:48:44[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+404|                        <span v-else class="panel-caption">Elementy dodatkowe</span>
+405|                      </div>
+406|                      <button
+   |                      ^^^^^^^
+407|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+408|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+409|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+410|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+411|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:48:44[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+410|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+411|                      </button>
+412|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+413|                    </button>
+414|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:50:15[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+404|                        <span v-else class="panel-caption">Elementy dodatkowe</span>
+405|                      </div>
+406|                      <button
+   |                      ^^^^^^^
+407|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+408|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+409|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+410|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+411|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:50:15[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+410|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+411|                      </button>
+412|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+413|                    </button>
+414|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:50:23[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+405|                        <span v-else class="panel-caption">Elementy dodatkowe</span>
+406|                      </div>
+407|                      <button
+   |                      ^^^^^^^
+408|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+409|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+410|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+411|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+412|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m15:50:23[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+411|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+412|                      </button>
+413|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+414|                    </button>
+415|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m16:01:30[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+402|                        <span v-else class="panel-caption">Elementy dodatkowe</span>
+403|                      </div>
+404|                      <button
+   |                      ^^^^^^^
+405|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+406|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+407|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+408|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+409|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m16:01:30[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+408|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+409|                      </button>
+410|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+411|                    </button>
+412|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m16:02:41[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+394|                        <span v-else class="panel-caption">Elementy dodatkowe</span>
+395|                      </div>
+396|                      <button
+   |                      ^^^^^^^
+397|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+398|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+399|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+400|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+401|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m16:02:41[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+400|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+401|                      </button>
+402|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+403|                    </button>
+404|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m16:04:27[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+394|                        <span v-else class="panel-caption">Elementy dodatkowe</span>
+395|                      </div>
+396|                      <button
+   |                      ^^^^^^^
+397|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+398|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+399|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+400|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+401|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m16:04:27[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+400|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+401|                      </button>
+402|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+403|                    </button>
+404|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m16:04:37[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+414|                        <span v-else class="panel-caption">Elementy dodatkowe</span>
+415|                      </div>
+416|                      <button
+   |                      ^^^^^^^
+417|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+418|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+419|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+420|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+421|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m16:04:37[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+420|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+421|                      </button>
+422|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+423|                    </button>
+424|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m16:04:50[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+414|                        <span v-else class="panel-caption">Elementy dodatkowe</span>
+415|                      </div>
+416|                      <button
+   |                      ^^^^^^^
+417|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+418|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+419|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+420|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+421|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m16:04:50[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+420|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+421|                      </button>
+422|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+423|                    </button>
+424|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m16:07:32[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+411|                        </div>
+412|                      </div>
+413|                      <button
+   |                      ^^^^^^^
+414|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+415|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+416|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+417|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+418|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m16:07:32[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+417|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+418|                      </button>
+419|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+420|                    </button>
+421|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m16:07:40[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+411|                        </div>
+412|                      </div>
+413|                      <button
+   |                      ^^^^^^^
+414|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+415|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+416|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+417|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+418|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m16:07:40[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+417|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+418|                      </button>
+419|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+420|                    </button>
+421|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m16:10:33[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+411|                        </div>
+412|                      </div>
+413|                      <button
+   |                      ^^^^^^^
+414|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+415|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+416|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+417|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+418|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m16:10:33[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+417|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+418|                      </button>
+419|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+420|                    </button>
+421|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m16:10:37[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+411|                        </div>
+412|                      </div>
+413|                      <button
+   |                      ^^^^^^^
+414|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+415|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+416|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+417|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+418|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m16:10:37[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+417|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+418|                      </button>
+419|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+420|                    </button>
+421|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m16:10:53[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+450|                        </div>
+451|                      </div>
+452|                      <button
+   |                      ^^^^^^^
+453|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+454|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+455|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+456|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+457|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m16:10:53[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+456|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+457|                      </button>
+458|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+459|                    </button>
+460|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m16:11:00[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+450|                        </div>
+451|                      </div>
+452|                      <button
+   |                      ^^^^^^^
+453|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+454|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+455|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+456|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+457|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m16:11:00[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+456|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+457|                      </button>
+458|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+459|                    </button>
+460|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m16:12:19[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+450|                        </div>
+451|                      </div>
+452|                      <button
+   |                      ^^^^^^^
+453|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+454|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+455|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+456|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+457|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m16:12:19[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+456|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+457|                      </button>
+458|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+459|                    </button>
+460|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m16:14:02[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+450|                        </div>
+451|                      </div>
+452|                      <button
+   |                      ^^^^^^^
+453|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+454|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+455|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+456|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+457|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m16:14:02[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+456|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+457|                      </button>
+458|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+459|                    </button>
+460|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m16:14:48[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+450|                        </div>
+451|                      </div>
+452|                      <button
+   |                      ^^^^^^^
+453|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+454|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+455|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+456|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+457|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m16:14:48[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+456|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+457|                      </button>
+458|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+459|                    </button>
+460|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m16:16:55[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+450|                        </div>
+451|                      </div>
+452|                      <button
+   |                      ^^^^^^^
+453|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+454|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+455|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+456|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+457|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m16:16:55[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+456|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+457|                      </button>
+458|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+459|                    </button>
+460|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m20:49:11[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+450|                        </div>
+451|                      </div>
+452|                      <button
+   |                      ^^^^^^^
+453|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+454|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+455|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+456|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+457|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m20:49:11[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+456|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+457|                      </button>
+458|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+459|                    </button>
+460|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m20:49:22[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+450|                        </div>
+451|                      </div>
+452|                      <button
+   |                      ^^^^^^^
+453|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+454|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+455|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+456|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+457|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m20:49:22[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+456|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+457|                      </button>
+458|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+459|                    </button>
+460|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m20:51:20[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+450|                        </div>
+451|                      </div>
+452|                      <button
+   |                      ^^^^^^^
+453|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+454|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+455|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+456|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+457|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m20:51:20[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+456|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+457|                      </button>
+458|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+459|                    </button>
+460|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m20:51:25[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+458|                        </div>
+459|                      </div>
+460|                      <button
+   |                      ^^^^^^^
+461|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+462|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+463|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+464|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+465|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m20:51:25[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+464|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+465|                      </button>
+466|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+467|                    </button>
+468|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m20:55:01[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+458|                        </div>
+459|                      </div>
+460|                      <button
+   |                      ^^^^^^^
+461|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+462|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+463|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+464|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+465|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m20:55:01[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+464|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+465|                      </button>
+466|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+467|                    </button>
+468|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m20:55:13[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+471|                        </div>
+472|                      </div>
+473|                      <button
+   |                      ^^^^^^^
+474|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+475|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+476|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+477|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+478|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m20:55:13[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+477|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+478|                      </button>
+479|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+480|                    </button>
+481|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m20:57:05[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+471|                        </div>
+472|                      </div>
+473|                      <button
+   |                      ^^^^^^^
+474|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+475|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+476|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+477|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+478|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m20:57:05[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+477|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+478|                      </button>
+479|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+480|                    </button>
+481|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m20:57:17[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+471|                        </div>
+472|                      </div>
+473|                      <button
+   |                      ^^^^^^^
+474|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+475|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+476|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+477|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+478|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m20:57:17[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+477|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+478|                      </button>
+479|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+480|                    </button>
+481|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m20:57:27[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+475|                        </div>
+476|                      </div>
+477|                      <button
+   |                      ^^^^^^^
+478|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+479|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+480|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+481|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+482|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m20:57:27[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+481|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+482|                      </button>
+483|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+484|                    </button>
+485|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m21:01:04[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+475|                        </div>
+476|                      </div>
+477|                      <button
+   |                      ^^^^^^^
+478|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+479|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+480|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+481|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+482|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m21:01:04[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+481|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+482|                      </button>
+483|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+484|                    </button>
+485|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m21:17:28[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+475|                        </div>
+476|                      </div>
+477|                      <button
+   |                      ^^^^^^^
+478|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+479|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+480|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+481|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+482|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m21:17:28[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+481|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+482|                      </button>
+483|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+484|                    </button>
+485|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m21:17:39[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+475|                        </div>
+476|                      </div>
+477|                      <button
+   |                      ^^^^^^^
+478|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+479|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+480|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+481|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+482|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m21:17:39[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+481|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+482|                      </button>
+483|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+484|                    </button>
+485|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m21:19:59[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+475|                        </div>
+476|                      </div>
+477|                      <button
+   |                      ^^^^^^^
+478|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+479|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+480|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+481|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+482|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m21:19:59[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+481|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+482|                      </button>
+483|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+484|                    </button>
+485|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m21:20:22[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+475|                        </div>
+476|                      </div>
+477|                      <button
+   |                      ^^^^^^^
+478|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+479|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+480|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+481|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+482|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m21:20:22[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+481|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+482|                      </button>
+483|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+484|                    </button>
+485|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m21:20:25[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+475|                        </div>
+476|                      </div>
+477|                      <button
+   |                      ^^^^^^^
+478|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+479|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+480|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+481|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+482|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m21:20:25[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+481|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+482|                      </button>
+483|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+484|                    </button>
+485|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m21:20:33[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+475|                        </div>
+476|                      </div>
+477|                      <button
+   |                      ^^^^^^^
+478|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+479|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+480|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+481|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+482|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m21:20:33[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+481|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+482|                      </button>
+483|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+484|                    </button>
+485|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m21:24:15[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+475|                        </div>
+476|                      </div>
+477|                      <button
+   |                      ^^^^^^^
+478|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+479|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+480|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+481|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+482|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m21:24:15[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+481|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+482|                      </button>
+483|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+484|                    </button>
+485|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m21:24:20[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+475|                        </div>
+476|                      </div>
+477|                      <button
+   |                      ^^^^^^^
+478|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+479|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+480|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+481|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+482|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m21:24:20[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+481|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+482|                      </button>
+483|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+484|                    </button>
+485|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m21:25:42[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+475|                        </div>
+476|                      </div>
+477|                      <button
+   |                      ^^^^^^^
+478|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+479|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+480|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+481|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+482|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m21:25:42[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+481|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+482|                      </button>
+483|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+484|                    </button>
+485|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m21:30:31[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+475|                        </div>
+476|                      </div>
+477|                      <button
+   |                      ^^^^^^^
+478|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+479|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+480|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+481|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+482|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m21:30:31[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+481|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+482|                      </button>
+483|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+484|                    </button>
+485|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m21:30:39[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+493|                        </div>
+494|                      </div>
+495|                      <button
+   |                      ^^^^^^^
+496|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+497|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+498|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+499|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+500|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m21:30:39[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+499|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+500|                      </button>
+501|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+502|                    </button>
+503|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m21:30:43[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+493|                        </div>
+494|                      </div>
+495|                      <button
+   |                      ^^^^^^^
+496|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+497|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+498|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+499|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+500|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m21:30:43[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+499|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+500|                      </button>
+501|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+502|                    </button>
+503|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m21:31:01[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+493|                        </div>
+494|                      </div>
+495|                      <button
+   |                      ^^^^^^^
+496|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+497|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+498|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+499|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+500|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m21:31:01[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+499|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+500|                      </button>
+501|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+502|                    </button>
+503|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m21:31:05[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+493|                        </div>
+494|                      </div>
+495|                      <button
+   |                      ^^^^^^^
+496|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+497|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+498|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+499|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+500|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m21:31:05[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+499|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+500|                      </button>
+501|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+502|                    </button>
+503|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m00:18:00[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+493|                        </div>
+494|                      </div>
+495|                      <button
+   |                      ^^^^^^^
+496|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+497|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+498|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+499|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+500|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m00:18:00[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+499|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+500|                      </button>
+501|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+502|                    </button>
+503|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m00:18:11[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+493|                        </div>
+494|                      </div>
+495|                      <button
+   |                      ^^^^^^^
+496|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+497|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+498|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+499|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+500|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m00:18:11[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+499|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+500|                      </button>
+501|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+502|                    </button>
+503|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m00:18:18[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+493|                        </div>
+494|                      </div>
+495|                      <button
+   |                      ^^^^^^^
+496|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+497|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+498|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+499|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+500|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m00:18:18[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+499|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+500|                      </button>
+501|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+502|                    </button>
+503|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m00:18:29[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+493|                        </div>
+494|                      </div>
+495|                      <button
+   |                      ^^^^^^^
+496|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+497|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+498|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+499|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+500|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m00:18:29[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+499|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+500|                      </button>
+501|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+502|                    </button>
+503|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m00:18:35[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+493|                        </div>
+494|                      </div>
+495|                      <button
+   |                      ^^^^^^^
+496|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+497|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+498|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+499|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+500|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m00:18:35[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+499|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+500|                      </button>
+501|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+502|                    </button>
+503|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m00:32:54[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+493|                        </div>
+494|                      </div>
+495|                      <button
+   |                      ^^^^^^^
+496|                        class="tool-btn compact"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+497|                        @click.stop="toggleMergeProductEditMode(group.productName)"
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+498|                      >
+   |  ^^^^^^^^^^^^^^^^^^^^^
+499|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+500|                      </button>
+   |  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m
+[2m00:32:54[22m [33m[1m[vite][22m[39m [33m[2m(client)[22m[39m [33mwarning: <button> cannot be child of <button>, according to HTML specifications. This can cause hydration errors or potentially disrupt future functionality.
+499|                        {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
+500|                      </button>
+501|                      <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
+   |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+502|                    </button>
+503|  [39m
+  Plugin: [35mvite:vue[39m
+  File: [36mC:/Users/Oskar/Desktop/MT-GO-WEB/src/App.vue[39m

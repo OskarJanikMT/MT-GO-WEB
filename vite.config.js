@@ -1,0 +1,602 @@
+﻿import fs from 'node:fs/promises';
+import { execFile } from 'node:child_process';
+import path from 'node:path';
+import os from 'node:os';
+import { promisify } from 'node:util';
+import { fileURLToPath } from 'node:url';
+import { defineConfig, loadEnv } from 'vite';
+import vue from '@vitejs/plugin-vue';
+import * as XLSX from 'xlsx';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const productsDir = path.join(__dirname, 'Produkty');
+const recipesFilePath = path.join(__dirname, 'receptury.json');
+const maxProductRows = 500;
+const execFileAsync = promisify(execFile);
+
+const editableColumnAliases = {
+  Kod: ['Kod', 'Nadruk'],
+  Nazwa: ['Nazwa', 'TYTUŁ', 'Nazwa mebla'],
+  ilość: ['Ilość', 'ILOŚĆ', 'Ilosc'],
+  Materiał: ['Materiał', 'MATERIAŁ', 'OPIS', 'gatunek drewna'],
+  Długość: ['DŁ', 'DŁ. [mm]', 'Dł', 'Dł. [mm]', 'Dlugosc'],
+  Grubość: ['GR.', 'GR. [mm]', 'Grubosc'],
+  Szerokość: ['Sz', 'SZER. [mm]', 'Szerokosc'],
+  Grupa: ['Grupa', 'GRUPA'],
+  Priorytet: ['Priorytet', 'PRIORYTET'],
+  Wybijak: ['Wybijak'],
+};
+
+function readJsonBody(req) {
+  return new Promise((resolve, reject) => {
+    let data = '';
+    req.on('data', (chunk) => {
+      data += chunk;
+    });
+    req.on('end', () => {
+      try {
+        resolve(data ? JSON.parse(data) : {});
+      } catch (error) {
+        reject(error);
+      }
+    });
+    req.on('error', reject);
+  });
+}
+
+function sendJson(res, statusCode, payload) {
+  res.statusCode = statusCode;
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.end(JSON.stringify(payload));
+}
+
+function normalizeCellValue(_column, value) {
+  if (value === null || value === undefined) return '';
+  return String(value);
+}
+
+function resolveHeaderName(headers, aliases) {
+  return headers.find((header) => aliases.includes(header));
+}
+
+function buildSheetMatrix(headers, rows) {
+  const nextHeaders = [...headers];
+
+  for (const aliases of Object.values(editableColumnAliases)) {
+    const hasMatchingHeader = nextHeaders.some((header) => aliases.includes(header));
+    if (!hasMatchingHeader && aliases[0]) {
+      nextHeaders.push(aliases[0]);
+    }
+  }
+
+  return [
+    nextHeaders,
+    ...rows.map((row) => {
+      const baseRow = row._originalRowData && typeof row._originalRowData === 'object' ? { ...row._originalRowData } : {};
+
+      for (const [column, aliases] of Object.entries(editableColumnAliases)) {
+        const headerName = resolveHeaderName(nextHeaders, aliases);
+        if (!headerName) continue;
+        baseRow[headerName] = normalizeCellValue(column, row[column]);
+      }
+
+      return nextHeaders.map((header) => baseRow[header] ?? '');
+    }),
+  ];
+}
+
+async function resolveUniqueProductFilePath(fileName) {
+  const parsed = path.parse(fileName);
+  const extension = parsed.ext || '.xlsx';
+  const baseName = parsed.name || 'Produkt';
+  let candidate = `${baseName}${extension}`;
+  let counter = 1;
+
+  while (true) {
+    const filePath = path.join(productsDir, candidate);
+    try {
+      await fs.access(filePath);
+      candidate = `${baseName} (${counter})${extension}`;
+      counter += 1;
+    } catch {
+      return filePath;
+    }
+  }
+}
+
+async function readRecipeCatalog() {
+  try {
+    const content = await fs.readFile(recipesFilePath, 'utf8');
+    const payload = JSON.parse(content);
+    return Array.isArray(payload?.recipes) ? payload.recipes : [];
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      return [];
+    }
+    throw error;
+  }
+}
+
+async function writeRecipeCatalog(recipes) {
+  await fs.writeFile(
+    recipesFilePath,
+    JSON.stringify({ recipes }, null, 2),
+    'utf8',
+  );
+}
+
+function toSqlLiteral(value) {
+  if (value === null || value === undefined || value === '') return 'NULL';
+  return `N'${String(value).replace(/'/g, "''")}'`;
+}
+
+function toSqlNumber(value, fallback = 0) {
+  const normalized = Number(String(value ?? '').replace(',', '.'));
+  return Number.isFinite(normalized) ? normalized : fallback;
+}
+
+function buildWorkMainUploadSql(rows) {
+  const valuesSql = rows
+    .map((row, index) => `(
+${index + 1},
+${toSqlLiteral(row.Material)},
+${toSqlLiteral(row.Przekroj)},
+${toSqlNumber(row.Dlugosc)},
+${toSqlNumber(row.Sztuk)},
+${toSqlNumber(row.Wybijaki)},
+${toSqlLiteral(row.TekstDoDruku)},
+${toSqlNumber(row.Klasa)},
+${toSqlLiteral(row.Nazwa)},
+${toSqlNumber(row.zliczonaIloscIn)}
+)`)
+    .join(',\n');
+
+  return `SET NOCOUNT ON;
+BEGIN TRY
+  BEGIN TRANSACTION;
+
+  CREATE TABLE #WorkMainUpload (
+    id INT NOT NULL,
+    Material NVARCHAR(255) NULL,
+    Przekroj NVARCHAR(255) NULL,
+    Dlugosc INT NULL,
+    Sztuk INT NULL,
+    Wybijak INT NULL,
+    TekstDoDruku NVARCHAR(255) NULL,
+    Klasa INT NULL,
+    Nazwa NVARCHAR(255) NULL,
+    zliczonaIloscIn INT NULL
+  );
+
+  INSERT INTO #WorkMainUpload (
+    id,
+    Material,
+    Przekroj,
+    Dlugosc,
+    Sztuk,
+    Wybijak,
+    TekstDoDruku,
+    Klasa,
+    Nazwa,
+    zliczonaIloscIn
+  )
+  VALUES
+  ${valuesSql};
+
+  DELETE FROM dbo.WorkMain;
+
+  DECLARE @countColumn SYSNAME =
+    CASE
+      WHEN COL_LENGTH('dbo.WorkMain', 'zliczonaIloscIn') IS NOT NULL THEN 'zliczonaIloscIn'
+      WHEN COL_LENGTH('dbo.WorkMain', 'zliczIloscWej') IS NOT NULL THEN 'zliczIloscWej'
+      ELSE NULL
+    END;
+
+  IF @countColumn IS NULL
+    THROW 50000, 'Brak kolumny zliczana ilość w dbo.WorkMain.', 1;
+
+  DECLARE @sql NVARCHAR(MAX) = N'
+    INSERT INTO dbo.WorkMain (
+      id,
+      Material,
+      Przekroj,
+      Dlugosc,
+      Sztuk,
+      Wybijak,
+      TekstDoDruku,
+      Klasa,
+      Nazwa,
+      ' + QUOTENAME(@countColumn) + N'
+    )
+    SELECT
+      id,
+      Material,
+      Przekroj,
+      Dlugosc,
+      Sztuk,
+      Wybijak,
+      TekstDoDruku,
+      Klasa,
+      Nazwa,
+      zliczonaIloscIn
+    FROM #WorkMainUpload;
+  ';
+
+  IF EXISTS (
+    SELECT 1
+    FROM sys.identity_columns
+    WHERE object_id = OBJECT_ID(N'dbo.WorkMain')
+      AND name = 'id'
+  )
+    SET IDENTITY_INSERT dbo.WorkMain ON;
+
+  EXEC sp_executesql @sql;
+
+  IF EXISTS (
+    SELECT 1
+    FROM sys.identity_columns
+    WHERE object_id = OBJECT_ID(N'dbo.WorkMain')
+      AND name = 'id'
+  )
+    SET IDENTITY_INSERT dbo.WorkMain OFF;
+
+  COMMIT TRANSACTION;
+END TRY
+BEGIN CATCH
+  IF @@TRANCOUNT > 0
+    ROLLBACK TRANSACTION;
+
+  DECLARE @message NVARCHAR(4000) = ERROR_MESSAGE();
+  THROW 50000, @message, 1;
+END CATCH;`;
+}
+
+async function executeSqlFile(sqlText) {
+  const sqlServer = process.env.MTGO_SQL_SERVER || process.env.SQL_SERVER || '';
+  const sqlDatabase = process.env.MTGO_SQL_DATABASE || process.env.SQL_DATABASE || '';
+  const sqlUser = process.env.MTGO_SQL_USER || process.env.SQL_USER || '';
+  const sqlPassword = process.env.MTGO_SQL_PASSWORD || process.env.SQL_PASSWORD || '';
+
+  if (!sqlServer || !sqlDatabase) {
+    throw new Error('Brak konfiguracji bazy. Ustaw MTGO_SQL_SERVER oraz MTGO_SQL_DATABASE.');
+  }
+
+  const tempFilePath = path.join(os.tmpdir(), `mt-go-web-workmain-${Date.now()}.sql`);
+  await fs.writeFile(tempFilePath, sqlText, 'utf8');
+
+  try {
+    const args = ['-b', '-S', sqlServer, '-d', sqlDatabase, '-i', tempFilePath];
+    if (sqlUser && sqlPassword) {
+      args.push('-U', sqlUser, '-P', sqlPassword);
+    } else {
+      args.push('-E');
+    }
+
+    await execFileAsync('sqlcmd', args, { windowsHide: true });
+  } catch (error) {
+    const stderr = String(error?.stderr || '').trim();
+    const stdout = String(error?.stdout || '').trim();
+    throw new Error(stderr || stdout || error.message || 'Błąd wykonania sqlcmd.');
+  } finally {
+    await fs.unlink(tempFilePath).catch(() => {});
+  }
+}
+
+function productSavePlugin() {
+  return {
+    name: 'product-save-api',
+    configureServer(server) {
+      server.middlewares.use('/api/products/list', async (req, res) => {
+        if (req.method !== 'GET') {
+          sendJson(res, 405, { error: 'Method not allowed' });
+          return;
+        }
+
+        try {
+          const entries = await fs.readdir(productsDir, { withFileTypes: true });
+          const files = entries
+            .filter((entry) => entry.isFile() && entry.name.toLowerCase().endsWith('.xlsx'))
+            .map((entry) => entry.name)
+            .sort((left, right) => left.localeCompare(right, 'pl'));
+          sendJson(res, 200, { files });
+        } catch (error) {
+          sendJson(res, 500, { error: error.message || 'Błąd odczytu listy plików.' });
+        }
+      });
+
+      server.middlewares.use('/api/products/file', async (req, res) => {
+        if (req.method !== 'GET') {
+          sendJson(res, 405, { error: 'Method not allowed' });
+          return;
+        }
+
+        try {
+          const requestUrl = new URL(req.url || '', 'http://127.0.0.1');
+          const fileName = path.basename(requestUrl.searchParams.get('fileName') || '');
+
+          if (!fileName.endsWith('.xlsx')) {
+            sendJson(res, 400, { error: 'Nieprawidłowa nazwa pliku.' });
+            return;
+          }
+
+          const filePath = path.join(productsDir, fileName);
+          const content = await fs.readFile(filePath);
+          res.statusCode = 200;
+          res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+          res.setHeader('Cache-Control', 'no-store');
+          res.end(content);
+        } catch (error) {
+          sendJson(res, 500, { error: error.message || 'Błąd odczytu pliku.' });
+        }
+      });
+
+      server.middlewares.use('/api/products/save', async (req, res) => {
+        if (req.method !== 'POST') {
+          sendJson(res, 405, { error: 'Method not allowed' });
+          return;
+        }
+
+        try {
+          const body = await readJsonBody(req);
+          const fileName = path.basename(body.fileName || '');
+          const rows = Array.isArray(body.rows) ? body.rows : [];
+
+          if (!fileName.endsWith('.xlsx')) {
+            sendJson(res, 400, { error: 'Nieprawidłowa nazwa pliku.' });
+            return;
+          }
+
+          if (rows.length > maxProductRows) {
+            sendJson(res, 400, { error: `Maksymalnie ${maxProductRows} pozycji w pliku.` });
+            return;
+          }
+
+          const filePath = path.join(productsDir, fileName);
+          const workbook = XLSX.read(await fs.readFile(filePath));
+          const firstSheetName = workbook.SheetNames[0];
+          const currentSheet = workbook.Sheets[firstSheetName];
+          const matrix = XLSX.utils.sheet_to_json(currentSheet, { header: 1, defval: '' });
+          const headers = matrix[0] || [];
+
+          if (!headers.length) {
+            sendJson(res, 400, { error: 'Nie udało się odczytać nagłówków arkusza.' });
+            return;
+          }
+
+          const nextSheet = XLSX.utils.aoa_to_sheet(buildSheetMatrix(headers, rows));
+
+          for (let rowIndex = 1; rowIndex <= rows.length; rowIndex += 1) {
+            for (let columnIndex = 0; columnIndex < headers.length; columnIndex += 1) {
+              const cellRef = XLSX.utils.encode_cell({ r: rowIndex, c: columnIndex });
+              const cell = nextSheet[cellRef];
+              if (!cell) continue;
+              cell.t = 's';
+              if (cell.v === null || cell.v === undefined) {
+                cell.v = '';
+              } else {
+                cell.v = String(cell.v);
+              }
+            }
+          }
+
+          if (currentSheet['!cols']) nextSheet['!cols'] = currentSheet['!cols'];
+          if (currentSheet['!autofilter']) nextSheet['!autofilter'] = currentSheet['!autofilter'];
+
+          workbook.Sheets[firstSheetName] = nextSheet;
+          XLSX.writeFile(workbook, filePath);
+          sendJson(res, 200, { ok: true });
+        } catch (error) {
+          sendJson(res, 500, { error: error.message || 'Błąd zapisu pliku.' });
+        }
+      });
+
+      server.middlewares.use('/api/products/import', async (req, res) => {
+        if (req.method !== 'POST') {
+          sendJson(res, 405, { error: 'Method not allowed' });
+          return;
+        }
+
+        try {
+          const body = await readJsonBody(req);
+          const fileName = path.basename(body.fileName || '');
+          const contentBase64 = String(body.contentBase64 || '');
+
+          if (!fileName.endsWith('.xlsx')) {
+            sendJson(res, 400, { error: 'Możesz importować tylko pliki .xlsx.' });
+            return;
+          }
+
+          if (!contentBase64) {
+            sendJson(res, 400, { error: 'Brak zawartości pliku do importu.' });
+            return;
+          }
+
+          const targetPath = await resolveUniqueProductFilePath(fileName);
+          await fs.writeFile(targetPath, Buffer.from(contentBase64, 'base64'));
+          sendJson(res, 200, { ok: true, fileName: path.basename(targetPath) });
+        } catch (error) {
+          sendJson(res, 500, { error: error.message || 'Błąd importu pliku.' });
+        }
+      });
+
+      server.middlewares.use('/api/products/duplicate', async (req, res) => {
+        if (req.method !== 'POST') {
+          sendJson(res, 405, { error: 'Method not allowed' });
+          return;
+        }
+
+        try {
+          const body = await readJsonBody(req);
+          const fileName = path.basename(body.fileName || '');
+
+          if (!fileName.endsWith('.xlsx')) {
+            sendJson(res, 400, { error: 'Możesz duplikować tylko pliki .xlsx.' });
+            return;
+          }
+
+          const sourcePath = path.join(productsDir, fileName);
+          const targetPath = await resolveUniqueProductFilePath(path.join(path.parse(fileName).name + ' kopia.xlsx'));
+          await fs.copyFile(sourcePath, targetPath);
+          sendJson(res, 200, { ok: true, fileName: path.basename(targetPath) });
+        } catch (error) {
+          sendJson(res, 500, { error: error.message || 'Błąd duplikowania pliku.' });
+        }
+      });
+
+      server.middlewares.use('/api/products/rename', async (req, res) => {
+        if (req.method !== 'POST') {
+          sendJson(res, 405, { error: 'Method not allowed' });
+          return;
+        }
+
+        try {
+          const body = await readJsonBody(req);
+          const fileName = path.basename(body.fileName || '');
+          const nextFileName = path.basename(body.nextFileName || '');
+
+          if (!fileName.endsWith('.xlsx') || !nextFileName.endsWith('.xlsx')) {
+            sendJson(res, 400, { error: 'Nazwa pliku musi kończyć się na .xlsx.' });
+            return;
+          }
+
+          if (fileName === nextFileName) {
+            sendJson(res, 400, { error: 'Nowa nazwa pliku musi być inna.' });
+            return;
+          }
+
+          const sourcePath = path.join(productsDir, fileName);
+          const targetPath = path.join(productsDir, nextFileName);
+
+          try {
+            await fs.access(targetPath);
+            sendJson(res, 400, { error: 'Plik o takiej nazwie już istnieje.' });
+            return;
+          } catch {
+            // free name
+          }
+
+          await fs.rename(sourcePath, targetPath);
+          sendJson(res, 200, { ok: true, fileName: nextFileName });
+        } catch (error) {
+          sendJson(res, 500, { error: error.message || 'Błąd zmiany nazwy pliku.' });
+        }
+      });
+
+      server.middlewares.use('/api/products/delete', async (req, res) => {
+        if (req.method !== 'POST') {
+          sendJson(res, 405, { error: 'Method not allowed' });
+          return;
+        }
+
+        try {
+          const body = await readJsonBody(req);
+          const fileName = path.basename(body.fileName || '');
+
+          if (!fileName.endsWith('.xlsx')) {
+            sendJson(res, 400, { error: 'Możesz usuwać tylko pliki .xlsx.' });
+            return;
+          }
+
+          await fs.unlink(path.join(productsDir, fileName));
+          sendJson(res, 200, { ok: true });
+        } catch (error) {
+          sendJson(res, 500, { error: error.message || 'Błąd usuwania pliku.' });
+        }
+      });
+
+      server.middlewares.use('/api/recipes/save', async (req, res) => {
+        if (req.method !== 'POST') {
+          sendJson(res, 405, { error: 'Method not allowed' });
+          return;
+        }
+
+        try {
+          const body = await readJsonBody(req);
+          const recipe = body?.recipe;
+
+          if (!recipe || typeof recipe !== 'object') {
+            sendJson(res, 400, { error: 'Brak danych receptury do zapisu.' });
+            return;
+          }
+
+          const recipeName = String(recipe.nazwaReceptury || '').trim();
+          const rows = Array.isArray(recipe.rows) ? recipe.rows : [];
+
+          if (!recipeName) {
+            sendJson(res, 400, { error: 'Nazwa receptury jest wymagana.' });
+            return;
+          }
+
+          const recipes = await readRecipeCatalog();
+          if (recipes.some((entry) => entry?.nazwaReceptury === recipeName)) {
+            sendJson(res, 400, { error: 'Receptura o tej nazwie już istnieje.' });
+            return;
+          }
+
+          const nextRecipe = {
+            idRap: recipe.idRap ?? Date.now(),
+            nazwaReceptury: recipeName,
+            CzasOdloz: recipe.CzasOdloz ?? new Date().toLocaleString('pl-PL'),
+            Usr: recipe.Usr ?? 'Default',
+            rows,
+          };
+
+          await writeRecipeCatalog([...recipes, nextRecipe]);
+          sendJson(res, 200, { ok: true, recipe: nextRecipe });
+        } catch (error) {
+          sendJson(res, 500, { error: error.message || 'Błąd zapisu receptury.' });
+        }
+      });
+
+      server.middlewares.use('/api/recipes', async (req, res) => {
+        if (req.method !== 'GET') {
+          sendJson(res, 405, { error: 'Method not allowed' });
+          return;
+        }
+
+        try {
+          const recipes = await readRecipeCatalog();
+          sendJson(res, 200, { recipes });
+        } catch (error) {
+          sendJson(res, 500, { error: error.message || 'Błąd odczytu receptur.' });
+        }
+      });
+
+      server.middlewares.use('/api/workmain/upload', async (req, res) => {
+        if (req.method !== 'POST') {
+          sendJson(res, 405, { error: 'Method not allowed' });
+          return;
+        }
+
+        try {
+          const body = await readJsonBody(req);
+          const rows = Array.isArray(body.rows) ? body.rows : [];
+
+          if (!rows.length) {
+            sendJson(res, 400, { error: 'Brak wierszy do wgrania do WorkMain.' });
+            return;
+          }
+
+          const sqlText = buildWorkMainUploadSql(rows);
+          await executeSqlFile(sqlText);
+          sendJson(res, 200, { ok: true, insertedRows: rows.length });
+        } catch (error) {
+          sendJson(res, 500, { error: error.message || 'Błąd wgrywania danych do WorkMain.' });
+        }
+      });
+    },
+  };
+}
+
+export default defineConfig(({ mode }) => {
+  Object.assign(process.env, loadEnv(mode, __dirname, ''));
+
+  return {
+    plugins: [vue(), productSavePlugin()],
+    server: {
+      host: '127.0.0.1',
+      port: 5174,
+    },
+  };
+});
