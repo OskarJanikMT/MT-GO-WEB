@@ -12,8 +12,20 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const productsDir = path.join(__dirname, 'Produkty');
 const recipesFilePath = path.join(__dirname, 'receptury.json');
-const maxProductRows = 500;
+const configFilePath = path.join(__dirname, 'config.json');
 const execFileAsync = promisify(execFile);
+const defaultAppConfig = {
+  stations: [],
+  activeMachineId: 'machine-1',
+  machines: [
+    {
+      id: 'machine-1',
+      name: 'Maszyna 1',
+      rowLimit: 500,
+    },
+  ],
+  favoriteElements: [],
+};
 
 const editableColumnAliases = {
   Kod: ['Kod', 'Nadruk'],
@@ -126,6 +138,27 @@ async function writeRecipeCatalog(recipes) {
   );
 }
 
+async function readAppConfig() {
+  try {
+    const content = await fs.readFile(configFilePath, 'utf8');
+    const payload = JSON.parse(content);
+    return payload && typeof payload === 'object' ? payload : defaultAppConfig;
+  } catch (error) {
+    if (error?.code === 'ENOENT') {
+      return defaultAppConfig;
+    }
+    throw error;
+  }
+}
+
+async function writeAppConfig(config) {
+  await fs.writeFile(
+    configFilePath,
+    JSON.stringify(config && typeof config === 'object' ? config : defaultAppConfig, null, 2),
+    'utf8',
+  );
+}
+
 function toSqlLiteral(value) {
   if (value === null || value === undefined || value === '') return 'NULL';
   return `N'${String(value).replace(/'/g, "''")}'`;
@@ -148,6 +181,7 @@ ${toSqlNumber(row.Wybijaki)},
 ${toSqlLiteral(row.TekstDoDruku)},
 ${toSqlNumber(row.Klasa)},
 ${toSqlLiteral(row.Nazwa)},
+${toSqlNumber(row.Stanowisko)},
 ${toSqlNumber(row.zliczonaIloscIn)}
 )`)
     .join(',\n');
@@ -166,6 +200,7 @@ BEGIN TRY
     TekstDoDruku NVARCHAR(255) NULL,
     Klasa INT NULL,
     Nazwa NVARCHAR(255) NULL,
+    Stanowisko INT NULL,
     zliczonaIloscIn INT NULL
   );
 
@@ -179,6 +214,7 @@ BEGIN TRY
     TekstDoDruku,
     Klasa,
     Nazwa,
+    Stanowisko,
     zliczonaIloscIn
   )
   VALUES
@@ -207,6 +243,7 @@ BEGIN TRY
       TekstDoDruku,
       Klasa,
       Nazwa,
+      Stanowisko,
       ' + QUOTENAME(@countColumn) + N'
     )
     SELECT
@@ -219,8 +256,182 @@ BEGIN TRY
       TekstDoDruku,
       Klasa,
       Nazwa,
+      Stanowisko,
       zliczonaIloscIn
     FROM #WorkMainUpload;
+  ';
+
+  IF EXISTS (
+    SELECT 1
+    FROM sys.identity_columns
+    WHERE object_id = OBJECT_ID(N'dbo.WorkMain')
+      AND name = 'id'
+  )
+    SET IDENTITY_INSERT dbo.WorkMain ON;
+
+  EXEC sp_executesql @sql;
+
+  IF EXISTS (
+    SELECT 1
+    FROM sys.identity_columns
+    WHERE object_id = OBJECT_ID(N'dbo.WorkMain')
+      AND name = 'id'
+  )
+    SET IDENTITY_INSERT dbo.WorkMain OFF;
+
+  COMMIT TRANSACTION;
+END TRY
+BEGIN CATCH
+  IF @@TRANCOUNT > 0
+    ROLLBACK TRANSACTION;
+
+  DECLARE @message NVARCHAR(4000) = ERROR_MESSAGE();
+  THROW 50000, @message, 1;
+END CATCH;`;
+}
+
+function buildWorkMainCorrectionsSql(rows) {
+  const valuesSql = rows
+    .map((row) => `(${toSqlNumber(row.id)}, ${toSqlNumber(row.WykonaneSztuki)})`)
+    .join(',\n');
+
+  return `SET NOCOUNT ON;
+BEGIN TRY
+  BEGIN TRANSACTION;
+
+  IF COL_LENGTH('dbo.WorkMain', 'WykonaneSztuki') IS NULL
+    THROW 50000, 'Brak kolumny WykonaneSztuki w dbo.WorkMain.', 1;
+
+  CREATE TABLE #WorkMainCorrections (
+    id INT NOT NULL,
+    WykonaneSztuki INT NOT NULL
+  );
+
+  INSERT INTO #WorkMainCorrections (id, WykonaneSztuki)
+  VALUES
+  ${valuesSql};
+
+  UPDATE workmain
+  SET workmain.WykonaneSztuki = corrections.WykonaneSztuki
+  FROM dbo.WorkMain AS workmain
+  INNER JOIN #WorkMainCorrections AS corrections ON corrections.id = workmain.id;
+
+  COMMIT TRANSACTION;
+END TRY
+BEGIN CATCH
+  IF @@TRANCOUNT > 0
+    ROLLBACK TRANSACTION;
+
+  DECLARE @message NVARCHAR(4000) = ERROR_MESSAGE();
+  THROW 50000, @message, 1;
+END CATCH;`;
+}
+
+function buildWorkMainSaveSql(rows) {
+  const valuesSql = rows
+    .map((row, index) => `(
+${toSqlNumber(row.id, index + 1)},
+${toSqlLiteral(row.Material)},
+${toSqlLiteral(row.Przekroj)},
+${toSqlNumber(row.Dlugosc)},
+${toSqlNumber(row.Sztuk)},
+${toSqlNumber(row.WykonaneSztuki)},
+${toSqlNumber(row.Wybijak)},
+${toSqlLiteral(row.TekstDoDruku)},
+${toSqlNumber(row.Klasa)},
+${toSqlLiteral(row.Nazwa)},
+${toSqlNumber(row.Stanowisko)},
+${toSqlNumber(row.zliczonaIloscIn)}
+)`)
+    .join(',\n');
+  const insertRowsSql = valuesSql
+    ? `  INSERT INTO #WorkMainSave (
+    id,
+    Material,
+    Przekroj,
+    Dlugosc,
+    Sztuk,
+    WykonaneSztuki,
+    Wybijak,
+    TekstDoDruku,
+    Klasa,
+    Nazwa,
+    Stanowisko,
+    zliczonaIloscIn
+  )
+  VALUES
+  ${valuesSql};
+
+`
+    : '';
+
+  return `SET NOCOUNT ON;
+BEGIN TRY
+  BEGIN TRANSACTION;
+
+  CREATE TABLE #WorkMainSave (
+    id INT NOT NULL,
+    Material NVARCHAR(255) NULL,
+    Przekroj NVARCHAR(255) NULL,
+    Dlugosc INT NULL,
+    Sztuk INT NULL,
+    WykonaneSztuki INT NULL,
+    Wybijak INT NULL,
+    TekstDoDruku NVARCHAR(255) NULL,
+    Klasa INT NULL,
+    Nazwa NVARCHAR(255) NULL,
+    Stanowisko INT NULL,
+    zliczonaIloscIn INT NULL
+  );
+
+${insertRowsSql}  
+  DELETE FROM dbo.WorkMain;
+
+  DECLARE @countColumn SYSNAME =
+    CASE
+      WHEN COL_LENGTH('dbo.WorkMain', 'zliczonaIloscIn') IS NOT NULL THEN 'zliczonaIloscIn'
+      WHEN COL_LENGTH('dbo.WorkMain', 'zliczIloscWej') IS NOT NULL THEN 'zliczIloscWej'
+      ELSE NULL
+    END;
+
+  DECLARE @doneColumn SYSNAME =
+    CASE
+      WHEN COL_LENGTH('dbo.WorkMain', 'WykonaneSztuki') IS NOT NULL THEN 'WykonaneSztuki'
+      ELSE NULL
+    END;
+
+  IF @countColumn IS NULL
+    THROW 50000, 'Brak kolumny zliczana ilość w dbo.WorkMain.', 1;
+
+  DECLARE @sql NVARCHAR(MAX) = N'
+    INSERT INTO dbo.WorkMain (
+      id,
+      Material,
+      Przekroj,
+      Dlugosc,
+      Sztuk,
+      Wybijak,
+      TekstDoDruku,
+      Klasa,
+      Nazwa,
+      Stanowisko,
+      ' + QUOTENAME(@countColumn) + N'' + CASE WHEN @doneColumn IS NOT NULL THEN N',
+      ' + QUOTENAME(@doneColumn) ELSE N'' END + N'
+    )
+    SELECT
+      id,
+      Material,
+      Przekroj,
+      Dlugosc,
+      Sztuk,
+      Wybijak,
+      TekstDoDruku,
+      Klasa,
+      Nazwa,
+      Stanowisko,
+      zliczonaIloscIn' + CASE WHEN @doneColumn IS NOT NULL THEN N',
+      WykonaneSztuki' ELSE N'' END + N'
+    FROM #WorkMainSave;
   ';
 
   IF EXISTS (
@@ -274,6 +485,38 @@ async function executeSqlFile(sqlText) {
     }
 
     await execFileAsync('sqlcmd', args, { windowsHide: true });
+  } catch (error) {
+    const stderr = String(error?.stderr || '').trim();
+    const stdout = String(error?.stdout || '').trim();
+    throw new Error(stderr || stdout || error.message || 'Błąd wykonania sqlcmd.');
+  } finally {
+    await fs.unlink(tempFilePath).catch(() => {});
+  }
+}
+
+async function executeSqlQuery(sqlText) {
+  const sqlServer = process.env.MTGO_SQL_SERVER || process.env.SQL_SERVER || '';
+  const sqlDatabase = process.env.MTGO_SQL_DATABASE || process.env.SQL_DATABASE || '';
+  const sqlUser = process.env.MTGO_SQL_USER || process.env.SQL_USER || '';
+  const sqlPassword = process.env.MTGO_SQL_PASSWORD || process.env.SQL_PASSWORD || '';
+
+  if (!sqlServer || !sqlDatabase) {
+    throw new Error('Brak konfiguracji bazy. Ustaw MTGO_SQL_SERVER oraz MTGO_SQL_DATABASE.');
+  }
+
+  const tempFilePath = path.join(os.tmpdir(), `mt-go-web-workmain-query-${Date.now()}.sql`);
+  await fs.writeFile(tempFilePath, sqlText, 'utf8');
+
+  try {
+    const args = ['-w', '65535', '-y', '0', '-Y', '0', '-S', sqlServer, '-d', sqlDatabase, '-i', tempFilePath];
+    if (sqlUser && sqlPassword) {
+      args.push('-U', sqlUser, '-P', sqlPassword);
+    } else {
+      args.push('-E');
+    }
+
+    const { stdout } = await execFileAsync('sqlcmd', args, { windowsHide: true, maxBuffer: 1024 * 1024 * 10 });
+    return String(stdout || '').trim();
   } catch (error) {
     const stderr = String(error?.stderr || '').trim();
     const stdout = String(error?.stdout || '').trim();
@@ -549,6 +792,80 @@ function productSavePlugin() {
         }
       });
 
+      server.middlewares.use('/api/recipes/update', async (req, res) => {
+        if (req.method !== 'POST') {
+          sendJson(res, 405, { error: 'Method not allowed' });
+          return;
+        }
+
+        try {
+          const body = await readJsonBody(req);
+          const recipe = body?.recipe;
+
+          if (!recipe || typeof recipe !== 'object') {
+            sendJson(res, 400, { error: 'Brak danych receptury do aktualizacji.' });
+            return;
+          }
+
+          const recipeName = String(recipe.nazwaReceptury || '').trim();
+          const rows = Array.isArray(recipe.rows) ? recipe.rows : [];
+
+          if (!recipeName) {
+            sendJson(res, 400, { error: 'Nazwa receptury jest wymagana.' });
+            return;
+          }
+
+          const recipes = await readRecipeCatalog();
+          const recipeIndex = recipes.findIndex((entry) => entry?.nazwaReceptury === recipeName);
+          if (recipeIndex === -1) {
+            sendJson(res, 404, { error: 'Nie znaleziono receptury do aktualizacji.' });
+            return;
+          }
+
+          const currentRecipe = recipes[recipeIndex];
+          const nextRecipe = {
+            ...currentRecipe,
+            rows,
+          };
+
+          recipes[recipeIndex] = nextRecipe;
+          await writeRecipeCatalog(recipes);
+          sendJson(res, 200, { ok: true, recipe: nextRecipe });
+        } catch (error) {
+          sendJson(res, 500, { error: error.message || 'Błąd aktualizacji receptury.' });
+        }
+      });
+
+      server.middlewares.use('/api/recipes/delete', async (req, res) => {
+        if (req.method !== 'POST') {
+          sendJson(res, 405, { error: 'Method not allowed' });
+          return;
+        }
+
+        try {
+          const body = await readJsonBody(req);
+          const recipeName = String(body?.recipeName || '').trim();
+
+          if (!recipeName) {
+            sendJson(res, 400, { error: 'Nazwa receptury jest wymagana.' });
+            return;
+          }
+
+          const recipes = await readRecipeCatalog();
+          const nextRecipes = recipes.filter((entry) => entry?.nazwaReceptury !== recipeName);
+
+          if (nextRecipes.length === recipes.length) {
+            sendJson(res, 404, { error: 'Nie znaleziono receptury do usunięcia.' });
+            return;
+          }
+
+          await writeRecipeCatalog(nextRecipes);
+          sendJson(res, 200, { ok: true });
+        } catch (error) {
+          sendJson(res, 500, { error: error.message || 'Błąd usuwania receptury.' });
+        }
+      });
+
       server.middlewares.use('/api/recipes', async (req, res) => {
         if (req.method !== 'GET') {
           sendJson(res, 405, { error: 'Method not allowed' });
@@ -561,6 +878,38 @@ function productSavePlugin() {
         } catch (error) {
           sendJson(res, 500, { error: error.message || 'Błąd odczytu receptur.' });
         }
+      });
+
+      server.middlewares.use('/api/config', async (req, res) => {
+        if (req.method === 'GET') {
+          try {
+            const config = await readAppConfig();
+            sendJson(res, 200, { config });
+          } catch (error) {
+            sendJson(res, 500, { error: error.message || 'Błąd odczytu konfiguracji.' });
+          }
+          return;
+        }
+
+        if (req.method === 'POST') {
+          try {
+            const body = await readJsonBody(req);
+            const config = body?.config;
+
+            if (!config || typeof config !== 'object') {
+              sendJson(res, 400, { error: 'Brak konfiguracji do zapisu.' });
+              return;
+            }
+
+            await writeAppConfig(config);
+            sendJson(res, 200, { ok: true, config });
+          } catch (error) {
+            sendJson(res, 500, { error: error.message || 'Błąd zapisu konfiguracji.' });
+          }
+          return;
+        }
+
+        sendJson(res, 405, { error: 'Method not allowed' });
       });
 
       server.middlewares.use('/api/workmain/upload', async (req, res) => {
@@ -583,6 +932,155 @@ function productSavePlugin() {
           sendJson(res, 200, { ok: true, insertedRows: rows.length });
         } catch (error) {
           sendJson(res, 500, { error: error.message || 'Błąd wgrywania danych do WorkMain.' });
+        }
+      });
+
+      server.middlewares.use('/api/workmain/corrections', async (req, res) => {
+        if (req.method !== 'POST') {
+          sendJson(res, 405, { error: 'Method not allowed' });
+          return;
+        }
+
+        try {
+          const body = await readJsonBody(req);
+          const rows = Array.isArray(body.rows) ? body.rows : [];
+
+          if (!rows.length) {
+            sendJson(res, 400, { error: 'Brak korekt do zapisania.' });
+            return;
+          }
+
+          const sqlText = buildWorkMainCorrectionsSql(rows);
+          await executeSqlFile(sqlText);
+          sendJson(res, 200, { ok: true, updatedRows: rows.length });
+        } catch (error) {
+          sendJson(res, 500, { error: error.message || 'Błąd zapisu korekt WorkMain.' });
+        }
+      });
+
+      server.middlewares.use('/api/workmain/save', async (req, res) => {
+        if (req.method !== 'POST') {
+          sendJson(res, 405, { error: 'Method not allowed' });
+          return;
+        }
+
+        try {
+          const body = await readJsonBody(req);
+          const rows = Array.isArray(body.rows) ? body.rows : [];
+
+          const sqlText = buildWorkMainSaveSql(rows);
+          await executeSqlFile(sqlText);
+          sendJson(res, 200, { ok: true, updatedRows: rows.length });
+        } catch (error) {
+          sendJson(res, 500, { error: error.message || 'Błąd zapisu zmian WorkMain.' });
+        }
+      });
+
+      server.middlewares.use('/api/workmain', async (req, res) => {
+        if (req.method !== 'GET') {
+          sendJson(res, 405, { error: 'Method not allowed' });
+          return;
+        }
+
+        try {
+          const sqlText = `SET NOCOUNT ON;
+DECLARE @countColumn SYSNAME =
+  CASE
+    WHEN COL_LENGTH('dbo.WorkMain', 'zliczonaIloscIn') IS NOT NULL THEN 'zliczonaIloscIn'
+    WHEN COL_LENGTH('dbo.WorkMain', 'zliczIloscWej') IS NOT NULL THEN 'zliczIloscWej'
+    ELSE NULL
+  END;
+
+DECLARE @stanowiskoExpr NVARCHAR(200) =
+  CASE
+    WHEN COL_LENGTH('dbo.WorkMain', 'Stanowisko') IS NOT NULL THEN N'Stanowisko'
+    ELSE N'CAST(NULL AS INT)'
+  END;
+
+DECLARE @wykonaneExpr NVARCHAR(200) =
+  CASE
+    WHEN COL_LENGTH('dbo.WorkMain', 'WykonaneSztuki') IS NOT NULL THEN N'WykonaneSztuki'
+    ELSE N'CAST(NULL AS INT)'
+  END;
+
+IF @countColumn IS NULL
+  THROW 50000, 'Brak kolumny zliczana ilość w dbo.WorkMain.', 1;
+
+DECLARE @sql NVARCHAR(MAX) = N'
+  SELECT
+    id,
+    Material,
+    Przekroj,
+    Dlugosc,
+    Sztuk,
+    Wybijak,
+    TekstDoDruku,
+    Klasa,
+    Nazwa,
+    ' + QUOTENAME(@countColumn) + N' AS zliczonaIloscIn,
+    ' + @stanowiskoExpr + N' AS Stanowisko,
+    ' + @wykonaneExpr + N' AS WykonaneSztuki
+  FROM dbo.WorkMain
+  ORDER BY id
+  FOR JSON PATH, INCLUDE_NULL_VALUES;
+';
+
+EXEC sp_executesql @sql;`;
+
+          const output = await executeSqlQuery(sqlText);
+          const startIndex = output.indexOf('[');
+          const endIndex = output.lastIndexOf(']');
+          const normalizedOutput =
+            startIndex >= 0 && endIndex >= startIndex ? output.slice(startIndex, endIndex + 1).replace(/\r?\n/g, '').trim() : '';
+          const rows = normalizedOutput ? JSON.parse(normalizedOutput) : [];
+          sendJson(res, 200, { rows: Array.isArray(rows) ? rows : [] });
+        } catch (error) {
+          sendJson(res, 500, { error: error.message || 'Błąd odczytu WorkMain.' });
+        }
+      });
+
+      server.middlewares.use('/api/machine-status', async (req, res) => {
+        if (req.method !== 'GET') {
+          sendJson(res, 405, { error: 'Method not allowed' });
+          return;
+        }
+
+        try {
+          const sqlText = `SET NOCOUNT ON;
+DECLARE @valueColumn SYSNAME =
+  CASE
+    WHEN COL_LENGTH('dbo.StatusMain', 'Wartosc') IS NOT NULL THEN 'Wartosc'
+    WHEN COL_LENGTH('dbo.StatusMain', 'Wartość') IS NOT NULL THEN 'Wartość'
+    WHEN COL_LENGTH('dbo.StatusMain', 'Waartość') IS NOT NULL THEN 'Waartość'
+    ELSE NULL
+  END;
+
+IF @valueColumn IS NULL
+  THROW 50000, 'Brak kolumny Wartosc/Wartość/Waartość w dbo.StatusMain.', 1;
+
+DECLARE @sql NVARCHAR(MAX) = N'
+  SELECT TOP (1)
+    id,
+    Komenda,
+    ' + QUOTENAME(@valueColumn) + N' AS Wartosc,
+    Pakiet,
+    statusPracy
+  FROM dbo.StatusMain
+  WHERE id = 2
+  FOR JSON PATH, INCLUDE_NULL_VALUES;
+';
+
+EXEC sp_executesql @sql;`;
+
+          const output = await executeSqlQuery(sqlText);
+          const startIndex = output.indexOf('[');
+          const endIndex = output.lastIndexOf(']');
+          const normalizedOutput =
+            startIndex >= 0 && endIndex >= startIndex ? output.slice(startIndex, endIndex + 1).replace(/\r?\n/g, '').trim() : '';
+          const rows = normalizedOutput ? JSON.parse(normalizedOutput) : [];
+          sendJson(res, 200, { status: Array.isArray(rows) ? rows[0] ?? null : null });
+        } catch (error) {
+          sendJson(res, 500, { error: error.message || 'Błąd odczytu statusu maszyny.' });
         }
       });
     },

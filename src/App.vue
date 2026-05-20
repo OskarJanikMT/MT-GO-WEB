@@ -16,6 +16,10 @@
             <div class="conn-dot"></div>
             SQL Msm
           </div>
+          <div class="connection-badge" :class="machineStatusBadgeClass">
+            <div class="conn-dot"></div>
+            {{ machineStatusLabel }}
+          </div>
           <span class="timestamp">{{ currentTime }}</span>
         </div>
       </header>
@@ -30,8 +34,240 @@
               <span v-if="index < tabs.length - 1" class="filter-arrow" aria-hidden="true">→</span>
             </template>
           </div>
-
+          <div class="filter-actions">
+            <button class="tool-btn" :class="{ primary: isConfigPanelOpen }" @click="toggleConfigPanel">
+              Config
+            </button>
+          </div>
         </nav>
+
+        <div v-if="isConfigPanelOpen" class="config-panel-overlay" @click.self="toggleConfigPanel">
+          <section class="config-panel panel" @click.stop>
+            <div class="panel-header">
+              <span>Config</span>
+              <div class="panel-actions">
+                <button class="tool-btn compact primary" :disabled="!isConfigDirty || isConfigSaving" @click="saveConfig">
+                  {{ isConfigSaving ? 'Zapisywanie...' : 'Zapisz' }}
+                </button>
+                <button class="tool-btn compact" @click="toggleConfigPanel">Zamknij</button>
+              </div>
+            </div>
+            <div class="config-panel-body">
+              <div v-if="configSaveMessage" class="save-status config-save-status" :class="{ error: configSaveError }">{{ configSaveMessage }}</div>
+              <div class="config-tabs">
+                <button
+                  v-for="tab in configTabs"
+                  :key="tab.id"
+                  class="tool-btn compact"
+                  :class="{ primary: activeConfigTab === tab.id }"
+                  @click="requestConfigTabChange(tab.id)"
+                >
+                  {{ tab.label }}
+                </button>
+              </div>
+
+              <div v-if="activeConfigTab === 'stations'" class="config-section">
+                <div class="config-section-header">
+                  <span class="panel-caption">Przypisywanie wybijaków do stanowisk</span>
+                  <button class="tool-btn compact primary" @click="addConfigStation">Dodaj stanowisko</button>
+                </div>
+
+                <div v-if="configStations.length" class="config-stations">
+                  <article v-for="(station, stationIndex) in configStations" :key="station.id" class="config-station-card">
+                    <div class="config-station-header">
+                      <div class="config-station-title-wrap">
+                        <span class="config-station-title">{{ getConfigStationLabel(stationIndex) }}</span>
+                      </div>
+                      <div class="config-station-actions">
+                        <button class="tool-btn compact" @click="addConfigStationPunch(station.id)">Dodaj wybijak</button>
+                        <button class="tool-btn compact danger" @click="removeConfigStation(station.id)">Usuń stanowisko</button>
+                      </div>
+                    </div>
+
+                    <div v-if="station.punches.length" class="config-punch-list">
+                      <div v-for="punch in station.punches" :key="punch.id" class="config-punch-row">
+                        <span class="config-punch-label">Wybijak</span>
+                        <input
+                          class="text-input config-punch-input"
+                          :value="punch.number"
+                          inputmode="numeric"
+                          placeholder="Nr"
+                          @input="updateConfigStationPunch(station.id, punch.id, $event.target.value)"
+                        />
+                        <button class="tool-btn compact danger" @click="removeConfigStationPunch(station.id, punch.id)">Usuń</button>
+                      </div>
+                    </div>
+
+                    <div v-else class="expanded-empty config-empty-state">
+                      Brak wybijaków dla tego stanowiska.
+                    </div>
+
+                    <div class="config-station-lengths">
+                      <div class="config-subsection-header">
+                        <span class="panel-caption">Zakres długości desek</span>
+                      </div>
+
+                      <div class="config-length-row">
+                        <span class="config-length-label">Od</span>
+                        <input
+                          class="text-input config-length-input"
+                          :value="station.lengthRange?.minLength ?? ''"
+                          inputmode="numeric"
+                          placeholder="Min"
+                          @input="updateConfigStationLengthRange(station.id, 'minLength', $event.target.value)"
+                        />
+                        <span class="config-length-separator">do</span>
+                        <input
+                          class="text-input config-length-input"
+                          :value="station.lengthRange?.maxLength ?? ''"
+                          inputmode="numeric"
+                          placeholder="Max"
+                          @input="updateConfigStationLengthRange(station.id, 'maxLength', $event.target.value)"
+                        />
+                      </div>
+                    </div>
+                  </article>
+                </div>
+
+                <div v-else class="expanded-empty config-empty-state">
+                  Brak stanowisk. Dodaj pierwsze stanowisko.
+                </div>
+              </div>
+
+              <div v-else-if="activeConfigTab === 'distances'" class="config-section">
+                <div class="config-section-header">
+                  <span class="panel-caption">Odległości między wybijakami dla stanowisk</span>
+                </div>
+
+                <div v-if="configStations.length" class="config-stations">
+                  <article v-for="(station, stationIndex) in configStations" :key="`dist-${station.id}`" class="config-station-card">
+                    <div class="config-station-header">
+                      <div class="config-station-title-wrap">
+                        <span class="config-station-title">{{ getConfigStationLabel(stationIndex) }}</span>
+                      </div>
+                    </div>
+
+                    <div v-if="station.distanceRules.length" class="config-distance-flow">
+                      <template v-for="(rule, ruleIndex) in station.distanceRules" :key="rule.id">
+                        <div v-if="ruleIndex === 0" class="config-punch-node">
+                          <span class="config-punch-node-number">{{ rule.leftPunch }}</span>
+                          <span class="config-punch-node-label">Wybijak</span>
+                        </div>
+                        <div class="config-distance-link">
+                          <span class="config-distance-caption">{{ rule.leftPunch }}-{{ rule.rightPunch }}</span>
+                          <input
+                            class="text-input config-distance-input"
+                            :value="rule.distance"
+                            inputmode="numeric"
+                            :placeholder="`Odległość ${rule.leftPunch}-${rule.rightPunch}`"
+                            @focus="rememberConfigDistanceEditStart(station.id, rule.id, rule.distance)"
+                            @input="updateConfigStationDistance(station.id, rule.id, 'distance', $event.target.value)"
+                            @blur="handleConfigDistanceEditBlur(station.id, rule.id)"
+                          />
+                        </div>
+                        <div class="config-punch-node">
+                          <span class="config-punch-node-number">{{ rule.rightPunch }}</span>
+                          <span class="config-punch-node-label">Wybijak</span>
+                        </div>
+                      </template>
+                    </div>
+
+                    <div v-else class="expanded-empty config-empty-state">
+                      Dodaj co najmniej dwa wybijaki w zakładce `Stanowiska`, aby ustawić odległości.
+                    </div>
+                  </article>
+                </div>
+
+                <div v-else class="expanded-empty config-empty-state">
+                  Najpierw dodaj stanowiska w zakładce `Stanowiska`.
+                </div>
+              </div>
+
+              <div v-else-if="activeConfigTab === 'parameters'" class="config-section">
+                <div class="config-section-header">
+                  <span class="panel-caption">Parametry maszyn</span>
+                  <button class="tool-btn compact primary" @click="addConfigMachine">Dodaj maszynę</button>
+                </div>
+
+                <div v-if="configMachines.length" class="config-stations">
+                  <article v-for="(machine, machineIndex) in configMachines" :key="machine.id" class="config-station-card">
+                    <div class="config-station-header">
+                      <div class="config-station-title-wrap">
+                        <span class="config-station-title">{{ getConfigMachineLabel(machineIndex) }}</span>
+                      </div>
+                      <div class="config-station-actions">
+                        <button
+                          class="tool-btn compact"
+                          :class="{ primary: activeMachineId === machine.id }"
+                          @click="selectActiveMachine(machine.id)"
+                        >
+                          {{ activeMachineId === machine.id ? 'Aktywna' : 'Ustaw aktywną' }}
+                        </button>
+                        <button class="tool-btn compact danger" :disabled="configMachines.length === 1" @click="removeConfigMachine(machine.id)">
+                          Usuń
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="config-punch-list">
+                      <div class="config-punch-row config-machine-row">
+                        <span class="config-punch-label">Limit pozycji</span>
+                        <input
+                          class="text-input config-punch-input"
+                          :value="machine.rowLimit"
+                          inputmode="numeric"
+                          placeholder="Limit pozycji"
+                          @input="updateConfigMachine(machine.id, 'rowLimit', $event.target.value)"
+                        />
+                      </div>
+                    </div>
+                  </article>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <div v-if="configUnsavedDialog.visible" class="confirm-modal-overlay" @click.self="cancelConfigUnsavedDialog">
+          <div class="confirm-modal panel" @click.stop>
+            <div class="panel-header">
+              <span>Niezapisane zmiany</span>
+            </div>
+            <div class="confirm-modal-body">
+              <p>Masz niezapisane zmiany w konfiguracji. Chcesz je zapisać czy porzucić?</p>
+              <div class="confirm-modal-actions">
+                <button class="tool-btn compact" @click="cancelConfigUnsavedDialog">Anuluj</button>
+                <button class="tool-btn compact" @click="discardConfigChangesAndContinue">Porzuć</button>
+                <button class="tool-btn compact primary" :disabled="isConfigSaving" @click="saveConfigAndContinue">
+                  {{ isConfigSaving ? 'Zapisywanie...' : 'Zapisz' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div
+          v-if="configDistanceImpactDialog.visible"
+          class="confirm-modal-overlay"
+          @click.self="cancelConfigDistanceImpactDialog"
+        >
+          <div class="confirm-modal panel" @click.stop>
+            <div class="panel-header">
+              <span>Zmiana odległości</span>
+            </div>
+            <div class="confirm-modal-body">
+              <p>Czy zastosować nową odległość do aktualnie wgranej receptury w zakładce 3, czy pominąć tę zmianę dla bieżących wierszy?</p>
+              <p class="panel-caption">
+                Jeśli zastosujesz zmianę, wartości `Wybijak` dla tej receptury zostaną przeliczone ponownie.
+                Wcześniejsze ręczne zmiany `Wybijak` mogą zostać utracone.
+              </p>
+              <div class="confirm-modal-actions">
+                <button class="tool-btn compact" @click="cancelConfigDistanceImpactDialog">Pomiń</button>
+                <button class="tool-btn compact primary" @click="applyConfigDistanceToCurrentWorkRecipe">Zastosuj do aktualnej receptury</button>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <section v-if="activeTab === 'products'" class="section">
           <div class="section-header">
@@ -93,8 +329,8 @@
                   </template>
                   <span v-else class="panel-caption">{{ selectedProductName }}</span>
                 </div>
-                <span class="row-limit modal-row-limit" :class="{ warn: selectedProductSourceRows.length > 450 }">
-                  Pozycje: {{ selectedProductSourceRows.length }} / {{ MAX_PRODUCT_ROWS }}
+                <span class="row-limit modal-row-limit" :class="{ warn: selectedProductSourceRows.length >= activeRowLimit }">
+                  Pozycje: {{ selectedProductSourceRows.length }} / {{ activeRowLimit }}
                 </span>
                 <div class="panel-actions">
                   <button
@@ -136,7 +372,7 @@
                   <button
                     v-if="isEditMode"
                     class="tool-btn compact"
-                    :disabled="selectedProductSourceRows.length >= MAX_PRODUCT_ROWS"
+                    :disabled="selectedProductSourceRows.length >= activeRowLimit"
                     @click="addProductRow"
                   >
                     Dodaj wiersz
@@ -207,7 +443,7 @@
                       <td v-if="isEditMode" class="row-actions-cell">
                         <button
                           class="tool-btn compact"
-                          :disabled="selectedProductSourceRows.length >= MAX_PRODUCT_ROWS"
+                          :disabled="selectedProductSourceRows.length >= activeRowLimit"
                           @click="duplicateProductRow(item._localId)"
                         >
                           Duplikuj
@@ -239,6 +475,21 @@
             </div>
           </div>
         </section>
+
+        <div v-if="confirmDialog.visible && activeTab !== 'products'" class="confirm-modal-overlay" @click.self="cancelConfirmAction">
+          <div class="confirm-modal panel" @click.stop>
+            <div class="panel-header">
+              <span>Potwierdzenie</span>
+            </div>
+            <div class="confirm-modal-body">
+              <p>{{ confirmDialog.message }}</p>
+              <div class="confirm-modal-actions">
+                <button class="tool-btn compact" @click.stop="cancelConfirmAction">Anuluj</button>
+                <button class="tool-btn compact primary" @click.stop="confirmAction">Potwierdź</button>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <section v-if="activeTab === 'merge'" class="section">
           <div class="section-header">
@@ -280,6 +531,25 @@
                     <button class="tool-btn compact danger" :disabled="!temporaryProductRows.length" @click="clearTemporaryProduct">
                       Wyczyść elementy dodatkowe
                     </button>
+                  </div>
+                  <div class="favorite-elements-panel">
+                    <div class="product-check favorite-elements-trigger">
+                      <button class="product-check-main favorite-elements-trigger-main" @click="openFavoriteElementsModal">
+                        <span class="favorite-elements-star" aria-hidden="true">★</span>
+                        <span class="favorite-elements-trigger-copy">
+                          <span>Ulubione elementy</span>
+                          <small>{{ favoriteElements.length }} elementów</small>
+                        </span>
+                      </button>
+                      <button class="tool-btn compact product-preview-btn" title="Podgląd ulubionych elementów" @click="openFavoriteElementsModal">
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                          <path
+                            d="M10.5 4a6.5 6.5 0 1 0 4.06 11.58l4.43 4.43 1.41-1.41-4.43-4.43A6.5 6.5 0 0 0 10.5 4Zm0 2a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Z"
+                            fill="currentColor"
+                          />
+                        </svg>
+                      </button>
+                    </div>
                   </div>
                   <div class="product-list">
                     <div v-for="productName in filteredAvailableProductNames" :key="productName" class="product-check">
@@ -348,23 +618,28 @@
                     <span>{{ temporarySourceRowOptions.length }} elementów w produkcie</span>
                     <span>Zaznaczone: {{ selectedTemporaryRowCount }}</span>
                   </div>
+                  <div v-if="temporarySourceRowOptions.length" class="favorite-elements-legend">
+                    Kod | Długość x Grubość x Szerokość | Materiał
+                  </div>
                   <div v-if="temporarySourceRowOptions.length" class="single-element-list">
-                    <label v-for="row in temporarySourceRowOptions" :key="row._localId" class="single-element-row">
-                      <input
-                        type="checkbox"
-                        :checked="isTemporaryRowSelected(row._localId)"
-                        :disabled="!isTemporaryRowSelected(row._localId) && selectedTemporaryRowCount >= remainingRecipeCapacity"
-                        @change="handleTemporaryRowCheckboxChange(row._localId, $event.target.checked)"
-                      />
-                      <span class="single-element-row-text">{{ formatTemporaryRowOption(row) }}</span>
-                    </label>
+                    <div v-for="row in temporarySourceRowOptions" :key="row._localId" class="single-element-row">
+                      <label class="single-element-check">
+                        <input
+                          type="checkbox"
+                          :checked="isTemporaryRowSelected(row._localId)"
+                          :disabled="!isTemporaryRowSelected(row._localId) && selectedTemporaryRowCount >= remainingRecipeCapacity"
+                          @change="handleTemporaryRowCheckboxChange(row._localId, $event.target.checked)"
+                        />
+                        <span class="single-element-row-text">{{ formatTemporaryRowOption(row) }}</span>
+                      </label>
+                    </div>
                   </div>
                   <div v-else class="expanded-empty single-element-empty">
                     Wybierz produkt, aby zobaczyć jego elementy.
                   </div>
                   <div class="confirm-modal-actions">
                     <div class="single-element-capacity" :class="{ full: !remainingRecipeCapacityAfterSelection }">
-                      <strong>Pozycje: {{ projectedRecipeCount }} / {{ MAX_PRODUCT_ROWS }}</strong>
+                      <strong>Pozycje: {{ projectedRecipeCount }} / {{ activeRowLimit }}</strong>
                     </div>
                     <button class="tool-btn compact" @click="closeSingleElementModal">Anuluj</button>
                     <button class="tool-btn compact primary" :disabled="!selectedTemporaryRowCount" @click="addSelectedTemporaryRows">
@@ -390,6 +665,113 @@
                     <button class="tool-btn compact" @click="cancelTemporarySourceChange">Anuluj</button>
                     <button class="tool-btn compact" @click="discardTemporarySourceSelectionAndChange">Odznacz i przejdź</button>
                     <button class="tool-btn compact primary" @click="applyTemporarySourceChangeWithSelectedRows">Dodaj i przejdź</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div v-if="isFavoriteElementsModalOpen" class="confirm-modal-overlay single-element-overlay" @click.self="closeFavoriteElementsModal">
+              <div class="confirm-modal panel favorite-elements-modal" @click.stop>
+                <div class="panel-header">
+                  <span>Ulubione elementy</span>
+                  <span class="panel-caption">{{ favoriteElements.length }}</span>
+                </div>
+                <div class="confirm-modal-body favorite-elements-modal-body">
+                  <div class="favorite-elements-modal-toolbar">
+                    <button
+                      class="tool-btn compact"
+                      :disabled="!availableProductNames.length"
+                      @click="openFavoriteSourceModal"
+                    >
+                      Dodaj element do ulubionych
+                    </button>
+                  </div>
+                  <div v-if="favoriteElements.length" class="favorite-elements-legend">
+                    Kod | Długość x Grubość x Szerokość | Materiał
+                  </div>
+                  <div v-if="favoriteElements.length" class="favorite-elements-list">
+                    <article v-for="favorite in favoriteElements" :key="favorite.id" class="favorite-element-card">
+                      <div class="favorite-element-main">
+                        <span class="favorite-element-line">
+                          {{ favorite.row.Kod || '—' }} | {{ favorite.row['Długość'] || '—' }} x {{ favorite.row['Grubość'] || '—' }} x {{ favorite.row['Szerokość'] || '—' }} | {{ favorite.row['Materiał'] || '—' }}
+                        </span>
+                      </div>
+                      <div class="favorite-element-actions">
+                        <button
+                          v-if="!isFavoriteElementInRecipe(favorite.id)"
+                          class="tool-btn compact"
+                          :disabled="!remainingRecipeCapacity"
+                          @click="addFavoriteElementToMerge(favorite.id)"
+                        >
+                          Dodaj
+                        </button>
+                        <button
+                          v-else
+                          class="tool-btn compact"
+                          @click="removeFavoriteElementFromMerge(favorite.id)"
+                        >
+                          Usuń z receptury
+                        </button>
+                        <button class="tool-btn compact danger" @click="removeFavoriteElement(favorite.id)">Usuń z ulubionych</button>
+                      </div>
+                    </article>
+                  </div>
+                  <div v-else class="expanded-empty favorite-elements-empty">
+                    Dodaj ulubione z okna `Dodaj pojedynczy element`.
+                  </div>
+                  <div class="confirm-modal-actions merge-preview-actions">
+                    <button class="tool-btn compact" @click="closeFavoriteElementsModal">Zamknij</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div v-if="isFavoriteSourceModalOpen" class="confirm-modal-overlay single-element-overlay" @click.self="closeFavoriteSourceModal">
+              <div class="confirm-modal panel favorite-elements-modal" @click.stop>
+                <div class="panel-header">
+                  <span>Dodaj element do ulubionych</span>
+                  <div class="panel-actions">
+                    <span class="panel-caption">{{ favoriteSourceRowOptions.length }}</span>
+                    <button class="tool-btn compact" @click="openFavoriteElementsModalFromSource">Pokaż ulubione elementy</button>
+                    <button class="tool-btn compact" @click="closeFavoriteSourceModal">Zamknij</button>
+                  </div>
+                </div>
+                <div class="confirm-modal-body favorite-elements-modal-body">
+                  <label class="rename-field">
+                    <span>Produkt źródłowy</span>
+                    <select v-model="favoriteSourceProductName" class="select-input">
+                      <option value="">Wybierz produkt</option>
+                      <option v-for="productName in availableProductNames" :key="`favorite-source-${productName}`" :value="productName">
+                        {{ formatProductDisplayName(productName) }}
+                      </option>
+                    </select>
+                  </label>
+                  <div class="single-element-summary">
+                    <span>{{ favoriteSourceRowOptions.length }} elementów w produkcie</span>
+                    <span>Ulubione: {{ favoriteElements.length }}</span>
+                  </div>
+                  <div v-if="favoriteSourceRowOptions.length" class="favorite-elements-legend">
+                    Kod | Długość x Grubość x Szerokość | Materiał
+                  </div>
+                  <div v-if="favoriteSourceRowOptions.length" class="single-element-list">
+                    <div v-for="row in favoriteSourceRowOptions" :key="row._localId" class="single-element-row favorite-source-item">
+                      <div class="single-element-check favorite-source-row">
+                        <span class="single-element-row-text">{{ formatTemporaryRowOption(row) }}</span>
+                      </div>
+                      <button
+                        class="tool-btn compact favorite-source-action"
+                        :class="{ primary: isFavoriteSourceRow(favoriteSourceProductName, row) }"
+                        @click="toggleFavoriteSourceRow(favoriteSourceProductName, row)"
+                      >
+                        {{ isFavoriteSourceRow(favoriteSourceProductName, row) ? 'Usuń z ulubionych' : 'Dodaj do ulubionych' }}
+                      </button>
+                    </div>
+                  </div>
+                  <div v-else class="expanded-empty single-element-empty">
+                    Wybierz produkt, aby zobaczyć jego elementy.
+                  </div>
+                  <div class="confirm-modal-actions merge-preview-actions">
+                    <button class="tool-btn compact" @click="closeFavoriteSourceModal">Zamknij</button>
                   </div>
                 </div>
               </div>
@@ -438,6 +820,13 @@
               <div class="panel-header">
                 <span>Podgląd scalonej receptury</span>
                 <div class="panel-actions">
+                  <button
+                    class="tool-btn compact primary"
+                    :disabled="!recipeRows.length || !hasConfiguredStationLengthRanges"
+                    @click="autoAssignMergeRecipeStations"
+                  >
+                    Automatycznie przydziel wybijaki
+                  </button>
                   <div v-if="availableMergeGroups.length" class="merge-group-filter">
                     <button
                       class="tool-btn compact"
@@ -456,7 +845,7 @@
                       {{ groupName }}
                     </button>
                   </div>
-                  <span class="row-limit" :class="{ warn: recipeRows.length > 450 }">Pozycje: {{ recipeRows.length }} / 500</span>
+                  <span class="row-limit" :class="{ warn: recipeRows.length >= activeRowLimit }">Pozycje: {{ recipeRows.length }} / {{ activeRowLimit }}</span>
                   <button class="tool-btn compact danger" @click="resetMergeSelection">Wyczyść</button>
                 </div>
               </div>
@@ -483,7 +872,7 @@
                           min="0"
                           step="1"
                           inputmode="numeric"
-                          max="500"
+                          :max="activeRowLimit"
                           :value="getMergeProductQuantity(group.productName)"
                           @click.stop
                           @keydown.stop
@@ -523,7 +912,7 @@
                         <tr v-for="row in group.rows" :key="`${group.productName}-${row._localId}`">
                           <td v-for="column in mergeRecipeColumns" :key="`${group.productName}-${row.idSkladowej}-${column}`">
                             <select
-                              v-if="isMergeProductEditMode(group.productName) && isDropdownColumn(column)"
+                              v-if="isMergeProductEditMode(group.productName) && (isDropdownColumn(column) || isStationColumn(column))"
                               class="edit-input"
                               :value="row[column] ?? ''"
                               @focus="mergeEditingCell = `${row._localId}:${column}`"
@@ -533,10 +922,10 @@
                               <option value=""></option>
                               <option
                                 v-for="option in getMergeDropdownOptions(group.productName, row, column)"
-                                :key="`${column}-${row._localId}-${option}`"
-                                :value="option"
+                                :key="`${column}-${row._localId}-${option.value ?? option}`"
+                                :value="option.value ?? option"
                               >
-                                {{ option }}
+                                {{ option.label ?? option }}
                               </option>
                             </select>
                             <input
@@ -553,7 +942,7 @@
                           <td v-if="isMergeProductEditMode(group.productName)" class="row-actions-cell">
                             <button
                               class="tool-btn compact"
-                              :disabled="recipeRows.length >= MAX_PRODUCT_ROWS"
+                              :disabled="recipeRows.length >= activeRowLimit"
                               @click="duplicateMergeRecipeRow(group.productName, row._localId)"
                             >
                               Duplikuj
@@ -568,7 +957,7 @@
                     <div v-if="isMergeProductEditMode(group.productName)" class="merge-group-footer">
                       <button
                         class="tool-btn compact"
-                        :disabled="recipeRows.length >= MAX_PRODUCT_ROWS"
+                        :disabled="recipeRows.length >= activeRowLimit"
                         @click="addMergeRecipeRow(group.productName)"
                       >
                         Dodaj nowy wiersz
@@ -614,31 +1003,81 @@
             </div>
           </div>
 
-          <div class="recipe-preview-section">
-            <div class="panel">
+          <div class="recipe-preview-section" :class="{ collapsed: isRecipeCatalogCollapsed }">
+            <div class="panel recipe-catalog-panel" :class="{ collapsed: isRecipeCatalogCollapsed }">
               <div class="panel-header">
-                <span>Zapisane receptury</span>
-                <span class="panel-caption">{{ recipeCatalog.length }}</span>
+                <span v-if="!isRecipeCatalogCollapsed">Zapisane receptury</span>
+                <span v-if="!isRecipeCatalogCollapsed" class="panel-caption">{{ recipeCatalog.length }}</span>
               </div>
-              <DataTable
-                :columns="recipeSummaryColumns"
-                :rows="recipeCatalog"
-                :labels="recipeSummaryLabels"
-                empty-text="Brak receptur"
-                @row-click="selectRecipePreview"
-              />
+              <div class="recipe-catalog-body">
+                <div v-if="!isRecipeCatalogCollapsed" class="recipe-catalog-content">
+                  <div class="merge-search recipe-catalog-search">
+                    <div class="search-input-wrap">
+                      <span class="search-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" focusable="false">
+                          <path
+                            d="M10.5 4a6.5 6.5 0 1 0 4.06 11.58l4.43 4.43 1.41-1.41-4.43-4.43A6.5 6.5 0 0 0 10.5 4Zm0 2a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Z"
+                            fill="currentColor"
+                          />
+                        </svg>
+                      </span>
+                      <input v-model="recipeCatalogSearch" class="text-input merge-search-input" placeholder="Szukaj receptury" />
+                    </div>
+                  </div>
+                  <DataTable
+                    :columns="recipeCatalogColumns"
+                    :rows="filteredRecipeCatalog"
+                    :labels="recipeSummaryLabels"
+                    empty-text="Brak receptur"
+                    @row-click="selectRecipePreview"
+                  />
+                </div>
+                <button
+                  class="recipe-catalog-toggle"
+                  type="button"
+                  :aria-expanded="(!isRecipeCatalogCollapsed).toString()"
+                  @click="toggleRecipeCatalogPanel"
+                >
+                  <span class="recipe-catalog-toggle-icon">{{ isRecipeCatalogCollapsed ? '▸' : '◂' }}</span>
+                </button>
+              </div>
             </div>
             <div class="panel panel-wide">
               <div class="panel-header">
                 <span>Podgląd receptury</span>
-                <span class="panel-caption">{{ selectedRecipePreviewName || 'Wybierz recepturę' }}</span>
+                <div class="panel-actions">
+                  <span
+                    v-if="recipePreviewSaveMessage"
+                    class="panel-caption"
+                    :class="{ error: recipePreviewSaveError, success: !recipePreviewSaveError }"
+                  >
+                    {{ recipePreviewSaveMessage }}
+                  </span>
+                  <span class="panel-caption">{{ selectedRecipePreviewName || 'Wybierz recepturę' }}</span>
+                  <button v-if="selectedRecipePreviewName && !isRecipePreviewEditMode" class="tool-btn compact" type="button" @click.stop="startRecipePreviewEdit">
+                    Edytuj
+                  </button>
+                  <button v-if="selectedRecipePreviewName && !isRecipePreviewEditMode" class="tool-btn compact danger" type="button" @click.stop="requestDeleteRecipePreview">
+                    Usuń
+                  </button>
+                  <button v-if="selectedRecipePreviewName && isRecipePreviewEditMode" class="tool-btn compact" type="button" @click.stop="requestCancelRecipePreviewEdit">
+                    Anuluj
+                  </button>
+                  <button v-if="selectedRecipePreviewName && isRecipePreviewEditMode" class="tool-btn compact primary" type="button" @click.stop="saveRecipePreviewChanges">
+                    Zapisz
+                  </button>
+                </div>
               </div>
-              <DataTable
-                :columns="recipeColumns"
-                :rows="selectedRecipePreviewRows"
+              <RecipePreviewTable
+                :columns="workRecipePreviewColumns"
+                :rows="recipePreviewRows"
                 :labels="recipeColumnLabels"
+                :is-edit-mode="isRecipePreviewEditMode"
                 empty-text="Wybierz recepturę, aby zobaczyć jej skład"
               />
+              <div v-if="selectedRecipePreviewName && isRecipePreviewEditMode" class="work-table-footer">
+                <button class="tool-btn" :disabled="recipePreviewDraftRows.length >= activeRowLimit" @click="addRecipePreviewRow">Dodaj nowy wiersz</button>
+              </div>
             </div>
           </div>
         </section>
@@ -649,38 +1088,227 @@
               <h2 class="section-title">Aktualnie cięte</h2>
               <p class="section-subtitle">Wszystkie pojedyncze elementy: deski i ich wymiary.</p>
             </div>
+          </div>
+          <div class="work-topbar">
+            <div class="work-summary-card">
+              <div class="work-summary-row">
+                <span>Włączone</span>
+                <strong>{{ activeWorkRows.length }}</strong>
+              </div>
+              <div class="work-summary-row">
+                <span>W recepturze</span>
+                <strong>{{ workRows.length }}</strong>
+              </div>
+              <div class="work-summary-row">
+                <span>Limit</span>
+                <strong>{{ activeRowLimit }}</strong>
+              </div>
+            </div>
             <div class="work-actions">
-              <select v-model="selectedRecipe" class="select-input">
-                <option v-for="name in recipeNames" :key="name" :value="name">{{ name }}</option>
-              </select>
-              <button class="tool-btn primary" :disabled="!selectedRecipe || isWorkUploadLoading" @click="loadRecipeToWorkMain">
-                {{ isWorkUploadLoading ? 'Wgrywanie...' : 'Wgraj do bazy danych' }}
+              <div class="work-recipe-picker">
+                <div class="work-recipe-picker-bar">
+                  <button class="select-input work-recipe-trigger" @click="toggleWorkRecipeMenu">
+                    <span class="work-recipe-trigger-label">{{ selectedRecipe || 'Wybierz recepturę' }}</span>
+                    <span class="work-recipe-trigger-icon" aria-hidden="true">▾</span>
+                  </button>
+                  <button
+                    class="tool-btn primary work-recipe-upload-btn"
+                    :disabled="!selectedRecipe || workEditingRowId !== null || isWorkCorrectionSaving"
+                    @click="loadRecipeToWorkMain"
+                  >
+                    Wczytaj wybraną recepturę do podglądu
+                  </button>
+                </div>
+                <div v-if="isWorkRecipeMenuOpen" class="work-recipe-menu panel">
+                  <input
+                    v-model="workRecipeSearch"
+                    class="text-input work-recipe-search"
+                    placeholder="Szukaj receptury"
+                  />
+                  <div v-if="filteredWorkRecipeNames.length" class="work-recipe-options">
+                    <div
+                      v-for="name in filteredWorkRecipeNames"
+                      :key="name"
+                      class="work-recipe-option"
+                      :class="{ active: selectedRecipe === name }"
+                    >
+                      <button class="work-recipe-option-select" @click="selectWorkRecipe(name)">
+                        <span class="work-recipe-option-label">{{ name }}</span>
+                      </button>
+                      <span class="work-recipe-option-actions">
+                        <button class="tool-btn compact product-preview-btn" :title="`Podgląd ${name}`" @click.stop="openWorkRecipePreview(name)">
+                          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <path
+                              d="M10.5 4a6.5 6.5 0 1 0 4.06 11.58l4.43 4.43 1.41-1.41-4.43-4.43A6.5 6.5 0 0 0 10.5 4Zm0 2a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Z"
+                              fill="currentColor"
+                            />
+                          </svg>
+                        </button>
+                      </span>
+                    </div>
+                  </div>
+                  <div v-else class="expanded-empty">Brak wyników</div>
+                </div>
+              </div>
+              <button
+                class="tool-btn"
+                :disabled="!activeWorkRows.length || !hasConfiguredStationLengthRanges || workEditingRowId !== null || isWorkCorrectionSaving"
+                @click="autoAssignWorkStations"
+              >
+                Automatycznie przydziel stanowiska
               </button>
-              <button class="tool-btn" @click="showSaved = !showSaved">
-                {{ showSaved ? 'Ukryj odłożone' : 'Odłożone prace' }}
+              <button
+                class="tool-btn primary"
+                :disabled="!hasPendingWorkChanges || isWorkCorrectionSaving"
+                @click="saveWorkTable"
+              >
+                {{ isWorkCorrectionSaving ? 'Zapisywanie...' : 'Zapisz zmiany do bazy danych' }}
+              </button>
+              <button class="tool-btn" :disabled="isWorkCorrectionSaving" @click="postponeCurrentWork">
+                Odłóż aktualną pracę
               </button>
             </div>
           </div>
 
           <div v-if="workUploadMessage" class="save-status" :class="{ error: workUploadError }">{{ workUploadMessage }}</div>
 
-          <div class="work-grid" :class="{ withSaved: showSaved }">
-            <div class="produkcja-container">
-              <DataTable :columns="workColumns" :rows="workDisplayRows" empty-text="WorkMain jest pusty" />
-            </div>
-
-            <aside v-if="showSaved" class="saved-panel">
+          <div v-if="isWorkRecipePreviewOpen" class="confirm-modal-overlay" @click.self="closeWorkRecipePreview">
+            <div class="confirm-modal panel panel-wide work-recipe-preview-modal" @click.stop>
               <div class="panel-header">
-                <span>Odłożone prace</span>
-                <button class="tool-btn compact">Usuń</button>
+                <span>Podgląd receptury</span>
+                <div class="panel-actions">
+                  <span class="panel-caption">{{ selectedRecipePreviewName || 'Wybierz recepturę' }}</span>
+                  <button v-if="selectedRecipePreviewName && !isRecipePreviewEditMode" class="tool-btn compact" type="button" @click.stop="startRecipePreviewEdit">Edytuj</button>
+                  <button v-if="selectedRecipePreviewName && isRecipePreviewEditMode" class="tool-btn compact" type="button" @click.stop="requestCancelRecipePreviewEdit">Anuluj</button>
+                  <button v-if="selectedRecipePreviewName && isRecipePreviewEditMode" class="tool-btn compact primary" type="button" @click.stop="saveRecipePreviewChanges">Zapisz</button>
+                  <button class="tool-btn compact" type="button" @click.stop="closeWorkRecipePreview">Zamknij</button>
+                </div>
               </div>
-              <DataTable
-                :columns="savedColumns"
-                :rows="savedRows"
-                :labels="savedColumnLabels"
-                empty-text="Brak odłożonych prac"
+              <div v-if="recipePreviewSaveMessage" class="save-status" :class="{ error: recipePreviewSaveError }">{{ recipePreviewSaveMessage }}</div>
+              <RecipePreviewTable
+                :columns="workRecipePreviewColumns"
+                :rows="recipePreviewRows"
+                :labels="recipeColumnLabels"
+                :is-edit-mode="isRecipePreviewEditMode"
+                empty-text="Brak pozycji w recepturze"
               />
-            </aside>
+              <div v-if="selectedRecipePreviewName && isRecipePreviewEditMode" class="work-table-footer">
+                <button class="tool-btn" :disabled="recipePreviewDraftRows.length >= activeRowLimit" @click="addRecipePreviewRow">Dodaj nowy wiersz</button>
+              </div>
+              <div class="confirm-modal-actions">
+                <button class="tool-btn compact" @click="closeWorkRecipePreview">Zamknij</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="work-grid">
+            <div class="produkcja-container">
+              <WorkTable
+                :columns="workColumns"
+                :rows="workDisplayRows"
+                :labels="workColumnLabels"
+                empty-text="WorkMain jest pusty"
+              />
+              <div class="work-table-footer">
+                <button class="tool-btn" :disabled="isWorkCorrectionSaving" @click="addWorkRow">Dodaj wiersz</button>
+                <button
+                  class="tool-btn"
+                  :disabled="isWorkCorrectionSaving || !availableProductNames.length || workRows.length >= activeRowLimit"
+                  @click="openWorkProductModal"
+                >
+                  Dodaj z produktu
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <aside class="saved-panel">
+            <div class="panel-header">
+              <span>Odłożone prace</span>
+            </div>
+            <div class="table-wrap saved-table-wrap">
+              <table class="data-table saved-data-table">
+                <thead>
+                  <tr>
+                    <th v-for="column in savedColumns" :key="column">{{ savedColumnLabels[column] ?? column }}</th>
+                    <th class="actions-column">Akcje</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template v-if="savedRows.length">
+                    <tr v-for="row in savedRows" :key="row.idRap">
+                      <td v-for="column in savedColumns" :key="`${row.idRap}-${column}`">{{ row[column] ?? '' }}</td>
+                      <td class="row-actions-cell saved-row-actions">
+                        <button
+                          class="tool-btn compact primary"
+                          type="button"
+                          :disabled="!row.rows"
+                          @click.stop.prevent="restoreSavedRow(row.idRap)"
+                        >
+                          Wczytaj
+                        </button>
+                        <button class="tool-btn compact danger" type="button" @click.stop.prevent="removeSavedRow(row.idRap)">Usuń</button>
+                      </td>
+                    </tr>
+                  </template>
+                  <tr v-else>
+                    <td :colspan="savedColumns.length + 1" class="empty-cell">Brak odłożonych prac</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </aside>
+
+          <div v-if="isWorkProductModalOpen" class="confirm-modal-overlay single-element-overlay" @click.self="closeWorkProductModal">
+            <div class="confirm-modal panel single-element-modal" @click.stop>
+              <div class="panel-header">
+                <span>Dodaj z produktu</span>
+                <span class="panel-caption">Wolne miejsca: {{ workRemainingCapacity }}</span>
+              </div>
+              <div class="confirm-modal-body single-element-body">
+                <label class="rename-field">
+                  <span>Produkt źródłowy</span>
+                  <select :value="workSourceProductName" class="select-input" @change="handleWorkSourceProductChange($event.target.value)">
+                    <option value="">Wybierz produkt</option>
+                    <option v-for="productName in availableProductNames" :key="`work-source-${productName}`" :value="productName">
+                      {{ formatProductDisplayName(productName) }}
+                    </option>
+                  </select>
+                </label>
+                <div class="single-element-summary">
+                  <span>{{ workSourceRowOptions.length }} elementów w produkcie</span>
+                  <span>Zaznaczone: {{ selectedWorkRowCount }}</span>
+                </div>
+                <div v-if="workSourceRowOptions.length" class="favorite-elements-legend">
+                  Kod | Długość x Grubość x Szerokość | Materiał
+                </div>
+                <div v-if="workSourceRowOptions.length" class="single-element-list">
+                  <div v-for="row in workSourceRowOptions" :key="row._localId" class="single-element-row">
+                    <label class="single-element-check">
+                      <input
+                        type="checkbox"
+                        :checked="isWorkSourceRowSelected(row._localId)"
+                        :disabled="!isWorkSourceRowSelected(row._localId) && selectedWorkRowCount >= workRemainingCapacity"
+                        @change="handleWorkSourceRowCheckboxChange(row._localId, $event.target.checked)"
+                      />
+                      <span class="single-element-row-text">{{ formatTemporaryRowOption(row) }}</span>
+                    </label>
+                  </div>
+                </div>
+                <div v-else class="expanded-empty single-element-empty">
+                  Wybierz produkt, aby zobaczyć jego elementy.
+                </div>
+                <div class="confirm-modal-actions">
+                  <div class="single-element-capacity" :class="{ full: !workRemainingCapacityAfterSelection }">
+                    <strong>Pozycje: {{ projectedWorkRowCount }} / {{ activeRowLimit }}</strong>
+                  </div>
+                  <button class="tool-btn compact" @click="closeWorkProductModal">Anuluj</button>
+                  <button class="tool-btn compact primary" :disabled="!selectedWorkRowCount" @click="addSelectedWorkRows">
+                    Dodaj zaznaczone
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
       </main>
@@ -692,14 +1320,20 @@
 import { computed, defineComponent, h, onMounted, onUnmounted, ref, watch } from 'vue';
 import * as XLSX from 'xlsx';
 
-const MAX_PRODUCT_ROWS = 500;
+const DEFAULT_ROW_LIMIT = 500;
 const PRODUCT_PREVIEW_STORAGE_KEY = 'mt-go-web:selected-product-preview';
 const TEMP_PRODUCT_KEY = '__TEMP_PRODUCT__';
+const SAVED_ROWS_STORAGE_KEY = 'mt-go-web:saved-rows';
 
 const tabs = [
   { id: 'products', label: '1. Twoje Produkty' },
   { id: 'merge', label: '2. Scal produkty' },
   { id: 'work', label: '3. Aktualnie cięte' },
+];
+const configTabs = [
+  { id: 'stations', label: 'Stanowiska' },
+  { id: 'distances', label: 'Odległości' },
+  { id: 'parameters', label: 'Parametry' },
 ];
 
 const productSummaryColumns = ['nazwaProduktu', 'liczbaPozycji', 'sumaElementow', 'materialy', 'ostatniaAktualizacja'];
@@ -711,7 +1345,7 @@ const productSummaryLabels = {
   ostatniaAktualizacja: 'Źródło',
 };
 
-const productColumns = ['Nr', 'Nazwa', 'Długość', 'Grubość', 'Szerokość', 'Materiał', 'Kod', 'Grupa', 'Priorytet', 'ilość', 'Wybijak'];
+const productColumns = ['Nr', 'Nazwa', 'Długość', 'Grubość', 'Szerokość', 'Materiał', 'Kod', 'Grupa', 'Priorytet', 'ilość', 'Wybijak', 'Stanowisko'];
 const groupOptions = Array.from({ length: 26 }, (_, index) => String.fromCharCode(65 + index));
 const priorityOptions = Array.from({ length: 10 }, (_, index) => String(index));
 const productColumnLabels = {
@@ -726,10 +1360,12 @@ const productColumnLabels = {
   Priorytet: 'Priorytet',
   'ilość': 'ilość',
   Wybijak: 'Wybijak',
+  Stanowisko: 'Stanowisko',
 };
 const editableProductColumns = ['Nazwa', 'Długość', 'Grubość', 'Szerokość', 'Materiał', 'Kod', 'Grupa', 'Priorytet', 'ilość', 'Wybijak'];
 
 const recipeSummaryColumns = ['nazwaReceptury', 'liczbaPozycji', 'sumaElementow', 'materialy'];
+const recipeCatalogColumns = ['nazwaReceptury', 'liczbaPozycji', 'sumaElementow'];
 const recipeSummaryLabels = {
   liczbaPozycji: 'Pozycje',
   sumaElementow: 'Elementy',
@@ -754,6 +1390,9 @@ const recipeColumns = [
   'Informacje',
   'TekstDoDruku',
 ];
+const workRecipePreviewColumns = recipeColumns.filter(
+  (column) => !['idReceptury', 'idSkladowej', 'iloscWykonana', 'Informacje'].includes(column),
+);
 const mergeRecipeColumns = recipeColumns.filter(
   (column) => !['Informacje', 'idReceptury', 'idSkladowej', 'iloscWykonana'].includes(column),
 );
@@ -776,7 +1415,34 @@ const recipeColumnLabels = {
   TekstDoDruku: 'Tekst do druku',
 };
 
-const workColumns = ['NR', 'Nazwa', 'Długość', 'Grubość', 'Szerokość', 'Materiał', 'ilość', 'wykonano', 'Wybijak'];
+const workColumns = [
+  'id',
+  'Nazwa',
+  'Material',
+  'Grubosc',
+  'Szerokosc',
+  'Dlugosc',
+  'Wybijak',
+  'TekstDoDruku',
+  'Klasa',
+  'Sztuk',
+  'Stanowisko',
+  'Progress',
+];
+const workColumnLabels = {
+  id: 'ID',
+  Nazwa: 'Nazwa',
+  Material: 'Materiał',
+  Grubosc: 'Grubość',
+  Szerokosc: 'Szerokość',
+  Dlugosc: 'Długość',
+  Progress: 'Progress',
+  Wybijak: 'Wybijak',
+  TekstDoDruku: 'Tekst do druku',
+  Klasa: 'Klasa',
+  Sztuk: 'Ilość',
+  Stanowisko: 'Stanowisko',
+};
 
 const savedColumns = ['idRap', 'NazwaRec', 'Wiersze', 'CzasOdloz', 'Usr'];
 const savedColumnLabels = {
@@ -789,6 +1455,27 @@ const savedColumnLabels = {
 
 const activeTab = ref('products');
 const currentTime = ref('');
+const machineStatusRow = ref(null);
+const isConfigPanelOpen = ref(false);
+const activeConfigTab = ref('stations');
+const configStations = ref([]);
+const configMachines = ref([]);
+const favoriteElements = ref([]);
+const activeMachineId = ref('machine-1');
+const savedConfigSnapshot = ref('{"stations":[],"activeMachineId":"machine-1","machines":[{"id":"machine-1","name":"Maszyna 1","rowLimit":500}],"favoriteElements":[]}');
+const isConfigSaving = ref(false);
+const configSaveMessage = ref('');
+const configSaveError = ref(false);
+const configUnsavedDialog = ref({
+  visible: false,
+  nextTab: '',
+  shouldClosePanel: false,
+});
+const configDistanceImpactDialog = ref({
+  visible: false,
+  stationId: '',
+  ruleId: '',
+});
 const selectedProducts = ref([]);
 const mergeProductQuantities = ref({});
 const mergeProductSearch = ref('');
@@ -800,10 +1487,13 @@ const lastMergeInteractedProduct = ref('');
 const mergeCheckboxResetProduct = ref('');
 const mergeCheckboxResetVersion = ref(0);
 const isMergeSelectionCollapsed = ref(false);
+const isRecipeCatalogCollapsed = ref(false);
 const mergeEditModes = ref({});
 const mergeEditingCell = ref(null);
 const mergeRecipeDrafts = ref({});
 const mergePreviewProductName = ref('');
+const isFavoriteElementsModalOpen = ref(false);
+const isFavoriteSourceModalOpen = ref(false);
 const isSingleElementModalOpen = ref(false);
 const temporarySourceChangeDialog = ref({
   visible: false,
@@ -811,12 +1501,21 @@ const temporarySourceChangeDialog = ref({
 });
 const temporaryProductName = ref('Produkt dodatkowy');
 const temporarySourceProductName = ref('');
+const favoriteSourceProductName = ref('');
 const temporarySourceRowId = ref('');
 const temporarySelectedRowIds = ref({});
 const selectedRecipe = ref('');
 const selectedRecipePreviewName = ref('');
+const recipeCatalogSearch = ref('');
+const isRecipePreviewEditMode = ref(false);
+const recipePreviewDraftRows = ref([]);
+const recipePreviewEditingCell = ref(null);
+const recipePreviewSaveMessage = ref('');
+const recipePreviewSaveError = ref(false);
+const isWorkRecipeMenuOpen = ref(false);
+const isWorkRecipePreviewOpen = ref(false);
+const workRecipeSearch = ref('');
 const selectedProductName = ref('');
-const showSaved = ref(false);
 const productsLoading = ref(false);
 const productFiles = ref([]);
 const productRowsMap = ref({});
@@ -833,9 +1532,14 @@ const isEditMode = ref(false);
 const isSaving = ref(false);
 const saveMessage = ref('');
 const saveError = ref(false);
-const isWorkUploadLoading = ref(false);
+const isWorkCorrectionSaving = ref(false);
 const workUploadMessage = ref('');
 const workUploadError = ref(false);
+const workEditingRowId = ref(null);
+const isWorkProductModalOpen = ref(false);
+const workSourceProductName = ref('');
+const workSelectedRowIds = ref({});
+const workCorrectionDrafts = ref({});
 const isFileActionLoading = ref(false);
 const productFileActionMessage = ref('');
 const productFileActionError = ref(false);
@@ -855,67 +1559,54 @@ const saveRecipeDialog = ref({
   name: '',
   error: '',
 });
+const configDistanceEditStart = ref({
+  stationId: '',
+  ruleId: '',
+  value: '',
+});
 
 let timerId = null;
+let workRefreshTimerId = null;
+let machineStatusTimerId = null;
+let recipePreviewMessageTimerId = null;
 let productLocalIdCounter = 1;
+let workRowClientIdCounter = 1;
+let configStationIdCounter = 1;
+let configPunchIdCounter = 1;
+let configDistanceIdCounter = 1;
+let configLengthRangeIdCounter = 1;
+let configMachineIdCounter = 2;
 
-const workRows = ref([
-  {
-    id: 1,
-    Kod: '',
-    Nazwa: 'PLAZA L',
-    Material: 'So',
-    Przekroj: '025x050',
-    Dlugosc: 255,
-    Sztuk: 30,
-    WykonaneSztuki: 0,
-    Wybijak: 4,
-    Rodzaj: '',
-    TekstDoDruku: 'PLAZA L 25.5',
-    idrec: 25,
-    ids: 0,
-    CzasUtw: '08.05.2026 12:01:04',
-    Usr: 'Default',
-    NazwaRec: 'monika',
-    gr: 25,
-    szer: 50,
-    Klasa: 2,
-    Stanowisko: 21,
-    Informacje: '',
-  },
-  {
-    id: 2,
-    Kod: '',
-    Nazwa: 'PLAZA L',
-    Material: 'So',
-    Przekroj: '025x050',
-    Dlugosc: 200,
-    Sztuk: 15,
-    WykonaneSztuki: 0,
-    Wybijak: 4,
-    Rodzaj: '',
-    TekstDoDruku: 'PLAZA L 20',
-    idrec: 25,
-    ids: 1,
-    CzasUtw: '08.05.2026 12:01:04',
-    Usr: 'Default',
-    NazwaRec: 'monika',
-    gr: 25,
-    szer: 50,
-    Klasa: 2,
-    Stanowisko: 21,
-    Informacje: '',
-  },
-]);
+const workRows = ref([]);
 
-const savedRows = ref([
-  { idRap: 1777388312283, NazwaRec: 'wtorek bull', Wiersze: 24, CzasOdloz: '29.04.2026 08:08:03', Usr: 'Default' },
-  { idRap: 1778234464839, NazwaRec: 'monika kopia', Wiersze: 96, CzasOdloz: '08.05.2026 12:12:40', Usr: 'Default' },
-]);
+const defaultSavedRows = [];
+const savedRows = ref(loadSavedRows());
+watch(
+  savedRows,
+  () => {
+    persistSavedRows();
+  },
+  { deep: true },
+);
 
 const savedRecipeCatalog = ref([]);
+const workRowsSnapshot = ref('[]');
 
 const selectedProductFile = computed(() => productFiles.value.find((entry) => entry.name === selectedProductName.value) || null);
+const activeMachine = computed(
+  () => configMachines.value.find((machine) => machine.id === activeMachineId.value) ?? configMachines.value[0] ?? null,
+);
+const activeRowLimit = computed(() => {
+  const rawLimit = Number(String(activeMachine.value?.rowLimit ?? DEFAULT_ROW_LIMIT).replace(',', '.'));
+  return Number.isFinite(rawLimit) && rawLimit > 0 ? Math.floor(rawLimit) : DEFAULT_ROW_LIMIT;
+});
+const stationOptions = computed(() =>
+  configStations.value.map((station, index) => ({
+    id: station.id,
+    value: String(index + 1),
+    label: getConfigStationLabel(index),
+  })),
+);
 const hasValidRenameExtension = computed(() => renameDraft.value.trim().toLowerCase().endsWith('.xlsx'));
 const canSubmitRename = computed(() => {
   const nextName = renameDraft.value.trim();
@@ -936,12 +1627,13 @@ const filteredAvailableProductNames = computed(() => {
 const productRowsByName = computed(() => productRowsMap.value);
 const temporaryProductRows = computed(() => mergeRecipeDrafts.value[TEMP_PRODUCT_KEY] ?? []);
 const temporarySourceRowOptions = computed(() => productRowsByName.value[temporarySourceProductName.value] ?? []);
+const favoriteSourceRowOptions = computed(() => productRowsByName.value[favoriteSourceProductName.value] ?? []);
 const selectedTemporaryRowCount = computed(
   () => Object.values(temporarySelectedRowIds.value).filter(Boolean).length,
 );
 const projectedRecipeCount = computed(() => recipeRows.value.length + selectedTemporaryRowCount.value);
-const remainingRecipeCapacity = computed(() => Math.max(0, MAX_PRODUCT_ROWS - recipeRows.value.length));
-const remainingRecipeCapacityAfterSelection = computed(() => Math.max(0, MAX_PRODUCT_ROWS - projectedRecipeCount.value));
+const remainingRecipeCapacity = computed(() => Math.max(0, activeRowLimit.value - recipeRows.value.length));
+const remainingRecipeCapacityAfterSelection = computed(() => Math.max(0, activeRowLimit.value - projectedRecipeCount.value));
 
 const productSummaries = computed(() =>
   productFiles.value.map((file) => {
@@ -1024,7 +1716,7 @@ const recipeRows = computed(() => {
     }
   }
 
-  return result.slice(0, 500);
+  return result.slice(0, activeRowLimit.value);
 });
 
 const availableMergeGroups = computed(() =>
@@ -1057,27 +1749,606 @@ const recipeCatalog = computed(() =>
     materialy: [...new Set(entry.rows.map((row) => row.material).filter(Boolean))].join(', '),
   })),
 );
+const filteredRecipeCatalog = computed(() => {
+  const query = recipeCatalogSearch.value.trim().toLowerCase();
+  if (!query) return recipeCatalog.value;
+  return recipeCatalog.value.filter((entry) => String(entry.nazwaReceptury || '').toLowerCase().includes(query));
+});
 
 const selectedRecipePreviewRows = computed(() => {
   const recipe = recipeCatalogEntries.value.find((entry) => entry.nazwaReceptury === selectedRecipePreviewName.value);
   return recipe ? recipe.rows : [];
 });
+const recipePreviewRows = computed(() => (isRecipePreviewEditMode.value ? recipePreviewDraftRows.value : selectedRecipePreviewRows.value));
 
 const recipeNames = computed(() => [...new Set(savedRecipeCatalog.value.map((entry) => entry.nazwaReceptury).filter(Boolean))]);
+const filteredWorkRecipeNames = computed(() => {
+  const query = workRecipeSearch.value.trim().toLowerCase();
+  if (!query) return recipeNames.value;
+  return recipeNames.value.filter((name) => name.toLowerCase().includes(query));
+});
+const workSourceRowOptions = computed(() => productRowsByName.value[workSourceProductName.value] ?? []);
+const selectedWorkRowCount = computed(() => Object.values(workSelectedRowIds.value).filter(Boolean).length);
+const projectedWorkRowCount = computed(() => workRows.value.length + selectedWorkRowCount.value);
+const workRemainingCapacity = computed(() => Math.max(0, activeRowLimit.value - workRows.value.length));
+const workRemainingCapacityAfterSelection = computed(() => Math.max(0, activeRowLimit.value - projectedWorkRowCount.value));
+const hasPendingRecipePreviewChanges = computed(() => {
+  if (!isRecipePreviewEditMode.value) return false;
+  const normalizeRows = (rows) =>
+    rows.map((row) => {
+      const { _localId, ...rest } = row || {};
+      return rest;
+    });
+  return JSON.stringify(normalizeRows(recipePreviewDraftRows.value)) !== JSON.stringify(normalizeRows(selectedRecipePreviewRows.value));
+});
+const machineStatusValue = computed(() => {
+  const rawValue = machineStatusRow.value?.Wartosc ?? machineStatusRow.value?.statusPracy ?? 0;
+  const normalized = Number(String(rawValue ?? '').replace(',', '.'));
+  return Number.isFinite(normalized) ? normalized : 0;
+});
+const isMachineWorking = computed(() => machineStatusValue.value > 0);
+const machineStatusLabel = computed(() => (isMachineWorking.value ? 'Maszyna pracuje' : 'Maszyna zatrzymana'));
+const machineStatusBadgeClass = computed(() => (isMachineWorking.value ? 'online' : 'offline'));
+const configPayload = computed(() => ({
+  stations: configStations.value.map((station) => ({
+    id: station.id,
+    punches: station.punches.map((punch) => ({
+      id: punch.id,
+      number: String(punch.number ?? ''),
+    })),
+    lengthRange: station.lengthRange
+      ? {
+          id: station.lengthRange.id,
+          minLength: String(station.lengthRange.minLength ?? ''),
+          maxLength: String(station.lengthRange.maxLength ?? ''),
+        }
+      : null,
+    distanceRules: station.distanceRules.map((rule) => ({
+      id: rule.id,
+      leftPunch: String(rule.leftPunch ?? ''),
+      rightPunch: String(rule.rightPunch ?? ''),
+      distance: String(rule.distance ?? ''),
+    })),
+  })),
+  activeMachineId: activeMachineId.value,
+  machines: configMachines.value.map((machine) => ({
+    id: machine.id,
+    rowLimit: Math.max(1, normalizeWorkCorrectionValue(machine.rowLimit || DEFAULT_ROW_LIMIT)),
+  })),
+  favoriteElements: favoriteElements.value.map((favorite) => ({
+    id: favorite.id,
+    sourceProductName: favorite.sourceProductName,
+    sourceRowIndex: favorite.sourceRowIndex,
+    label: favorite.label,
+    row: favorite.row,
+  })),
+}));
+const isConfigDirty = computed(() => JSON.stringify(configPayload.value) !== savedConfigSnapshot.value);
+const hasConfiguredStationLengthRanges = computed(() =>
+  configStations.value.some((station) => {
+    const minLength = getNormalizedLengthValue(station.lengthRange?.minLength);
+    const maxLength = getNormalizedLengthValue(station.lengthRange?.maxLength);
+    return minLength > 0 || maxLength > 0;
+  }),
+);
+
+const hasPendingWorkChanges = computed(() => serializeWorkRows(workRows.value) !== workRowsSnapshot.value);
+const activeWorkRows = computed(() => workRows.value.filter((row) => !row.__disabled));
 
 const workDisplayRows = computed(() =>
-  workRows.value.map((row, index) => ({
-    NR: row.id ?? index + 1,
+  workRows.value.map((row) => ({
+    __clientId: row.__clientId,
+    __disabled: Boolean(row.__disabled),
+    id: row.id ?? '',
     Nazwa: row.Nazwa ?? '',
-    'Długość': row.Dlugosc ?? '',
-    'Grubość': row.gr ?? '',
-    'Szerokość': row.szer ?? '',
-    'Materiał': row.Material ?? '',
-    'ilość': row.Sztuk ?? '',
-    wykonano: row.WykonaneSztuki ?? '',
+    Material: row.Material ?? '',
+    Grubosc: row.Grubosc ?? '',
+    Szerokosc: row.Szerokosc ?? '',
+    Dlugosc: row.Dlugosc ?? '',
+    Progress: {
+      done: row.WykonaneSztuki ?? 0,
+      total: row.Sztuk ?? 0,
+    },
     Wybijak: row.Wybijak ?? '',
+    TekstDoDruku: row.TekstDoDruku ?? '',
+    Klasa: row.Klasa ?? '',
+    Sztuk: row.Sztuk ?? '',
+    Stanowisko: row.Stanowisko ?? '',
   })),
 );
+
+function normalizeWorkCorrectionValue(value) {
+  const normalizedText = String(value ?? '')
+    .replace(/[^\d]/g, '')
+    .trim();
+  const parsed = normalizedText ? Number.parseInt(normalizedText, 10) : 0;
+  return Number.isFinite(parsed) ? Math.max(parsed, 0) : 0;
+}
+
+function nextWorkRowClientId() {
+  const nextId = workRowClientIdCounter;
+  workRowClientIdCounter += 1;
+  return `work-row-${nextId}`;
+}
+
+function buildPrzekrojValue(grubosc, szerokosc) {
+  const normalizedGrubosc = normalizeWorkCorrectionValue(grubosc);
+  const normalizedSzerokosc = normalizeWorkCorrectionValue(szerokosc);
+  if (!normalizedGrubosc && !normalizedSzerokosc) return '';
+  return `${String(normalizedGrubosc).padStart(3, '0')}x${String(normalizedSzerokosc).padStart(3, '0')}`;
+}
+
+function parsePrzekrojValue(przekroj) {
+  const normalized = String(przekroj ?? '').trim();
+  const match = normalized.match(/(\d+)\D+(\d+)/);
+  if (!match) {
+    return {
+      Grubosc: 0,
+      Szerokosc: 0,
+    };
+  }
+
+  return {
+    Grubosc: normalizeWorkCorrectionValue(match[1]),
+    Szerokosc: normalizeWorkCorrectionValue(match[2]),
+  };
+}
+
+function resolveWorkWybijakValue(stanowisko, dlugosc, wybijak) {
+  const explicitWybijak = normalizeWorkCorrectionValue(wybijak);
+  if (explicitWybijak > 0) return explicitWybijak;
+
+  const normalizedStation = normalizeStationValue(stanowisko);
+  const normalizedLength = normalizeWorkCorrectionValue(dlugosc);
+  if (!normalizedStation || !normalizedLength) return explicitWybijak;
+
+  return normalizeWorkCorrectionValue(getWybijakValueForStation(normalizedStation, normalizedLength));
+}
+
+function getWorkRowPayload(row, index = 0) {
+  const parsedPrzekroj = parsePrzekrojValue(row?.Przekroj);
+  const grubosc = normalizeWorkCorrectionValue(row?.Grubosc ?? parsedPrzekroj.Grubosc);
+  const szerokosc = normalizeWorkCorrectionValue(row?.Szerokosc ?? parsedPrzekroj.Szerokosc);
+  const sztuk = normalizeWorkCorrectionValue(row?.Sztuk);
+  const dlugosc = normalizeWorkCorrectionValue(row?.Dlugosc);
+  const stanowisko = normalizeStationValue(row?.Stanowisko);
+  const wybijak = resolveWorkWybijakValue(stanowisko, dlugosc, row?.Wybijak);
+  return {
+    id: normalizeWorkCorrectionValue(row?.id || index + 1),
+    Nazwa: String(row?.Nazwa ?? '').trim(),
+    Material: String(row?.Material ?? '').trim(),
+    Przekroj: buildPrzekrojValue(grubosc, szerokosc),
+    Grubosc: grubosc,
+    Szerokosc: szerokosc,
+    Dlugosc: dlugosc,
+    Sztuk: sztuk,
+    WykonaneSztuki: normalizeWorkCorrectionValue(row?.WykonaneSztuki),
+    Wybijak: wybijak,
+    TekstDoDruku: String(row?.TekstDoDruku ?? '').trim(),
+    Klasa: normalizeWorkCorrectionValue(row?.Klasa),
+    zliczonaIloscIn: sztuk,
+    Stanowisko: stanowisko,
+  };
+}
+
+function serializeWorkRows(rows) {
+  return JSON.stringify(
+    rows.map((row, index) => ({
+      ...getWorkRowPayload(row, index),
+      __disabled: Boolean(row?.__disabled),
+    })),
+  );
+}
+
+function normalizeWorkRow(row, index = 0) {
+  const payload = getWorkRowPayload(row, index);
+  return {
+    __clientId: row?.__clientId || nextWorkRowClientId(),
+    __disabled: Boolean(row?.__disabled),
+    ...payload,
+  };
+}
+
+function getNextWorkRowId() {
+  return workRows.value.reduce((maxId, row, index) => Math.max(maxId, getWorkRowPayload(row, index).id), 0) + 1;
+}
+
+function createEmptyWorkRow() {
+  return normalizeWorkRow({
+    id: getNextWorkRowId(),
+    Nazwa: '',
+    Material: '',
+    Przekroj: '',
+    Grubosc: 0,
+    Szerokosc: 0,
+    Dlugosc: 0,
+    Sztuk: 0,
+    WykonaneSztuki: 0,
+    Wybijak: 0,
+    TekstDoDruku: '',
+    Klasa: 0,
+    zliczonaIloscIn: 0,
+    Stanowisko: '',
+  });
+}
+
+function getWorkDisplayedDoneValue(rowId, fallbackValue) {
+  const row = workRows.value.find((entry) => entry.__clientId === rowId);
+  return row ? normalizeWorkCorrectionValue(row.WykonaneSztuki) : normalizeWorkCorrectionValue(fallbackValue);
+}
+
+function getWorkDisplayedTotalValue(rowId, fallbackValue) {
+  const row = workRows.value.find((entry) => entry.__clientId === rowId);
+  return row ? normalizeWorkCorrectionValue(row.Sztuk) : normalizeWorkCorrectionValue(fallbackValue);
+}
+
+function isWorkRowEditing(rowId) {
+  return workEditingRowId.value === rowId;
+}
+
+function startWorkCorrectionEdit(rowId) {
+  workEditingRowId.value = rowId;
+}
+
+function finishWorkCorrectionEdit() {
+  workEditingRowId.value = null;
+}
+
+function updateWorkCell(rowId, column, value) {
+  const row = workRows.value.find((entry) => entry.__clientId === rowId);
+  if (!row || column === 'id') return;
+
+  if (isStationColumn(column)) {
+    row[column] = normalizeStationValue(value);
+    row.Wybijak = getWybijakValueForStation(row[column], row.Dlugosc);
+    return;
+  }
+
+  if (['Dlugosc', 'Wybijak', 'Klasa', 'Grubosc', 'Szerokosc', 'Sztuk'].includes(column)) {
+    row[column] = normalizeWorkCorrectionValue(value);
+    if (column === 'Grubosc' || column === 'Szerokosc') {
+      row.Przekroj = buildPrzekrojValue(row.Grubosc, row.Szerokosc);
+    }
+    if (column === 'Sztuk') {
+      row.zliczonaIloscIn = row.Sztuk;
+    }
+    if (column === 'Dlugosc' && row.Stanowisko) {
+      row.Wybijak = getWybijakValueForStation(row.Stanowisko, row.Dlugosc);
+    }
+    return;
+  }
+
+  row[column] = String(value ?? '');
+}
+
+function updateWorkProgressValue(rowId, field, value) {
+  const row = workRows.value.find((entry) => entry.__clientId === rowId);
+  if (!row) return;
+  row[field] = normalizeWorkCorrectionValue(value);
+}
+
+function clearWorkCorrectionState() {
+  workEditingRowId.value = null;
+}
+
+function resetWorkRowsSnapshot() {
+  workRowsSnapshot.value = serializeWorkRows(workRows.value);
+}
+
+function addWorkRow() {
+  const newRow = createEmptyWorkRow();
+  workRows.value = [...workRows.value, newRow];
+  workEditingRowId.value = newRow.__clientId;
+}
+
+function toggleWorkRowDisabled(rowId) {
+  workRows.value = workRows.value.map((row) =>
+    row.__clientId === rowId
+      ? {
+          ...row,
+          __disabled: !row.__disabled,
+        }
+      : row,
+  );
+
+  if (workEditingRowId.value === rowId) {
+    workEditingRowId.value = null;
+  }
+}
+
+function resetWorkSourceSelection() {
+  workSelectedRowIds.value = {};
+}
+
+function openWorkProductModal() {
+  if (!availableProductNames.value.length) return;
+  if (!workSourceProductName.value || !availableProductNames.value.includes(workSourceProductName.value)) {
+    workSourceProductName.value = availableProductNames.value[0] || '';
+  }
+  resetWorkSourceSelection();
+  isWorkProductModalOpen.value = true;
+}
+
+function closeWorkProductModal() {
+  isWorkProductModalOpen.value = false;
+  resetWorkSourceSelection();
+}
+
+function handleWorkSourceProductChange(nextProductName) {
+  workSourceProductName.value = nextProductName;
+  resetWorkSourceSelection();
+}
+
+function isWorkSourceRowSelected(localId) {
+  return Boolean(workSelectedRowIds.value[localId]);
+}
+
+function handleWorkSourceRowCheckboxChange(localId, isChecked) {
+  if (isChecked && selectedWorkRowCount.value >= workRemainingCapacity.value) {
+    showMergeLimitMessage();
+    return;
+  }
+
+  workSelectedRowIds.value = {
+    ...workSelectedRowIds.value,
+    [localId]: isChecked,
+  };
+}
+
+function createWorkRowFromProductRow(sourceRow = {}) {
+  const length = normalizeWorkCorrectionValue(sourceRow['Długość'] ?? sourceRow.dlugosc);
+  const thickness = normalizeWorkCorrectionValue(sourceRow['Grubość'] ?? sourceRow.grubosc);
+  const width = normalizeWorkCorrectionValue(sourceRow['Szerokość'] ?? sourceRow.szerokosc);
+  const quantity = normalizeWorkCorrectionValue(sourceRow['ilość'] ?? sourceRow.ilosc ?? 0);
+  const station = normalizeStationValue(sourceRow.Stanowisko);
+
+  return normalizeWorkRow({
+    id: getNextWorkRowId(),
+    Nazwa: sourceRow.Nazwa ?? sourceRow.nazwaSkladowej ?? '',
+    Material: sourceRow['Materiał'] ?? sourceRow.material ?? '',
+    Przekroj: buildPrzekrojValue(thickness, width),
+    Grubosc: thickness,
+    Szerokosc: width,
+    Dlugosc: length,
+    Sztuk: quantity,
+    WykonaneSztuki: 0,
+    Wybijak: station ? getWybijakValueForStation(station, length) : normalizeWorkCorrectionValue(sourceRow.Wybijak ?? sourceRow.wybijak ?? 0),
+    TekstDoDruku: sourceRow.Kod ?? sourceRow.TekstDoDruku ?? '',
+    Klasa: normalizeWorkCorrectionValue(sourceRow.Klasa ?? 0),
+    zliczonaIloscIn: quantity,
+    Stanowisko: station,
+  });
+}
+
+function addSelectedWorkRows() {
+  if (!selectedWorkRowCount.value) return;
+  if (selectedWorkRowCount.value > workRemainingCapacity.value) {
+    showMergeLimitMessage();
+    return;
+  }
+
+  const selectedIds = Object.entries(workSelectedRowIds.value)
+    .filter(([, isSelected]) => isSelected)
+    .map(([localId]) => localId);
+  const rowsToAdd = workSourceRowOptions.value
+    .filter((row) => selectedIds.includes(row._localId))
+    .map((row) => createWorkRowFromProductRow(row));
+  const validationInfo = rowsToAdd.map((row) => ({
+    row,
+    missingFields: getWorkRowMissingFields(row),
+  }));
+  const blockingRows = validationInfo.filter(({ missingFields }) =>
+    missingFields.some((field) => !['Wybijak', 'Klasa'].includes(field)),
+  );
+
+  if (blockingRows.length) {
+    const validationMessage = getWorkRowsValidationMessage(
+      blockingRows.map(({ row }) => row),
+      'Nie można dodać elementów z produktu.',
+    );
+    workUploadError.value = true;
+    workUploadMessage.value = validationMessage;
+    return;
+  }
+
+  workRows.value = [...workRows.value, ...rowsToAdd];
+  const rowToEdit = validationInfo.find(({ missingFields }) => missingFields.some((field) => ['Wybijak', 'Klasa'].includes(field)))?.row;
+  if (rowToEdit) {
+    workEditingRowId.value = rowToEdit.__clientId;
+  }
+  closeWorkProductModal();
+}
+
+function removeSavedRow(idRap) {
+  savedRows.value = savedRows.value.filter((row) => String(row.idRap) !== String(idRap));
+  persistSavedRows();
+}
+
+function restoreSavedRow(idRap) {
+  const snapshot = savedRows.value.find((row) => String(row.idRap) === String(idRap));
+  if (!snapshot || !snapshot.rows) return;
+
+  try {
+    const parsedRows = JSON.parse(snapshot.rows);
+    if (!Array.isArray(parsedRows)) {
+      throw new Error('Nieprawidłowy zapis odłożonej pracy.');
+    }
+
+    workRows.value = parsedRows.map((row, index) => normalizeWorkRow(row, index));
+    workEditingRowId.value = null;
+    clearWorkCorrectionState();
+    if (snapshot.selectedRecipe) {
+      selectedRecipe.value = snapshot.selectedRecipe;
+    }
+    workUploadError.value = false;
+    workUploadMessage.value = `Wczytano odłożoną pracę "${snapshot.NazwaRec}".`;
+  } catch (error) {
+    workUploadError.value = true;
+    workUploadMessage.value = error.message || 'Nie udało się wczytać odłożonej pracy.';
+  }
+}
+
+function loadSavedRows() {
+  try {
+    const rawValue = window.localStorage.getItem(SAVED_ROWS_STORAGE_KEY);
+    if (!rawValue) return [...defaultSavedRows];
+    const parsedValue = JSON.parse(rawValue);
+    if (!Array.isArray(parsedValue)) return [...defaultSavedRows];
+    return parsedValue.map((row) => ({
+      idRap: row.idRap ?? Date.now(),
+      NazwaRec: row.NazwaRec ?? 'Odłożona praca',
+      Wiersze: normalizeWorkCorrectionValue(row.Wiersze ?? 0),
+      CzasOdloz: row.CzasOdloz ?? '',
+      Usr: row.Usr ?? 'Default',
+      rows: row.rows ?? '',
+      selectedRecipe: row.selectedRecipe ?? '',
+    }));
+  } catch {
+    return [...defaultSavedRows];
+  }
+}
+
+function persistSavedRows() {
+  try {
+    window.localStorage.setItem(SAVED_ROWS_STORAGE_KEY, JSON.stringify(savedRows.value));
+  } catch {
+    // Ignore storage errors.
+  }
+}
+
+function createWorkSnapshot() {
+  return {
+    idRap: Date.now(),
+    NazwaRec: selectedRecipe.value || 'Aktualna praca',
+    Wiersze: activeWorkRows.value.length,
+    CzasOdloz: new Date().toLocaleString('pl-PL'),
+    Usr: 'Default',
+    rows: serializeWorkRows(workRows.value),
+    selectedRecipe: selectedRecipe.value,
+  };
+}
+
+function addWorkSnapshot(snapshot) {
+  savedRows.value = [snapshot, ...savedRows.value.filter((row) => String(row.idRap) !== String(snapshot.idRap))];
+  persistSavedRows();
+}
+
+function getWorkRowMissingFields(row) {
+  const payload = getWorkRowPayload(row);
+  const missingFields = [];
+
+  if (!payload.Nazwa) missingFields.push('Nazwa');
+  if (!payload.Material) missingFields.push('Materiał');
+  if (!payload.Przekroj) missingFields.push('Przekrój');
+  if (!payload.Dlugosc) missingFields.push('Długość');
+  if (!payload.Grubosc) missingFields.push('Grubość');
+  if (!payload.Szerokosc) missingFields.push('Szerokość');
+  if (!payload.Wybijak) missingFields.push('Wybijak');
+  if (!payload.Klasa) missingFields.push('Klasa');
+  if (!payload.Sztuk) missingFields.push('Ilość');
+
+  return missingFields;
+}
+
+function getWorkRowsValidationErrors(rows) {
+  return rows
+    .map((row) => {
+      const missingFields = getWorkRowMissingFields(row);
+      if (!missingFields.length) return '';
+      return `Brak pól ${missingFields.join(', ')}.`;
+    })
+    .filter(Boolean);
+}
+
+function getWorkRowsValidationMessage(rows, contextMessage) {
+  const validationErrors = getWorkRowsValidationErrors(rows);
+  if (!validationErrors.length) return '';
+
+  const invalidRowsCount = validationErrors.length;
+  const pluralLabel =
+    invalidRowsCount === 1 ? '1 wiersz ma braki' : invalidRowsCount < 5 ? `${invalidRowsCount} wiersze mają braki` : `${invalidRowsCount} wierszy ma braki`;
+
+  return `${contextMessage} ${pluralLabel}. ${validationErrors[0]}`;
+}
+
+function duplicateWorkRow(rowId) {
+  const rowIndex = workRows.value.findIndex((entry) => entry.__clientId === rowId);
+  if (rowIndex === -1) return;
+  const duplicate = normalizeWorkRow({
+    ...JSON.parse(JSON.stringify(workRows.value[rowIndex])),
+    id: getNextWorkRowId(),
+  });
+  workRows.value = [...workRows.value.slice(0, rowIndex + 1), duplicate, ...workRows.value.slice(rowIndex + 1)];
+}
+
+function removeWorkRow(rowId) {
+  workRows.value = workRows.value.filter((entry) => entry.__clientId !== rowId);
+  if (workEditingRowId.value === rowId) {
+    workEditingRowId.value = null;
+  }
+}
+
+async function loadWorkMainRows({ preserveDisabled = true } = {}) {
+  const disabledRows = preserveDisabled
+    ? workRows.value.filter((row) => row.__disabled).map((row) => normalizeWorkRow(row))
+    : [];
+
+  const response = await fetch(`/api/workmain?t=${Date.now()}`, { cache: 'no-store' });
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(payload.error || 'Nie udało się pobrać danych WorkMain.');
+  }
+
+  const activeRows = Array.isArray(payload.rows) ? payload.rows.map((row, index) => normalizeWorkRow(row, index)) : [];
+  workRows.value = [...activeRows, ...disabledRows];
+  resetWorkRowsSnapshot();
+}
+
+async function loadMachineStatus() {
+  const response = await fetch(`/api/machine-status?t=${Date.now()}`, { cache: 'no-store' });
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(payload.error || 'Nie udało się pobrać statusu maszyny.');
+  }
+
+  machineStatusRow.value = payload.status ?? null;
+}
+
+function startWorkMainAutoRefresh() {
+  if (workRefreshTimerId) return;
+  workRefreshTimerId = window.setInterval(() => {
+    if (activeTab.value !== 'work' || workEditingRowId.value !== null || hasPendingWorkChanges.value || isWorkCorrectionSaving.value) return;
+    loadWorkMainRows().catch(() => {});
+  }, 5000);
+}
+
+function stopWorkMainAutoRefresh() {
+  if (!workRefreshTimerId) return;
+  window.clearInterval(workRefreshTimerId);
+  workRefreshTimerId = null;
+}
+
+function getWorkProgressPercent(doneValue, totalValue) {
+  const done = normalizeWorkCorrectionValue(doneValue);
+  const total = normalizeWorkCorrectionValue(totalValue);
+  if (total <= 0) return 0;
+  return Math.min(100, Math.max(0, (done / total) * 100));
+}
+
+function startMachineStatusAutoRefresh() {
+  if (machineStatusTimerId) return;
+  machineStatusTimerId = window.setInterval(() => {
+    loadMachineStatus().catch(() => {});
+  }, 3000);
+}
+
+function stopMachineStatusAutoRefresh() {
+  if (!machineStatusTimerId) return;
+  window.clearInterval(machineStatusTimerId);
+  machineStatusTimerId = null;
+}
 
 function compareValues(a, b) {
   const left = a ?? '';
@@ -1096,6 +2367,564 @@ function updateClock() {
     minute: '2-digit',
     second: '2-digit',
   }).format(new Date());
+}
+
+function toggleWorkRecipeMenu() {
+  isWorkRecipeMenuOpen.value = !isWorkRecipeMenuOpen.value;
+  if (!isWorkRecipeMenuOpen.value) {
+    workRecipeSearch.value = '';
+  }
+}
+
+function selectWorkRecipe(recipeName) {
+  selectedRecipe.value = recipeName;
+  isWorkRecipeMenuOpen.value = false;
+  workRecipeSearch.value = '';
+}
+
+function openWorkRecipePreview(recipeName) {
+  openRecipePreviewEditor(recipeName);
+  isWorkRecipePreviewOpen.value = true;
+  isWorkRecipeMenuOpen.value = false;
+  workRecipeSearch.value = '';
+}
+
+function closeWorkRecipePreview() {
+  isWorkRecipePreviewOpen.value = false;
+}
+
+function toggleConfigPanel() {
+  if (isConfigPanelOpen.value && isConfigDirty.value) {
+    openConfigUnsavedDialog({ shouldClosePanel: true });
+    return;
+  }
+  isConfigPanelOpen.value = !isConfigPanelOpen.value;
+  if (isConfigPanelOpen.value) {
+    clearConfigSaveMessage();
+  }
+}
+
+function createConfigStation() {
+  return {
+    id: `station-${Date.now()}-${configStationIdCounter++}`,
+    punches: [],
+    lengthRange: createConfigLengthRange(),
+    distanceRules: [],
+  };
+}
+
+function clearConfigSaveMessage() {
+  configSaveMessage.value = '';
+  configSaveError.value = false;
+}
+
+function normalizeLoadedConfigStation(station) {
+  const loadedLengthRange = station?.lengthRange ?? station?.lengthRanges?.[0] ?? null;
+  return syncConfigStationDistanceRules({
+    id: station?.id || `station-${configStationIdCounter++}`,
+    punches: Array.isArray(station?.punches)
+      ? station.punches.map((punch) => ({
+          id: punch?.id || `punch-${configPunchIdCounter++}`,
+          number: String(punch?.number ?? '').replace(/[^\d]/g, '').trim(),
+        }))
+      : [],
+    lengthRange: {
+      id: loadedLengthRange?.id || `length-${configLengthRangeIdCounter++}`,
+      minLength: String(loadedLengthRange?.minLength ?? '').replace(/[^\d]/g, '').trim(),
+      maxLength: String(loadedLengthRange?.maxLength ?? '').replace(/[^\d]/g, '').trim(),
+    },
+    distanceRules: Array.isArray(station?.distanceRules)
+      ? station.distanceRules.map((rule) => ({
+          id: rule?.id || `distance-${configDistanceIdCounter++}`,
+          leftPunch: String(rule?.leftPunch ?? '').replace(/[^\d]/g, '').trim(),
+          rightPunch: String(rule?.rightPunch ?? '').replace(/[^\d]/g, '').trim(),
+          distance: String(rule?.distance ?? '').replace(/[^\d]/g, '').trim(),
+        }))
+      : [],
+  });
+}
+
+function createConfigMachine() {
+  return {
+    id: `machine-${Date.now()}-${configMachineIdCounter++}`,
+    rowLimit: DEFAULT_ROW_LIMIT,
+  };
+}
+
+function normalizeFavoriteElementRow(row) {
+  return {
+    Nazwa: row?.Nazwa ?? row?.nazwaSkladowej ?? '',
+    'Długość': row?.['Długość'] ?? row?.dlugosc ?? '',
+    'Grubość': row?.['Grubość'] ?? row?.grubosc ?? '',
+    'Szerokość': row?.['Szerokość'] ?? row?.szerokosc ?? '',
+    'Materiał': row?.['Materiał'] ?? row?.material ?? '',
+    Kod: row?.Kod ?? row?.TekstDoDruku ?? '',
+    Grupa: normalizeGroupValue(row?.Grupa ?? row?.grupa ?? ''),
+    Priorytet: normalizePriorityValue(row?.Priorytet ?? row?.priorytet ?? ''),
+    'ilość': row?.['ilość'] ?? row?.ilosc ?? 0,
+    Wybijak: row?.Wybijak ?? row?.wybijak ?? 0,
+    Stanowisko: normalizeStationValue(row?.Stanowisko ?? row?.stanowisko ?? ''),
+  };
+}
+
+function createFavoriteElementEntry(sourceProductName, row = {}) {
+  return {
+    id: `favorite-${Date.now()}-${createProductLocalId()}`,
+    sourceProductName,
+    sourceRowIndex: Number.isFinite(row?._rowIndex) ? row._rowIndex : -1,
+    label: formatTemporaryRowOption(row),
+    row: normalizeFavoriteElementRow(row),
+  };
+}
+
+function normalizeLoadedFavoriteElement(entry) {
+  return {
+    id: entry?.id || `favorite-${Date.now()}-${createProductLocalId()}`,
+    sourceProductName: String(entry?.sourceProductName ?? ''),
+    sourceRowIndex: Number.isFinite(entry?.sourceRowIndex) ? entry.sourceRowIndex : -1,
+    label: String(entry?.label ?? formatTemporaryRowOption(entry?.row ?? {})),
+    row: normalizeFavoriteElementRow(entry?.row ?? {}),
+  };
+}
+
+function normalizeLoadedConfigMachine(machine, index = 0) {
+  return {
+    id: machine?.id || `machine-${index + 1}`,
+    rowLimit: Math.max(1, normalizeWorkCorrectionValue(machine?.rowLimit ?? DEFAULT_ROW_LIMIT)),
+  };
+}
+
+function applyLoadedConfig(config) {
+  const stations = Array.isArray(config?.stations) ? config.stations.map((station) => normalizeLoadedConfigStation(station)) : [];
+  const machines = Array.isArray(config?.machines) && config.machines.length
+    ? config.machines.map((machine, index) => normalizeLoadedConfigMachine(machine, index))
+    : [normalizeLoadedConfigMachine({ id: 'machine-1', rowLimit: DEFAULT_ROW_LIMIT }, 0)];
+  const favorites = Array.isArray(config?.favoriteElements)
+    ? config.favoriteElements.map((entry) => normalizeLoadedFavoriteElement(entry))
+    : [];
+  configStations.value = stations;
+  configMachines.value = machines;
+  favoriteElements.value = favorites;
+  activeMachineId.value = machines.some((machine) => machine.id === config?.activeMachineId)
+    ? config.activeMachineId
+    : machines[0].id;
+  savedConfigSnapshot.value = JSON.stringify({
+    stations: stations.map((station) => ({
+      id: station.id,
+      punches: station.punches.map((punch) => ({ id: punch.id, number: String(punch.number ?? '') })),
+      lengthRange: station.lengthRange
+        ? {
+            id: station.lengthRange.id,
+            minLength: String(station.lengthRange.minLength ?? ''),
+            maxLength: String(station.lengthRange.maxLength ?? ''),
+          }
+        : null,
+      distanceRules: station.distanceRules.map((rule) => ({
+        id: rule.id,
+        leftPunch: String(rule.leftPunch ?? ''),
+        rightPunch: String(rule.rightPunch ?? ''),
+        distance: String(rule.distance ?? ''),
+      })),
+    })),
+    activeMachineId: activeMachineId.value,
+    machines: machines.map((machine) => ({
+      id: machine.id,
+      rowLimit: machine.rowLimit,
+    })),
+    favoriteElements: favorites.map((favorite) => ({
+      id: favorite.id,
+      sourceProductName: favorite.sourceProductName,
+      sourceRowIndex: favorite.sourceRowIndex,
+      label: favorite.label,
+      row: favorite.row,
+    })),
+  });
+}
+
+async function loadConfig() {
+  const response = await fetch(`/api/config?t=${Date.now()}`, { cache: 'no-store' });
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(payload.error || 'Nie udało się pobrać konfiguracji.');
+  }
+
+  applyLoadedConfig(payload.config ?? { stations: [] });
+}
+
+async function saveConfig() {
+  isConfigSaving.value = true;
+  clearConfigSaveMessage();
+
+  try {
+    const response = await fetch('/api/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ config: configPayload.value }),
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload.error || 'Nie udało się zapisać konfiguracji.');
+    }
+
+    applyLoadedConfig(payload.config ?? configPayload.value);
+    configSaveMessage.value = 'Konfiguracja została zapisana.';
+  } catch (error) {
+    configSaveError.value = true;
+    configSaveMessage.value = error.message || 'Nie udało się zapisać konfiguracji.';
+    throw error;
+  } finally {
+    isConfigSaving.value = false;
+  }
+}
+
+function openConfigUnsavedDialog({ nextTab = '', shouldClosePanel = false } = {}) {
+  configUnsavedDialog.value = {
+    visible: true,
+    nextTab,
+    shouldClosePanel,
+  };
+}
+
+function cancelConfigUnsavedDialog() {
+  configUnsavedDialog.value = {
+    visible: false,
+    nextTab: '',
+    shouldClosePanel: false,
+  };
+}
+
+function applyConfigPendingNavigation() {
+  const { nextTab, shouldClosePanel } = configUnsavedDialog.value;
+  cancelConfigUnsavedDialog();
+
+  if (nextTab) {
+    activeConfigTab.value = nextTab;
+  }
+
+  if (shouldClosePanel) {
+    isConfigPanelOpen.value = false;
+  }
+}
+
+async function saveConfigAndContinue() {
+  try {
+    await saveConfig();
+    applyConfigPendingNavigation();
+  } catch {}
+}
+
+function discardConfigChangesAndContinue() {
+  applyLoadedConfig(JSON.parse(savedConfigSnapshot.value));
+  clearConfigSaveMessage();
+  applyConfigPendingNavigation();
+}
+
+function requestConfigTabChange(nextTab) {
+  if (activeConfigTab.value === nextTab) return;
+  if (isConfigDirty.value) {
+    openConfigUnsavedDialog({ nextTab });
+    return;
+  }
+  activeConfigTab.value = nextTab;
+}
+
+function createConfigPunch() {
+  return {
+    id: `punch-${Date.now()}-${configPunchIdCounter++}`,
+    number: '',
+  };
+}
+
+function createConfigDistanceRule() {
+  return {
+    id: `distance-${Date.now()}-${configDistanceIdCounter++}`,
+    leftPunch: '',
+    rightPunch: '',
+    distance: '',
+  };
+}
+
+function createConfigLengthRange() {
+  return {
+    id: `length-${Date.now()}-${configLengthRangeIdCounter++}`,
+    minLength: '',
+    maxLength: '',
+  };
+}
+
+function addConfigStation() {
+  configStations.value = [...configStations.value, createConfigStation()];
+}
+
+function removeConfigStation(stationId) {
+  configStations.value = configStations.value.filter((station) => station.id !== stationId);
+}
+
+function addConfigMachine() {
+  configMachines.value = [...configMachines.value, createConfigMachine()];
+}
+
+function removeConfigMachine(machineId) {
+  const remainingMachines = configMachines.value.filter((machine) => machine.id !== machineId);
+  if (!remainingMachines.length) return;
+  configMachines.value = remainingMachines;
+  if (!remainingMachines.some((machine) => machine.id === activeMachineId.value)) {
+    activeMachineId.value = remainingMachines[0].id;
+  }
+}
+
+function updateConfigMachine(machineId, field, value) {
+  configMachines.value = configMachines.value.map((machine) =>
+    machine.id === machineId
+      ? {
+          ...machine,
+          [field]:
+            field === 'rowLimit'
+              ? Math.max(1, normalizeWorkCorrectionValue(value || DEFAULT_ROW_LIMIT))
+              : String(value ?? ''),
+        }
+      : machine,
+  );
+}
+
+function selectActiveMachine(machineId) {
+  activeMachineId.value = machineId;
+}
+
+function getConfigMachineLabel(machineIndex) {
+  return `Maszyna ${machineIndex + 1}`;
+}
+
+function getConfigStationLabel(stationIndex) {
+  return `Stanowisko ${stationIndex + 1}`;
+}
+
+function getConfigStationValueById(stationId) {
+  const stationIndex = configStations.value.findIndex((station) => station.id === stationId);
+  return stationIndex >= 0 ? String(stationIndex + 1) : '';
+}
+
+function getConfigStationValueByLength(lengthValue) {
+  const normalizedLength = getNormalizedLengthValue(lengthValue);
+  if (!normalizedLength) return '';
+
+  for (let stationIndex = 0; stationIndex < configStations.value.length; stationIndex += 1) {
+    const station = configStations.value[stationIndex];
+    const minLength = getNormalizedLengthValue(station.lengthRange?.minLength);
+    const maxLength = getNormalizedLengthValue(station.lengthRange?.maxLength);
+    const hasRange = minLength > 0 || maxLength > 0;
+    const matchesRange =
+      hasRange &&
+      (!minLength || normalizedLength >= minLength) &&
+      (!maxLength || normalizedLength <= maxLength);
+
+    if (matchesRange) {
+      return String(stationIndex + 1);
+    }
+  }
+
+  return '';
+}
+
+function autoAssignMergeRecipeStations() {
+  if (!recipeRows.value.length || !hasConfiguredStationLengthRanges.value) return;
+
+  let updatedCount = 0;
+  let assignedCount = 0;
+
+  mergeRecipeDrafts.value = Object.fromEntries(
+    Object.entries(mergeRecipeDrafts.value).map(([productName, rows]) => [
+      productName,
+      rows.map((row) => {
+        const autoStation = getConfigStationValueByLength(row.dlugosc);
+        const nextStation = autoStation || normalizeStationValue(row.Stanowisko);
+        const nextWybijak = nextStation ? getWybijakValueForStation(nextStation, row.dlugosc) : '';
+        const hasChanged = String(nextStation ?? '') !== String(normalizeStationValue(row.Stanowisko) ?? '') || String(nextWybijak ?? '') !== String(row.wybijak ?? '');
+
+        if (autoStation) {
+          assignedCount += 1;
+        }
+        if (hasChanged) {
+          updatedCount += 1;
+        }
+
+        return {
+          ...row,
+          Stanowisko: nextStation,
+          wybijak: nextWybijak,
+        };
+      }),
+    ]),
+  );
+
+  mergeEditingCell.value = null;
+  mergeAlert.value = {
+    visible: true,
+    message:
+      updatedCount > 0
+        ? `Automatycznie przydzielono ${assignedCount} wierszy po długości i przeliczono wybijaki.`
+        : 'Nie znaleziono pasujących zakresów długości dla żadnego wiersza.',
+  };
+}
+
+function getConfigStationOrderedPunches(station) {
+  return station.punches
+    .map((punch) => String(punch.number ?? '').trim())
+    .filter(Boolean);
+}
+
+function syncConfigStationDistanceRules(station) {
+  const orderedPunches = getConfigStationOrderedPunches(station);
+  const syncedRules = [];
+
+  for (let index = 0; index < orderedPunches.length - 1; index += 1) {
+    const leftPunch = orderedPunches[index];
+    const rightPunch = orderedPunches[index + 1];
+    const existingRule = station.distanceRules.find(
+      (rule) => rule.leftPunch === leftPunch && rule.rightPunch === rightPunch,
+    );
+
+    syncedRules.push(
+      existingRule || {
+        ...createConfigDistanceRule(),
+        leftPunch,
+        rightPunch,
+      },
+    );
+  }
+
+  return {
+    ...station,
+    distanceRules: syncedRules,
+  };
+}
+
+function addConfigStationPunch(stationId) {
+  configStations.value = configStations.value.map((station) =>
+    station.id === stationId
+      ? syncConfigStationDistanceRules({ ...station, punches: [...station.punches, createConfigPunch()] })
+      : station,
+  );
+}
+
+function updateConfigStationPunch(stationId, punchId, value) {
+  const normalizedValue = String(value ?? '')
+    .replace(/[^\d]/g, '')
+    .trim();
+
+  configStations.value = configStations.value.map((station) =>
+    station.id === stationId
+      ? syncConfigStationDistanceRules({
+          ...station,
+          punches: station.punches.map((punch) =>
+            punch.id === punchId ? { ...punch, number: normalizedValue } : punch,
+          ),
+        })
+      : station,
+  );
+}
+
+function removeConfigStationPunch(stationId, punchId) {
+  configStations.value = configStations.value.map((station) =>
+    station.id === stationId
+      ? syncConfigStationDistanceRules({ ...station, punches: station.punches.filter((punch) => punch.id !== punchId) })
+      : station,
+  );
+}
+
+function updateConfigStationLengthRange(stationId, field, value) {
+  const normalizedValue = String(value ?? '')
+    .replace(/[^\d]/g, '')
+    .trim();
+
+  configStations.value = configStations.value.map((station) =>
+    station.id === stationId
+      ? {
+          ...station,
+          lengthRange: {
+            ...(station.lengthRange ?? createConfigLengthRange()),
+            [field]: normalizedValue,
+          },
+        }
+      : station,
+  );
+}
+
+function rememberConfigDistanceEditStart(stationId, ruleId, value) {
+  configDistanceEditStart.value = {
+    stationId,
+    ruleId,
+    value: String(value ?? ''),
+  };
+}
+
+function cancelConfigDistanceImpactDialog() {
+  configDistanceImpactDialog.value = {
+    visible: false,
+    stationId: '',
+    ruleId: '',
+  };
+}
+
+function handleConfigDistanceEditBlur(stationId, ruleId) {
+  const start = configDistanceEditStart.value;
+  const station = configStations.value.find((entry) => entry.id === stationId);
+  const rule = station?.distanceRules.find((entry) => entry.id === ruleId);
+  const currentValue = String(rule?.distance ?? '');
+
+  configDistanceEditStart.value = {
+    stationId: '',
+    ruleId: '',
+    value: '',
+  };
+
+  if (start.stationId !== stationId || start.ruleId !== ruleId) return;
+  if (start.value === currentValue) return;
+  if (!workRows.value.length) return;
+
+  configDistanceImpactDialog.value = {
+    visible: true,
+    stationId,
+    ruleId,
+  };
+}
+
+function applyConfigDistanceToCurrentWorkRecipe() {
+  const stationValue = getConfigStationValueById(configDistanceImpactDialog.value.stationId);
+  if (stationValue) {
+    workRows.value = workRows.value.map((row) =>
+      normalizeStationValue(row.Stanowisko) === stationValue
+        ? {
+            ...row,
+            Wybijak: getWybijakValueForStation(stationValue, row.Dlugosc),
+          }
+        : row,
+    );
+    workUploadError.value = false;
+    workUploadMessage.value =
+      'Przeliczono wartości Wybijak dla aktualnie wgranej receptury. Wcześniejsze ręczne zmiany Wybijak mogły zostać utracone.';
+  }
+
+  cancelConfigDistanceImpactDialog();
+}
+
+function updateConfigStationDistance(stationId, ruleId, field, value) {
+  const normalizedValue = String(value ?? '')
+    .replace(/[^\d]/g, '')
+    .trim();
+
+  configStations.value = configStations.value.map((station) =>
+    station.id === stationId
+      ? {
+          ...station,
+          distanceRules: station.distanceRules.map((rule) =>
+            rule.id === ruleId ? { ...rule, [field]: normalizedValue } : rule,
+          ),
+        }
+      : station,
+  );
 }
 
 function normalizeHeaderKey(value) {
@@ -1144,11 +2973,129 @@ function getMergeProductDisplayName(productName) {
 }
 
 function formatTemporaryRowOption(row) {
-  const name = row.Nazwa || row.nazwaSkladowej || 'Bez nazwy';
+  const code = row.Kod ?? row.TekstDoDruku ?? '—';
   const length = row['Długość'] ?? row.dlugosc ?? '—';
-  const width = row['Szerokość'] ?? row.szerokosc ?? '—';
   const thickness = row['Grubość'] ?? row.grubosc ?? '—';
-  return `${name} | ${length} x ${width} x ${thickness}`;
+  const width = row['Szerokość'] ?? row.szerokosc ?? '—';
+  const material = row['Materiał'] ?? row.material ?? '—';
+  return `${code} | ${length} x ${thickness} x ${width} | ${material}`;
+}
+
+function getFavoriteElementIdentity(sourceProductName, row = {}, sourceRowIndex = -1) {
+  return JSON.stringify({
+    sourceProductName: String(sourceProductName ?? ''),
+    sourceRowIndex,
+    name: String(row?.Nazwa ?? row?.nazwaSkladowej ?? ''),
+    length: String(row?.['Długość'] ?? row?.dlugosc ?? ''),
+    width: String(row?.['Szerokość'] ?? row?.szerokosc ?? ''),
+    thickness: String(row?.['Grubość'] ?? row?.grubosc ?? ''),
+    code: String(row?.Kod ?? row?.TekstDoDruku ?? ''),
+  });
+}
+
+function isFavoriteSourceRow(sourceProductName, row = {}) {
+  const targetIdentity = getFavoriteElementIdentity(
+    sourceProductName,
+    row,
+    Number.isFinite(row?._rowIndex) ? row._rowIndex : -1,
+  );
+  return favoriteElements.value.some(
+    (favorite) =>
+      getFavoriteElementIdentity(favorite.sourceProductName, favorite.row, favorite.sourceRowIndex) === targetIdentity,
+  );
+}
+
+async function persistFavoriteElements() {
+  try {
+    const response = await fetch('/api/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ config: configPayload.value }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload.error || 'Nie udało się zapisać ulubionych elementów.');
+    }
+    applyLoadedConfig(payload.config ?? configPayload.value);
+  } catch (error) {
+    mergeAlert.value = {
+      visible: true,
+      message: error.message || 'Nie udało się zapisać ulubionych elementów.',
+    };
+  }
+}
+
+async function toggleFavoriteSourceRow(sourceProductName, row) {
+  if (!sourceProductName || !row) return;
+
+  const targetIdentity = getFavoriteElementIdentity(
+    sourceProductName,
+    row,
+    Number.isFinite(row?._rowIndex) ? row._rowIndex : -1,
+  );
+  const existingFavorite = favoriteElements.value.find(
+    (favorite) =>
+      getFavoriteElementIdentity(favorite.sourceProductName, favorite.row, favorite.sourceRowIndex) === targetIdentity,
+  );
+
+  if (existingFavorite) {
+    favoriteElements.value = favoriteElements.value.filter((favorite) => favorite.id !== existingFavorite.id);
+    await persistFavoriteElements();
+    return;
+  }
+
+  favoriteElements.value = [...favoriteElements.value, createFavoriteElementEntry(sourceProductName, row)];
+  await persistFavoriteElements();
+}
+
+async function removeFavoriteElement(favoriteId) {
+  removeFavoriteElementFromMerge(favoriteId);
+  favoriteElements.value = favoriteElements.value.filter((favorite) => favorite.id !== favoriteId);
+  if (!favoriteElements.value.length) {
+    closeFavoriteElementsModal();
+  }
+  await persistFavoriteElements();
+}
+
+function isFavoriteElementInRecipe(favoriteId) {
+  return temporaryProductRows.value.some((row) => row?._favoriteId === favoriteId);
+}
+
+function addFavoriteElementToMerge(favoriteId) {
+  const favorite = favoriteElements.value.find((entry) => entry.id === favoriteId);
+  if (!favorite) return;
+  if (isFavoriteElementInRecipe(favoriteId)) return;
+  if (!remainingRecipeCapacity.value) {
+    showMergeLimitMessage();
+    return;
+  }
+
+  const nextRow = {
+    ...createMergeDraftRow(TEMP_PRODUCT_KEY, favorite.row),
+    _favoriteId: favoriteId,
+  };
+  mergeRecipeDrafts.value = {
+    ...mergeRecipeDrafts.value,
+    [TEMP_PRODUCT_KEY]: [...temporaryProductRows.value, nextRow],
+  };
+  syncTemporaryProductSelection();
+  clearMergeMessage();
+}
+
+function removeFavoriteElementFromMerge(favoriteId) {
+  if (!favoriteId) return;
+  const nextRows = temporaryProductRows.value.filter((row) => row?._favoriteId !== favoriteId);
+  mergeRecipeDrafts.value = {
+    ...mergeRecipeDrafts.value,
+    [TEMP_PRODUCT_KEY]: nextRows,
+  };
+  if (!nextRows.length) {
+    const nextDrafts = { ...mergeRecipeDrafts.value };
+    delete nextDrafts[TEMP_PRODUCT_KEY];
+    mergeRecipeDrafts.value = nextDrafts;
+  }
+  syncTemporaryProductSelection();
+  mergeEditingCell.value = null;
 }
 
 function normalizeGroupValue(value) {
@@ -1161,12 +3108,22 @@ function normalizePriorityValue(value) {
   return /^[0-9]$/.test(normalized) ? normalized : normalized.replace(/\D/g, '').slice(0, 1);
 }
 
+function normalizeStationValue(value) {
+  const normalized = String(value ?? '')
+    .replace(/[^\d]/g, '')
+    .trim();
+  return normalized === '0' ? '' : normalized;
+}
+
 function normalizeEditableCellValue(column, value) {
   if (column === 'Grupa' || column === 'grupa') {
     return normalizeGroupValue(value);
   }
   if (column === 'Priorytet' || column === 'priorytet') {
     return normalizePriorityValue(value);
+  }
+  if (column === 'Stanowisko' || column === 'stanowisko') {
+    return normalizeStationValue(value);
   }
   return value;
 }
@@ -1179,6 +3136,59 @@ function getDropdownOptions(column) {
 
 function isDropdownColumn(column) {
   return getDropdownOptions(column).length > 0;
+}
+
+function isStationColumn(column) {
+  return column === 'Stanowisko' || column === 'stanowisko';
+}
+
+function getStationDropdownOptions(currentValue = '') {
+  const normalizedCurrentValue = normalizeStationValue(currentValue);
+  const options = [...stationOptions.value];
+
+  if (normalizedCurrentValue && !options.some((option) => option.value === normalizedCurrentValue)) {
+    options.push({
+      id: `legacy-station-${normalizedCurrentValue}`,
+      value: normalizedCurrentValue,
+      label: `Stanowisko ${normalizedCurrentValue}`,
+    });
+  }
+
+  return options;
+}
+
+function getNormalizedLengthValue(lengthValue) {
+  const normalized = Number(String(lengthValue ?? '').replace(',', '.'));
+  return Number.isFinite(normalized) ? normalized : 0;
+}
+
+function getWybijakValueForStation(stationValue, lengthValue = 0) {
+  const normalizedStationValue = normalizeStationValue(stationValue);
+  if (!normalizedStationValue) return '';
+
+  const stationIndex = Number.parseInt(normalizedStationValue, 10) - 1;
+  if (!Number.isFinite(stationIndex) || stationIndex < 0) return '';
+
+  const station = configStations.value[stationIndex];
+  if (!station) return '';
+
+  const punchNumbers = getConfigStationOrderedPunches(station)
+    .map((punch) => String(punch ?? '').replace(/[^\d]/g, '').trim())
+    .filter(Boolean);
+
+  if (!punchNumbers.length) return '';
+  const normalizedLength = getNormalizedLengthValue(lengthValue);
+  const orderedDistanceRules = Array.isArray(station.distanceRules) ? station.distanceRules : [];
+  const hasTooShortLengthForDistance = orderedDistanceRules.some((rule) => {
+    const distance = getNormalizedLengthValue(rule?.distance);
+    return distance > 0 && normalizedLength > 0 && normalizedLength < distance;
+  });
+
+  if (hasTooShortLengthForDistance) {
+    return punchNumbers[0];
+  }
+  if (punchNumbers.length === 1) return punchNumbers[0];
+  return punchNumbers.join('0');
 }
 
 function getRowGroupValue(row) {
@@ -1254,6 +3264,10 @@ function getMergeDropdownOptions(productName, row, column) {
     return getPriorityDropdownOptions(allMergeRows, row);
   }
 
+  if (isStationColumn(column)) {
+    return getStationDropdownOptions(row?.[column]);
+  }
+
   return [];
 }
 
@@ -1317,9 +3331,31 @@ function createMergeDraftRow(productName, sourceRow = {}) {
     ilosc: baseQuantity,
     iloscWykonana: sourceRow.iloscWykonana ?? 0,
     Klasa: sourceRow.Klasa ?? 2,
-    Stanowisko: sourceRow.Stanowisko ?? 0,
+    Stanowisko: normalizeStationValue(sourceRow.Stanowisko),
     Informacje: sourceRow.Informacje ?? 'Kopia tymczasowa',
     TekstDoDruku: sourceRow.Kod || sourceRow.TekstDoDruku || sourceRow.nazwaSkladowej || sourceRow.Nazwa || '',
+  };
+}
+
+function createRecipePreviewDraftRow(sourceRow = {}) {
+  return {
+    _localId: createProductLocalId(),
+    nazwaSkladowej: sourceRow.nazwaSkladowej ?? '',
+    dlugosc: sourceRow.dlugosc ?? '',
+    grubosc: sourceRow.grubosc ?? '',
+    szerokosc: sourceRow.szerokosc ?? '',
+    material: sourceRow.material ?? '',
+    idReceptury: sourceRow.idReceptury ?? 0,
+    idSkladowej: sourceRow.idSkladowej ?? 0,
+    wybijak: sourceRow.wybijak ?? '',
+    grupa: sourceRow.grupa ?? '',
+    priorytet: sourceRow.priorytet ?? '',
+    ilosc: sourceRow.ilosc ?? 0,
+    iloscWykonana: sourceRow.iloscWykonana ?? 0,
+    Klasa: sourceRow.Klasa ?? 0,
+    Stanowisko: normalizeStationValue(sourceRow.Stanowisko),
+    Informacje: sourceRow.Informacje ?? '',
+    TekstDoDruku: sourceRow.TekstDoDruku ?? '',
   };
 }
 
@@ -1452,6 +3488,7 @@ function createEditableProductRow(fileName = "") {
     Priorytet: '',
     'ilość': '',
     Wybijak: '',
+    Stanowisko: '',
     _sourceFile: fileName,
     _localId: createProductLocalId(),
     _originalRowData: {},
@@ -1471,6 +3508,7 @@ function normalizeProductRows(fileName, headers, rows) {
       const code = getCellValue(sourceRow, ['Kod', 'NR CZĘŚCI', 'NR CZESCI', 'Nadruk']) || rowValues[1] || rowValues[0] || '';
       const grupa = getCellValue(sourceRow, ['Grupa', 'GRUPA']) || '';
       const priorytet = getCellValue(sourceRow, ['Priorytet', 'PRIORYTET']) || '';
+      const stanowisko = getCellValue(sourceRow, ['Stanowisko', 'STANOWISKO']) || '';
 
       return {
         Nazwa: name,
@@ -1483,6 +3521,7 @@ function normalizeProductRows(fileName, headers, rows) {
         Priorytet: normalizePriorityValue(priorytet),
         'ilość': quantity,
         Wybijak: getCellValue(sourceRow, ['Wybijak']) || 0,
+        Stanowisko: normalizeStationValue(stanowisko),
         _sourceFile: fileName,
         _rowIndex: index,
         _localId: createProductLocalId(),
@@ -1788,11 +3827,11 @@ function toggleEditMode() {
 
 function showRowLimitMessage() {
   saveError.value = true;
-  saveMessage.value = `Maksymalnie ${MAX_PRODUCT_ROWS} pozycji w pliku.`;
+  saveMessage.value = `Maksymalnie ${activeRowLimit.value} pozycji w pliku dla aktywnej maszyny.`;
 }
 
 function addProductRow() {
-  if (editingRows.value.length >= MAX_PRODUCT_ROWS) {
+  if (editingRows.value.length >= activeRowLimit.value) {
     showRowLimitMessage();
     return;
   }
@@ -1802,7 +3841,7 @@ function addProductRow() {
 }
 
 function duplicateProductRow(localId) {
-  if (editingRows.value.length >= MAX_PRODUCT_ROWS) {
+  if (editingRows.value.length >= activeRowLimit.value) {
     showRowLimitMessage();
     return;
   }
@@ -1870,6 +3909,15 @@ function getMergeEditInputStyle(column, value) {
   return { width: `${chWidth}ch` };
 }
 
+function getRecipePreviewEditInputStyle(column, value) {
+  const length = String(value ?? '').length;
+  const isWideColumn = ['nazwaSkladowej', 'material', 'TekstDoDruku'].includes(column);
+  const minWidth = isWideColumn ? 10 : 4;
+  const maxWidth = isWideColumn ? 20 : 8;
+  const chWidth = Math.max(minWidth, Math.min(length + 1, maxWidth));
+  return { width: `${chWidth}ch` };
+}
+
 async function saveProductChanges() {
   if (!selectedProductName.value || !isEditMode.value) return;
   openConfirmDialog(
@@ -1929,8 +3977,17 @@ function confirmAction() {
     executeSaveProductChanges();
     return;
   }
+  if (action === 'cancel-recipe-preview-edit') {
+    cancelRecipePreviewEdit();
+    return;
+  }
   if (action === 'delete-file') {
     executeDeleteSelectedProductFile();
+    return;
+  }
+  if (action === 'delete-recipe') {
+    executeDeleteRecipePreview();
+    return;
   }
 }
 
@@ -1959,7 +4016,7 @@ function clearMergeMessage() {
 function showMergeLimitMessage() {
   mergeAlert.value = {
     visible: true,
-    message: `Nie można dodać produktu, bo został osiągnięty limit ${MAX_PRODUCT_ROWS} elementów.`,
+    message: `Nie można dodać produktu, bo został osiągnięty limit ${activeRowLimit.value} elementów dla aktywnej maszyny.`,
   };
 }
 
@@ -1969,6 +4026,10 @@ function closeMergeAlert() {
 
 function toggleMergeSelectionPanel() {
   isMergeSelectionCollapsed.value = !isMergeSelectionCollapsed.value;
+}
+
+function toggleRecipeCatalogPanel() {
+  isRecipeCatalogCollapsed.value = !isRecipeCatalogCollapsed.value;
 }
 
 function openSaveRecipeDialog() {
@@ -2075,7 +4136,7 @@ function rejectMergeProductSelection(productName) {
 function canSelectMergeProduct(productName) {
   if (selectedProducts.value.includes(productName)) return true;
   const nextCount = selectedMergeRowCount.value + (productRowsByName.value[productName]?.length ?? 0);
-  return nextCount <= MAX_PRODUCT_ROWS;
+  return nextCount <= activeRowLimit.value;
 }
 
 function updateMergeProductQuantity(productName, value) {
@@ -2083,7 +4144,7 @@ function updateMergeProductQuantity(productName, value) {
     .replace(/[^\d]/g, '')
     .trim();
   const parsedValue = normalizedText ? Number.parseInt(normalizedText, 10) : 0;
-  const normalizedValue = Number.isFinite(parsedValue) ? Math.min(Math.max(parsedValue, 0), 500) : 0;
+  const normalizedValue = Number.isFinite(parsedValue) ? Math.min(Math.max(parsedValue, 0), activeRowLimit.value) : 0;
 
   if (normalizedValue > 0 && !selectedProducts.value.includes(productName) && !canSelectMergeProduct(productName)) {
     rejectMergeProductSelection(productName);
@@ -2145,7 +4206,7 @@ async function loadSavedRecipes() {
 
 function stepMergeProductQuantity(productName, delta) {
   lastMergeInteractedProduct.value = productName;
-  const nextValue = Math.min(500, Math.max(0, getMergeProductQuantity(productName) + delta));
+  const nextValue = Math.min(activeRowLimit.value, Math.max(0, getMergeProductQuantity(productName) + delta));
   updateMergeProductQuantity(productName, nextValue);
 }
 
@@ -2227,7 +4288,209 @@ function isRecipeGroupCollapsed(productName) {
 }
 
 function selectRecipePreview(row) {
+  isRecipePreviewEditMode.value = false;
+  recipePreviewDraftRows.value = [];
+  recipePreviewEditingCell.value = null;
+  recipePreviewSaveMessage.value = '';
+  recipePreviewSaveError.value = false;
   selectedRecipePreviewName.value = row.nazwaReceptury;
+}
+
+function requestDeleteRecipePreview() {
+  if (!selectedRecipePreviewName.value) return;
+  openConfirmDialog('delete-recipe', `Na pewno chcesz usunąć recepturę "${selectedRecipePreviewName.value}"?`);
+}
+
+function clearRecipePreviewStatusMessage() {
+  if (recipePreviewMessageTimerId) {
+    window.clearTimeout(recipePreviewMessageTimerId);
+    recipePreviewMessageTimerId = null;
+  }
+  recipePreviewSaveMessage.value = '';
+  recipePreviewSaveError.value = false;
+}
+
+function setRecipePreviewStatusMessage(message, isError = false) {
+  if (recipePreviewMessageTimerId) {
+    window.clearTimeout(recipePreviewMessageTimerId);
+    recipePreviewMessageTimerId = null;
+  }
+
+  recipePreviewSaveMessage.value = message;
+  recipePreviewSaveError.value = isError;
+
+  if (!isError && message) {
+    recipePreviewMessageTimerId = window.setTimeout(() => {
+      recipePreviewSaveMessage.value = '';
+      recipePreviewSaveError.value = false;
+      recipePreviewMessageTimerId = null;
+    }, 3500);
+  }
+}
+
+async function executeDeleteRecipePreview() {
+  if (!selectedRecipePreviewName.value) return;
+  const deletedRecipeName = selectedRecipePreviewName.value;
+
+  clearRecipePreviewStatusMessage();
+
+  try {
+    const response = await fetch('/api/recipes/delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        recipeName: deletedRecipeName,
+      }),
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload.error || 'Nie udało się usunąć receptury.');
+    }
+
+    await loadSavedRecipes();
+    isRecipePreviewEditMode.value = false;
+    recipePreviewDraftRows.value = [];
+    recipePreviewEditingCell.value = null;
+
+    const fallbackName = savedRecipeCatalog.value[0]?.nazwaReceptury || '';
+    selectedRecipePreviewName.value = savedRecipeCatalog.value.some((entry) => entry.nazwaReceptury === selectedRecipePreviewName.value)
+      ? selectedRecipePreviewName.value
+      : fallbackName;
+    selectedRecipe.value = savedRecipeCatalog.value.some((entry) => entry.nazwaReceptury === selectedRecipe.value)
+      ? selectedRecipe.value
+      : fallbackName;
+
+    setRecipePreviewStatusMessage('Receptura została usunięta.');
+  } catch (error) {
+    setRecipePreviewStatusMessage(error?.message || 'Nie udało się usunąć receptury.', true);
+  }
+}
+
+function openRecipePreviewEditor(recipeName) {
+  isRecipePreviewEditMode.value = false;
+  recipePreviewDraftRows.value = [];
+  recipePreviewEditingCell.value = null;
+  clearRecipePreviewStatusMessage();
+  selectedRecipePreviewName.value = recipeName;
+}
+
+function startRecipePreviewEdit() {
+  if (!selectedRecipePreviewName.value) return;
+  recipePreviewDraftRows.value = selectedRecipePreviewRows.value.map((row) => createRecipePreviewDraftRow(row));
+  isRecipePreviewEditMode.value = true;
+  clearRecipePreviewStatusMessage();
+}
+
+function cancelRecipePreviewEdit() {
+  isRecipePreviewEditMode.value = false;
+  recipePreviewDraftRows.value = [];
+  recipePreviewEditingCell.value = null;
+  clearRecipePreviewStatusMessage();
+}
+
+function requestCancelRecipePreviewEdit() {
+  if (!isRecipePreviewEditMode.value) return;
+  if (!hasPendingRecipePreviewChanges.value) {
+    cancelRecipePreviewEdit();
+    return;
+  }
+  openConfirmDialog('cancel-recipe-preview-edit', 'Na pewno chcesz anulować edycję receptury? Niezapisane zmiany zostaną utracone.');
+}
+
+function updateRecipePreviewCell(localId, column, value) {
+  const row = recipePreviewDraftRows.value.find((item) => item._localId === localId);
+  if (!row) return;
+  const normalizedValue = normalizeEditableCellValue(column, value);
+
+  if (column === 'grupa') {
+    row.grupa = normalizedValue;
+    row.priorytet = normalizedValue
+      ? getSmallestAvailablePriority(recipePreviewDraftRows.value, normalizedValue, localId)
+      : '';
+    return;
+  }
+
+  if (column === 'priorytet') {
+    if (!getRowGroupValue(row)) {
+      row.priorytet = '';
+      return;
+    }
+
+    const availablePriorities = getPriorityDropdownOptions(recipePreviewDraftRows.value, row);
+    row.priorytet = availablePriorities.includes(normalizedValue) ? normalizedValue : '';
+    return;
+  }
+
+  if (isStationColumn(column)) {
+    row[column] = normalizedValue;
+    row.wybijak = getWybijakValueForStation(normalizedValue, row.dlugosc);
+    return;
+  }
+
+  if (column === 'dlugosc') {
+    row[column] = normalizedValue;
+    if (row.Stanowisko) {
+      row.wybijak = getWybijakValueForStation(row.Stanowisko, normalizedValue);
+    }
+    return;
+  }
+
+  row[column] = normalizedValue;
+}
+
+function addRecipePreviewRow() {
+  if (recipePreviewDraftRows.value.length >= activeRowLimit.value) return;
+  recipePreviewDraftRows.value = [...recipePreviewDraftRows.value, createRecipePreviewDraftRow()];
+}
+
+function duplicateRecipePreviewRow(localId) {
+  if (recipePreviewDraftRows.value.length >= activeRowLimit.value) return;
+  const rowIndex = recipePreviewDraftRows.value.findIndex((item) => item._localId === localId);
+  if (rowIndex === -1) return;
+  const duplicate = createRecipePreviewDraftRow(JSON.parse(JSON.stringify(recipePreviewDraftRows.value[rowIndex])));
+  recipePreviewDraftRows.value = [
+    ...recipePreviewDraftRows.value.slice(0, rowIndex + 1),
+    duplicate,
+    ...recipePreviewDraftRows.value.slice(rowIndex + 1),
+  ];
+}
+
+function removeRecipePreviewRow(localId) {
+  recipePreviewDraftRows.value = recipePreviewDraftRows.value.filter((item) => item._localId !== localId);
+}
+
+async function saveRecipePreviewChanges() {
+  if (!selectedRecipePreviewName.value || !isRecipePreviewEditMode.value) return;
+
+  const rows = recipePreviewDraftRows.value.map(({ _localId, ...row }) => row);
+  clearRecipePreviewStatusMessage();
+
+  try {
+    const response = await fetch('/api/recipes/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        recipe: {
+          nazwaReceptury: selectedRecipePreviewName.value,
+          rows,
+        },
+      }),
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload.error || 'Nie udało się zaktualizować receptury.');
+    }
+
+    savedRecipeCatalog.value = savedRecipeCatalog.value.map((entry) =>
+      entry.nazwaReceptury === selectedRecipePreviewName.value ? payload.recipe ?? { ...entry, rows } : entry,
+    );
+    cancelRecipePreviewEdit();
+    setRecipePreviewStatusMessage('Zmiany zapisane.');
+  } catch (error) {
+    setRecipePreviewStatusMessage(error?.message || 'Nie udało się zaktualizować receptury.', true);
+  }
 }
 
 function openMergeProductPreview(productName) {
@@ -2245,8 +4508,43 @@ function closeMergeProductPreview() {
 function handleGlobalEscape(event) {
   if (event.key !== 'Escape') return;
 
+  if (isWorkRecipePreviewOpen.value) {
+    closeWorkRecipePreview();
+    return;
+  }
+
+  if (isWorkRecipeMenuOpen.value) {
+    isWorkRecipeMenuOpen.value = false;
+    return;
+  }
+
+  if (configUnsavedDialog.value.visible) {
+    cancelConfigUnsavedDialog();
+    return;
+  }
+
+  if (isConfigPanelOpen.value) {
+    toggleConfigPanel();
+    return;
+  }
+
   if (temporarySourceChangeDialog.value.visible) {
     cancelTemporarySourceChange();
+    return;
+  }
+
+  if (isFavoriteElementsModalOpen.value) {
+    closeFavoriteElementsModal();
+    return;
+  }
+
+  if (isFavoriteSourceModalOpen.value) {
+    closeFavoriteSourceModal();
+    return;
+  }
+
+  if (isWorkProductModalOpen.value) {
+    closeWorkProductModal();
     return;
   }
 
@@ -2293,6 +4591,32 @@ function closeSingleElementModal() {
   isSingleElementModalOpen.value = false;
   resetTemporarySelection();
   cancelTemporarySourceChange();
+}
+
+function openFavoriteElementsModal() {
+  isFavoriteElementsModalOpen.value = true;
+}
+
+function closeFavoriteElementsModal() {
+  isFavoriteElementsModalOpen.value = false;
+}
+
+function openFavoriteElementsModalFromSource() {
+  closeFavoriteSourceModal();
+  openFavoriteElementsModal();
+}
+
+function openFavoriteSourceModal() {
+  if (!availableProductNames.value.length) return;
+  if (!favoriteSourceProductName.value || !availableProductNames.value.includes(favoriteSourceProductName.value)) {
+    favoriteSourceProductName.value = availableProductNames.value[0] || '';
+  }
+  closeFavoriteElementsModal();
+  isFavoriteSourceModalOpen.value = true;
+}
+
+function closeFavoriteSourceModal() {
+  isFavoriteSourceModalOpen.value = false;
 }
 
 function isTemporaryRowSelected(localId) {
@@ -2434,12 +4758,26 @@ function updateMergeRecipeCell(productName, localId, column, value) {
     return;
   }
 
+  if (isStationColumn(column)) {
+    row[column] = normalizedValue;
+    row.wybijak = getWybijakValueForStation(normalizedValue, row.dlugosc);
+    return;
+  }
+
+  if (column === 'dlugosc') {
+    row[column] = normalizedValue;
+    if (row.Stanowisko) {
+      row.wybijak = getWybijakValueForStation(row.Stanowisko, normalizedValue);
+    }
+    return;
+  }
+
   row[column] = normalizedValue;
 }
 
 function addMergeRecipeRow(productName) {
   const currentRows = mergeRecipeDrafts.value[productName] ?? [];
-  if (selectedMergeRowCount.value >= MAX_PRODUCT_ROWS) {
+  if (selectedMergeRowCount.value >= activeRowLimit.value) {
     showMergeLimitMessage();
     return;
   }
@@ -2451,7 +4789,7 @@ function addMergeRecipeRow(productName) {
 }
 
 function duplicateMergeRecipeRow(productName, localId) {
-  if (selectedMergeRowCount.value >= MAX_PRODUCT_ROWS) {
+  if (selectedMergeRowCount.value >= activeRowLimit.value) {
     showMergeLimitMessage();
     return;
   }
@@ -2484,71 +4822,168 @@ function removeMergeRecipeRow(productName, localId) {
 }
 
 async function loadRecipeToWorkMain() {
+  if (workEditingRowId.value !== null) {
+    workUploadError.value = true;
+    workUploadMessage.value = 'Najpierw zakończ edycję wszystkich wierszy, zanim wczytasz recepturę do podglądu.';
+    return;
+  }
+
   const savedRecipeRows =
     recipeCatalogEntries.value.find((entry) => entry.nazwaReceptury === selectedRecipe.value)?.rows ?? [];
-  const source = savedRecipeRows;
-  if (!source.length) return;
+  if (!savedRecipeRows.length) {
+    workUploadError.value = true;
+    workUploadMessage.value = 'Nie znaleziono wybranej receptury do wczytania.';
+    return;
+  }
 
-  const nextWorkRows = source.map((row, index) => ({
-    id: index + 1,
-    Kod: row.Kod || '',
-    Nazwa: row.nazwaSkladowej || row.Nazwa,
-    Material: row.material || row.Material,
-    Przekroj: `${String(row.grubosc || row.gr || 0).padStart(3, '0')}x${String(row.szerokosc || row.szer || 0).padStart(3, '0')}`,
-    Dlugosc: row.dlugosc || row.Dlugosc,
-    Sztuk: row.ilosc || row.Sztuk,
-    WykonaneSztuki: row.iloscWykonana || row.WykonaneSztuki || 0,
-    Wybijak: row.wybijak || row.Wybijak || 0,
-    Rodzaj: row.rodzaj || row.Rodzaj || '',
-    TekstDoDruku: row.TekstDoDruku,
-    idrec: row.idReceptury || row.idrec || 0,
-    ids: row.idSkladowej ?? row.ids ?? index,
-    CzasUtw: new Date().toLocaleString('pl-PL'),
-    Usr: 'Default',
-    NazwaRec: selectedRecipe.value,
-    gr: row.grubosc || row.gr,
-    szer: row.szerokosc || row.szer,
-    Klasa: row.Klasa,
-    Stanowisko: row.Stanowisko,
-    Informacje: row.Informacje,
-  }));
+  workRows.value = savedRecipeRows.map((row, index) =>
+    normalizeWorkRow({
+      id: index + 1,
+      Kod: row.Kod || '',
+      Nazwa: row.nazwaSkladowej || row.Nazwa,
+      Material: row.material || row.Material,
+      Przekroj: buildPrzekrojValue(row.grubosc || row.gr || 0, row.szerokosc || row.szer || 0),
+      Grubosc: normalizeWorkCorrectionValue(row.grubosc || row.gr || 0),
+      Szerokosc: normalizeWorkCorrectionValue(row.szerokosc || row.szer || 0),
+      Dlugosc: row.dlugosc || row.Dlugosc,
+      Sztuk: row.ilosc || row.Sztuk,
+      WykonaneSztuki: row.iloscWykonana ?? row.WykonaneSztuki ?? 0,
+      Wybijak: row.wybijak ?? row.Wybijak ?? 0,
+      Rodzaj: row.rodzaj || row.Rodzaj || '',
+      TekstDoDruku: row.TekstDoDruku,
+      idrec: row.idReceptury || row.idrec || 0,
+      ids: row.idSkladowej ?? row.ids ?? index,
+      CzasUtw: new Date().toLocaleString('pl-PL'),
+      Usr: 'Default',
+      NazwaRec: selectedRecipe.value,
+      gr: row.grubosc || row.gr,
+      szer: row.szerokosc || row.szer,
+      Grupa: row.grupa || row.Grupa || '',
+      Priorytet: row.priorytet || row.Priorytet || '',
+      Klasa: row.Klasa,
+      Stanowisko: row.Stanowisko,
+      Informacje: row.Informacje,
+    }),
+  );
+  clearWorkCorrectionState();
+  workUploadError.value = false;
+  workUploadMessage.value = `Wczytano recepturę "${selectedRecipe.value}" do podglądu. Stanowiska możesz przydzielić automatycznie, a zapis wykonasz później do bazy danych.`;
+}
 
-  const payloadRows = nextWorkRows.map((row) => ({
-    id: row.id,
-    Material: row.Material ?? '',
-    Przekroj: row.Przekroj ?? '',
-    Dlugosc: row.Dlugosc ?? 0,
-    Sztuk: row.Sztuk ?? 0,
-    Wybijaki: row.Wybijak ?? 0,
-    TekstDoDruku: row.TekstDoDruku ?? '',
-    Klasa: row.Klasa ?? 0,
-    Nazwa: row.Nazwa ?? '',
-    zliczonaIloscIn: row.Sztuk ?? 0,
-  }));
+function autoAssignWorkStations() {
+  if (workEditingRowId.value !== null) {
+    workUploadError.value = true;
+    workUploadMessage.value = 'Najpierw zakończ edycję wszystkich wierszy, zanim przydzielisz stanowiska automatycznie.';
+    return;
+  }
 
-  isWorkUploadLoading.value = true;
+  if (!activeWorkRows.value.length || !hasConfiguredStationLengthRanges.value) {
+    workUploadError.value = true;
+    workUploadMessage.value = 'Brak wierszy do automatycznego przydziału stanowisk albo nie ustawiono jeszcze zakresów długości w konfiguracji.';
+    return;
+  }
+
+  let updatedCount = 0;
+  let assignedCount = 0;
+
+  workRows.value = workRows.value.map((row) => {
+    if (row.__disabled) return row;
+
+    const autoStation = getConfigStationValueByLength(row.Dlugosc);
+    const nextStation = autoStation || normalizeStationValue(row.Stanowisko);
+    const nextWybijak = nextStation ? getWybijakValueForStation(nextStation, row.Dlugosc) : '';
+    const hasChanged =
+      String(nextStation ?? '') !== String(normalizeStationValue(row.Stanowisko) ?? '') ||
+      String(nextWybijak ?? '') !== String(row.Wybijak ?? '');
+
+    if (autoStation) {
+      assignedCount += 1;
+    }
+    if (hasChanged) {
+      updatedCount += 1;
+    }
+
+    return {
+      ...row,
+      Stanowisko: nextStation,
+      Wybijak: nextWybijak,
+    };
+  });
+
+  workUploadError.value = false;
+  workUploadMessage.value =
+    assignedCount > 0 || updatedCount > 0
+      ? `Automatycznie przydzielono ${assignedCount} wierszy po długości i przeliczono wybijaki.`
+      : 'Nie znaleziono pasujących zakresów długości dla żadnego wiersza.';
+}
+
+async function persistWorkRowsToDatabase(rowsToSave) {
+  isWorkCorrectionSaving.value = true;
   workUploadMessage.value = '';
   workUploadError.value = false;
 
   try {
-    const response = await fetch('/api/workmain/upload', {
+    const response = await fetch('/api/workmain/save', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ rows: payloadRows }),
+      body: JSON.stringify({ rows: rowsToSave }),
     });
 
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
-      throw new Error(payload.error || 'Nie udało się wgrać danych do WorkMain.');
+      throw new Error(payload.error || 'Nie udało się zapisać zmian WorkMain.');
     }
 
-    workRows.value = nextWorkRows;
-    workUploadMessage.value = `Wgrano ${payload.insertedRows ?? payloadRows.length} wierszy do WorkMain.`;
+    clearWorkCorrectionState();
+    await loadWorkMainRows();
+    return payload;
+  } finally {
+    isWorkCorrectionSaving.value = false;
+  }
+}
+
+async function saveWorkTable() {
+  if (!hasPendingWorkChanges.value) return;
+  if (workEditingRowId.value !== null) {
+    workUploadError.value = true;
+    workUploadMessage.value = 'Najpierw zakończ edycję wszystkich wierszy, zanim zapiszesz zmiany do bazy danych.';
+    return;
+  }
+
+  const rowsToSave = activeWorkRows.value.map((row, index) => getWorkRowPayload(row, index));
+  const validationMessage = getWorkRowsValidationMessage(rowsToSave, 'Nie można zapisać zmian.');
+  if (validationMessage) {
+    workUploadError.value = true;
+    workUploadMessage.value = validationMessage;
+    return;
+  }
+
+  try {
+    const payload = await persistWorkRowsToDatabase(rowsToSave);
+    workUploadMessage.value = `Zapisano ${payload.updatedRows ?? rowsToSave.length} wierszy WorkMain.`;
   } catch (error) {
     workUploadError.value = true;
-    workUploadMessage.value = error.message || 'Nie udało się wgrać danych do WorkMain.';
-  } finally {
-    isWorkUploadLoading.value = false;
+    workUploadMessage.value = error.message || 'Nie udało się zapisać zmian WorkMain.';
+  }
+}
+
+async function postponeCurrentWork() {
+  if (workEditingRowId.value !== null) {
+    workUploadError.value = true;
+    workUploadMessage.value = 'Najpierw zakończ edycję wszystkich wierszy, zanim odłożysz pracę.';
+    return;
+  }
+
+  const rowsToSave = activeWorkRows.value.map((row, index) => getWorkRowPayload(row, index));
+
+  try {
+    const payload = await persistWorkRowsToDatabase(rowsToSave);
+    const snapshot = createWorkSnapshot();
+    addWorkSnapshot(snapshot);
+    workUploadMessage.value = `Odłożono pracę "${snapshot.NazwaRec}" i zapisano ${payload.updatedRows ?? rowsToSave.length} wierszy WorkMain.`;
+  } catch (error) {
+    workUploadError.value = true;
+    workUploadMessage.value = error.message || 'Nie udało się odłożyć aktualnej pracy.';
   }
 }
 
@@ -2558,6 +4993,20 @@ onMounted(() => {
   window.addEventListener('keydown', handleGlobalEscape);
   loadProductFiles();
   loadSavedRecipes();
+  loadWorkMainRows().catch(() => {});
+  loadConfig().catch(() => {});
+  loadMachineStatus().catch(() => {});
+  startMachineStatusAutoRefresh();
+});
+
+watch(activeTab, (tab) => {
+  if (tab === 'work') {
+    loadWorkMainRows().catch(() => {});
+    startWorkMainAutoRefresh();
+    return;
+  }
+
+  stopWorkMainAutoRefresh();
 });
 
 watch(availableMergeGroups, (groups) => {
@@ -2568,6 +5017,11 @@ watch(availableMergeGroups, (groups) => {
 
 onUnmounted(() => {
   window.clearInterval(timerId);
+  stopWorkMainAutoRefresh();
+  stopMachineStatusAutoRefresh();
+  if (recipePreviewMessageTimerId) {
+    window.clearTimeout(recipePreviewMessageTimerId);
+  }
   window.removeEventListener('keydown', handleGlobalEscape);
 });
 
@@ -2579,6 +5033,327 @@ const StatPill = defineComponent({
   setup(props) {
     return () =>
       h('div', { class: 'stat-pill' }, [h('span', { class: 'stat-label' }, props.label), h('strong', props.value)]);
+  },
+});
+
+const WorkTable = defineComponent({
+  props: {
+    columns: { type: Array, required: true },
+    rows: { type: Array, required: true },
+    labels: { type: Object, default: () => ({}) },
+    emptyText: { type: String, default: 'Brak danych' },
+  },
+  setup(props) {
+    const sortKey = ref('');
+    const sortDirection = ref(1);
+
+    const sortedRows = computed(() => {
+      const rows = [...props.rows];
+      if (!sortKey.value) return rows;
+      return rows.sort((a, b) => compareValues(a[sortKey.value], b[sortKey.value]) * sortDirection.value);
+    });
+
+    function sortBy(column) {
+      if (sortKey.value !== column) {
+        sortKey.value = column;
+        sortDirection.value = 1;
+        return;
+      }
+
+      if (sortDirection.value === 1) {
+        sortDirection.value = -1;
+        return;
+      }
+
+      sortKey.value = '';
+      sortDirection.value = 1;
+    }
+
+    function isSorted(column) {
+      return sortKey.value === column;
+    }
+
+    return () =>
+      h('div', { class: 'table-wrap' }, [
+        h('table', { class: 'data-table work-data-table' }, [
+          h(
+            'thead',
+            h(
+              'tr',
+              [
+                ...props.columns.map((column) =>
+                  h(
+                    'th',
+                    {
+                      onClick: () => sortBy(column),
+                      class: { sorted: isSorted(column) },
+                    },
+                    [
+                      props.labels[column] ?? column,
+                      isSorted(column) ? h('span', { class: 'sort-mark' }, sortDirection.value > 0 ? '▲' : '▼') : null,
+                    ],
+                  ),
+                ),
+                h('th', 'Akcje'),
+              ],
+            ),
+          ),
+          h(
+            'tbody',
+                sortedRows.value.length
+                  ? sortedRows.value.map((row) =>
+                      h(
+                        'tr',
+                    { key: row.__clientId ?? row.id ?? row.Nazwa, class: { disabled: row.__disabled } },
+                    props.columns.map((column) => {
+                      if (column === 'id') {
+                        return h('td', { key: `${row.__clientId}-${column}` }, row.id ?? '');
+                      }
+
+                      if (column !== 'Progress' && !isWorkRowEditing(row.__clientId)) {
+                        return h('td', { key: `${row.__clientId}-${column}` }, row[column] ?? '');
+                      }
+
+                      if (column !== 'Progress') {
+                        if (row.__disabled) {
+                          return h('td', { key: `${row.__clientId}-${column}` }, row[column] ?? '');
+                        }
+                        if (isStationColumn(column)) {
+                          return h('td', { key: `${row.__clientId}-${column}` }, [
+                            h(
+                              'select',
+                              {
+                                class: 'edit-input work-cell-input',
+                                value: row[column] ?? '',
+                                onInput: (event) => updateWorkCell(row.__clientId, column, event.target.value),
+                              },
+                              [
+                                h('option', { value: '' }, ''),
+                                ...getStationDropdownOptions(row[column]).map((option) =>
+                                  h('option', { key: `${row.__clientId}-${column}-${option.value}`, value: option.value }, option.label),
+                                ),
+                              ],
+                            ),
+                          ]);
+                        }
+
+                        return h('td', { key: `${row.__clientId}-${column}` }, [
+                          h('input', {
+                            class: 'edit-input work-cell-input',
+                            value: row[column] ?? '',
+                            inputmode: ['Dlugosc', 'Wybijak', 'Klasa', 'Grubosc', 'Szerokosc', 'Sztuk', 'Stanowisko'].includes(column) ? 'numeric' : undefined,
+                            onInput: (event) => updateWorkCell(row.__clientId, column, event.target.value),
+                          }),
+                        ]);
+                      }
+
+                      const doneValue = getWorkDisplayedDoneValue(row.__clientId, row.Progress?.done ?? 0);
+                      const totalValue = getWorkDisplayedTotalValue(row.__clientId, row.Progress?.total ?? 0);
+                      const progressPercent = getWorkProgressPercent(doneValue, totalValue);
+
+                      return h('td', { key: `${row.__clientId}-${column}` }, [
+                        h('div', { class: 'work-progress-cell' }, [
+                          h('div', { class: 'work-progress-bar-wrap' }, [
+                            h('div', { class: 'work-progress-bar-track' }, [
+                              h('div', {
+                                class: ['work-progress-bar-fill', { complete: progressPercent >= 100 }],
+                                style: { width: `${progressPercent}%` },
+                              }),
+                              h('div', { class: 'work-progress-bar-content' }, [
+                                isWorkRowEditing(row.__clientId)
+                                  ? h('div', { class: 'work-progress-inline-edit' }, [
+                                      h('input', {
+                                        class: 'edit-input work-done-input',
+                                        value: doneValue,
+                                        inputmode: 'numeric',
+                                        onInput: (event) => updateWorkProgressValue(row.__clientId, 'WykonaneSztuki', event.target.value),
+                                        onKeydown: (event) => {
+                                          if (event.key === 'Enter') finishWorkCorrectionEdit();
+                                        },
+                                      }),
+                                      h('span', { class: 'work-progress-slash' }, '/'),
+                                      h('input', {
+                                        class: 'edit-input work-done-input',
+                                        value: totalValue,
+                                        inputmode: 'numeric',
+                                        onInput: (event) => updateWorkProgressValue(row.__clientId, 'Sztuk', event.target.value),
+                                        onKeydown: (event) => {
+                                          if (event.key === 'Enter') finishWorkCorrectionEdit();
+                                        },
+                                      }),
+                                    ])
+                                  : h('span', { class: 'work-progress-value' }, `${doneValue}/${totalValue}`),
+                              ]),
+                            ]),
+                          ]),
+                        ]),
+                      ]);
+                    }),
+                    h(
+                      'td',
+                      { key: `${row.__clientId}-actions`, class: 'row-actions-cell work-row-actions' },
+                      isWorkRowEditing(row.__clientId)
+                        ? [
+                            h(
+                              'button',
+                              {
+                                class: 'tool-btn compact primary',
+                                type: 'button',
+                                title: 'Zakończ edycję wiersza',
+                                onClick: () => finishWorkCorrectionEdit(),
+                              },
+                              'Gotowe',
+                            ),
+                            h(
+                              'button',
+                              {
+                                class: 'tool-btn compact',
+                                type: 'button',
+                                title: 'Duplikuj wiersz',
+                                onClick: () => duplicateWorkRow(row.__clientId),
+                              },
+                              'Duplikuj',
+                            ),
+                            h(
+                              'button',
+                              {
+                                class: 'tool-btn compact danger',
+                                type: 'button',
+                                title: 'Usuń wiersz',
+                                onClick: () => removeWorkRow(row.__clientId),
+                              },
+                              'Usuń',
+                            ),
+                          ]
+                        : [
+                            h(
+                              'button',
+                              {
+                                class: ['tool-btn compact', row.__disabled ? 'primary' : ''],
+                                type: 'button',
+                                title: row.__disabled ? 'Włącz wiersz do wysyłki' : 'Wyłącz wiersz z wysyłki',
+                                onClick: () => toggleWorkRowDisabled(row.__clientId),
+                              },
+                              row.__disabled ? 'Włącz' : 'Wyłącz',
+                            ),
+                            h(
+                              'button',
+                              {
+                                class: 'tool-btn compact',
+                                type: 'button',
+                                title: 'Edytuj wiersz',
+                                onClick: () => startWorkCorrectionEdit(row.__clientId),
+                              },
+                              'Edytuj',
+                            ),
+                          ],
+                    ),
+                  ),
+                )
+              : h('tr', [h('td', { colspan: props.columns.length + 1, class: 'empty-cell' }, props.emptyText)]),
+          ),
+        ]),
+      ]);
+  },
+});
+
+const RecipePreviewTable = defineComponent({
+  props: {
+    columns: { type: Array, required: true },
+    rows: { type: Array, required: true },
+    labels: { type: Object, default: () => ({}) },
+    isEditMode: { type: Boolean, default: false },
+    emptyText: { type: String, default: 'Brak danych' },
+  },
+  setup(props) {
+    return () =>
+      h('div', { class: 'table-wrap' }, [
+        h('table', { class: 'data-table' }, [
+          h(
+            'thead',
+            h(
+              'tr',
+              [
+                ...props.columns.map((column) => h('th', props.labels[column] ?? column)),
+                props.isEditMode ? h('th', { class: 'actions-column' }, 'Akcje') : null,
+              ].filter(Boolean),
+            ),
+          ),
+          h(
+            'tbody',
+            props.rows.length
+              ? props.rows.map((row) =>
+                  h(
+                    'tr',
+                    { key: row._localId ?? `${row.nazwaSkladowej}-${row.idSkladowej}` },
+                    [
+                      ...props.columns.map((column) => {
+                        if (!props.isEditMode) {
+                          return h('td', row[column] ?? '');
+                        }
+
+                        if (isDropdownColumn(column) || isStationColumn(column)) {
+                          const options = isStationColumn(column)
+                            ? getStationDropdownOptions(row?.[column])
+                            : getMergeDropdownOptions('', row, column);
+                          return h('td', [
+                            h(
+                              'select',
+                              {
+                                class: 'edit-input recipe-preview-input',
+                                value: row[column] ?? '',
+                                style: getRecipePreviewEditInputStyle(column, row[column]),
+                                onInput: (event) => updateRecipePreviewCell(row._localId, column, event.target.value),
+                              },
+                              [
+                                h('option', { value: '' }, ''),
+                                ...options.map((option) =>
+                                  h('option', { value: option.value ?? option }, option.label ?? option),
+                                ),
+                              ],
+                            ),
+                          ]);
+                        }
+
+                        return h('td', [
+                          h('input', {
+                            class: 'edit-input recipe-preview-input',
+                            value: row[column] ?? '',
+                            style: getRecipePreviewEditInputStyle(column, row[column]),
+                            onInput: (event) => updateRecipePreviewCell(row._localId, column, event.target.value),
+                          }),
+                        ]);
+                      }),
+                      props.isEditMode
+                        ? h('td', { class: 'row-actions-cell' }, [
+                            h(
+                              'button',
+                              {
+                                class: 'tool-btn compact',
+                                type: 'button',
+                                disabled: props.rows.length >= activeRowLimit.value,
+                                onClick: () => duplicateRecipePreviewRow(row._localId),
+                              },
+                              'Duplikuj',
+                            ),
+                            h(
+                              'button',
+                              {
+                                class: 'tool-btn compact danger',
+                                type: 'button',
+                                onClick: () => removeRecipePreviewRow(row._localId),
+                              },
+                              'Usuń',
+                            ),
+                          ])
+                        : null,
+                    ].filter(Boolean),
+                  ),
+                )
+              : h('tr', [h('td', { colspan: props.columns.length + (props.isEditMode ? 1 : 0), class: 'empty-cell' }, props.emptyText)]),
+          ),
+        ]),
+      ]);
   },
 });
 
@@ -2670,4 +5445,3 @@ const DataTable = defineComponent({
   },
 });
 </script>
-

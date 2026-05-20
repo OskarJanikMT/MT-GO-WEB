@@ -1,0 +1,148 @@
+{
+  "stations": [
+    {
+      "id": "station-1778766623049-1",
+      "punches": [
+        {
+          "id": "punch-1778766624003-1",
+          "number": "1"
+        },
+        {
+          "id": "punch-1778766624604-2",
+          "number": "2"
+        }
+      ],
+      "lengthRange": {
+        "id": "length-1",
+        "minLength": "0",
+        "maxLength": "200"
+      },
+      "distanceRules": [
+        {
+          "id": "distance-1778766629606-1",
+          "leftPunch": "1",
+          "rightPunch": "2",
+          "distance": "150"
+        }
+      ]
+    },
+    {
+      "id": "station-1778766625152-2",
+      "punches": [
+        {
+          "id": "punch-1778766626129-3",
+          "number": "3"
+        },
+        {
+          "id": "punch-1778766626866-4",
+          "number": "4"
+        }
+      ],
+      "lengthRange": {
+        "id": "length-2",
+        "minLength": "201",
+        "maxLength": "500"
+      },
+      "distanceRules": [
+        {
+          "id": "distance-1778766631865-2",
+          "leftPunch": "3",
+          "rightPunch": "4",
+          "distance": "500"
+        }
+      ]
+    },
+    {
+      "id": "station-1778766979585-1",
+      "punches": [
+        {
+          "id": "punch-1778767038996-1",
+          "number": "5"
+        },
+        {
+          "id": "punch-1778767040542-2",
+          "number": "6"
+        }
+      ],
+      "lengthRange": {
+        "id": "length-3",
+        "minLength": "501",
+        "maxLength": "9999"
+      },
+      "distanceRules": [
+        {
+          "id": "distance-1779270943881-2",
+          "leftPunch": "5",
+          "rightPunch": "6",
+          "distance": "500"
+        }
+      ]
+    }
+  ],
+  "activeMachineId": "machine-1",
+  "machines": [
+    {
+      "id": "machine-1",
+      "rowLimit": 500
+    }
+  ],
+  "favoriteElements": [
+    {
+      "id": "favorite-1779179380093-product-row-1876",
+      "sourceProductName": "BULL S.xlsx",
+      "sourceRowIndex": 2,
+      "label": "BULL S | 940 x 60 x 30",
+      "row": {
+        "Nazwa": "BULL S",
+        "Długość": 940,
+        "Grubość": 30,
+        "Szerokość": 60,
+        "Materiał": "So",
+        "Kod": "BULL S 94 FR",
+        "Grupa": "",
+        "Priorytet": "",
+        "ilość": 2,
+        "Wybijak": 0,
+        "Stanowisko": ""
+      }
+    },
+    {
+      "id": "favorite-1779181128802-product-row-1875",
+      "sourceProductName": "PLAZA L4.xlsx",
+      "sourceRowIndex": 0,
+      "label": "PLAZA L 135.5 FR | 1355 x 30 x 60 | So",
+      "row": {
+        "Nazwa": "PLAZA L",
+        "Długość": 1355,
+        "Grubość": 30,
+        "Szerokość": 60,
+        "Materiał": "So",
+        "Kod": "PLAZA L 135.5 FR",
+        "Grupa": "",
+        "Priorytet": "",
+        "ilość": 2,
+        "Wybijak": 0,
+        "Stanowisko": ""
+      }
+    },
+    {
+      "id": "favorite-1779181462220-product-row-1875",
+      "sourceProductName": "BULL S.xlsx",
+      "sourceRowIndex": 1,
+      "label": "BULL S 126  | 1260 x 30 x 60 | So",
+      "row": {
+        "Nazwa": "BULL S",
+        "Długość": 1260,
+        "Grubość": 30,
+        "Szerokość": 60,
+        "Materiał": "So",
+        "Kod": "BULL S 126 ",
+        "Grupa": "",
+        "Priorytet": "",
+        "ilość": 1,
+        "Wybijak": 0,
+        "Stanowisko": ""
+      }
+    }
+  ]
+}
