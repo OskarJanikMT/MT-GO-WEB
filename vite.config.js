@@ -1066,7 +1066,7 @@ DECLARE @sql NVARCHAR(MAX) = N'
     Pakiet,
     statusPracy
   FROM dbo.StatusMain
-  WHERE id = 2
+  WHERE id = 1
   FOR JSON PATH, INCLUDE_NULL_VALUES;
 ';
 
