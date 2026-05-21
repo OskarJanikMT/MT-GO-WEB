@@ -1162,9 +1162,7 @@ DECLARE @sql NVARCHAR(MAX) = N'
   SELECT TOP (1)
     id,
     Komenda,
-    ' + QUOTENAME(@valueColumn) + N' AS Wartosc,
-    Pakiet,
-    statusPracy
+    ' + QUOTENAME(@valueColumn) + N' AS Wartosc
   FROM dbo.StatusMain
   WHERE LTRIM(RTRIM(COALESCE(Komenda, ''''))) = N''statusPracy''
   FOR JSON PATH, INCLUDE_NULL_VALUES;
@@ -1199,9 +1197,7 @@ DECLARE @sql NVARCHAR(MAX) = N'
   SELECT TOP (10)
     id,
     Komenda,
-    ' + QUOTENAME(@valueColumn) + N' AS Wartosc,
-    Pakiet,
-    statusPracy
+    ' + QUOTENAME(@valueColumn) + N' AS Wartosc
   FROM dbo.StatusMain
   ORDER BY id;
   ';
