@@ -1133,7 +1133,21 @@ EXEC sp_executesql @sql;`;
           const normalizedOutput =
             startIndex >= 0 && endIndex >= startIndex ? output.slice(startIndex, endIndex + 1).replace(/\r?\n/g, '').trim() : '';
           const rows = normalizedOutput ? JSON.parse(normalizedOutput) : [];
-          sendJson(res, 200, { rows: Array.isArray(rows) ? rows : [] });
+          const normalizedRows = Array.isArray(rows) ? rows : [];
+
+          if (!normalizedRows.length) {
+            console.warn('[MTGO SQL] /api/workmain: endpoint zwrócił 0 wierszy. Uruchamiam diagnostykę dbo.WorkMain.');
+            try {
+              const debugSqlText = `SET NOCOUNT ON;
+SELECT COUNT(*) AS totalRows FROM dbo.WorkMain;
+SELECT TOP (5) * FROM dbo.WorkMain ORDER BY id;`;
+              const debugOutput = await executeSqlQuery(debugSqlText);
+              console.warn(`[MTGO SQL] /api/workmain: diagnostyka dbo.WorkMain:\n${debugOutput}`);
+            } catch (debugError) {
+              console.warn(`[MTGO SQL] /api/workmain: diagnostyka nieudana: ${debugError.message || debugError}`);
+            }
+          }
+          sendJson(res, 200, { rows: normalizedRows });
         } catch (error) {
           sendJson(res, 500, { error: error.message || 'Błąd odczytu WorkMain.' });
         }
