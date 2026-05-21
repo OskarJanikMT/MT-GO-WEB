@@ -1154,7 +1154,7 @@ DECLARE @sql NVARCHAR(MAX) = N'
     Pakiet,
     statusPracy
   FROM dbo.StatusMain
-  WHERE id = 1
+  WHERE LTRIM(RTRIM(COALESCE(Komenda, ''''))) = N''statusPracy''
   FOR JSON PATH, INCLUDE_NULL_VALUES;
 ';
 
