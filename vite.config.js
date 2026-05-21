@@ -117,6 +117,10 @@ async function resolveUniqueProductFilePath(fileName) {
   }
 }
 
+function createSqlLogPrefix(kind, sqlServer, sqlDatabase) {
+  return `[MTGO SQL ${new Date().toISOString()}] [${kind}] [${sqlServer}/${sqlDatabase}]`;
+}
+
 function padDateTimePart(value) {
   return String(value).padStart(2, '0');
 }
@@ -514,6 +518,7 @@ async function executeSqlFile(sqlText) {
   const sqlDatabase = process.env.MTGO_SQL_DATABASE || process.env.SQL_DATABASE || '';
   const sqlUser = process.env.MTGO_SQL_USER || process.env.SQL_USER || '';
   const sqlPassword = process.env.MTGO_SQL_PASSWORD || process.env.SQL_PASSWORD || '';
+  const logPrefix = createSqlLogPrefix('EXEC', sqlServer, sqlDatabase);
 
   if (!sqlServer || !sqlDatabase) {
     throw new Error('Brak konfiguracji bazy. Ustaw MTGO_SQL_SERVER oraz MTGO_SQL_DATABASE.');
@@ -523,6 +528,7 @@ async function executeSqlFile(sqlText) {
   await fs.writeFile(tempFilePath, sqlText, 'utf8');
 
   try {
+    console.log(`${logPrefix} start połączenia przez sqlcmd`);
     const args = ['-b', '-S', sqlServer, '-d', sqlDatabase, '-i', tempFilePath];
     if (sqlUser && sqlPassword) {
       args.push('-U', sqlUser, '-P', sqlPassword);
@@ -531,9 +537,11 @@ async function executeSqlFile(sqlText) {
     }
 
     await execFileAsync('sqlcmd', args, { windowsHide: true });
+    console.log(`${logPrefix} połączenie OK, wykonanie zakończone sukcesem`);
   } catch (error) {
     const stderr = String(error?.stderr || '').trim();
     const stdout = String(error?.stdout || '').trim();
+    console.error(`${logPrefix} błąd połączenia lub wykonania: ${stderr || stdout || error.message || 'Nieznany błąd'}`);
     throw new Error(stderr || stdout || error.message || 'Błąd wykonania sqlcmd.');
   } finally {
     await fs.unlink(tempFilePath).catch(() => {});
@@ -545,6 +553,7 @@ async function executeSqlQuery(sqlText) {
   const sqlDatabase = process.env.MTGO_SQL_DATABASE || process.env.SQL_DATABASE || '';
   const sqlUser = process.env.MTGO_SQL_USER || process.env.SQL_USER || '';
   const sqlPassword = process.env.MTGO_SQL_PASSWORD || process.env.SQL_PASSWORD || '';
+  const logPrefix = createSqlLogPrefix('QUERY', sqlServer, sqlDatabase);
 
   if (!sqlServer || !sqlDatabase) {
     throw new Error('Brak konfiguracji bazy. Ustaw MTGO_SQL_SERVER oraz MTGO_SQL_DATABASE.');
@@ -554,6 +563,7 @@ async function executeSqlQuery(sqlText) {
   await fs.writeFile(tempFilePath, sqlText, 'utf8');
 
   try {
+    console.log(`${logPrefix} start połączenia przez sqlcmd`);
     const args = ['-w', '65535', '-y', '0', '-Y', '0', '-S', sqlServer, '-d', sqlDatabase, '-i', tempFilePath];
     if (sqlUser && sqlPassword) {
       args.push('-U', sqlUser, '-P', sqlPassword);
@@ -562,10 +572,12 @@ async function executeSqlQuery(sqlText) {
     }
 
     const { stdout } = await execFileAsync('sqlcmd', args, { windowsHide: true, maxBuffer: 1024 * 1024 * 10 });
+    console.log(`${logPrefix} połączenie OK, zapytanie zakończone sukcesem`);
     return String(stdout || '').trim();
   } catch (error) {
     const stderr = String(error?.stderr || '').trim();
     const stdout = String(error?.stdout || '').trim();
+    console.error(`${logPrefix} błąd połączenia lub zapytania: ${stderr || stdout || error.message || 'Nieznany błąd'}`);
     throw new Error(stderr || stdout || error.message || 'Błąd wykonania sqlcmd.');
   } finally {
     await fs.unlink(tempFilePath).catch(() => {});
