@@ -1133,7 +1133,7 @@ EXEC sp_executesql @sql;`;
           const normalizedOutput =
             startIndex >= 0 && endIndex >= startIndex ? output.slice(startIndex, endIndex + 1).replace(/\r?\n/g, '').trim() : '';
           const rows = normalizedOutput ? JSON.parse(normalizedOutput) : [];
-          const normalizedRows = Array.isArray(rows) ? rows : [];
+          let normalizedRows = Array.isArray(rows) ? rows : [];
 
           if (!normalizedRows.length) {
             console.warn('[MTGO SQL] /api/workmain: endpoint zwrócił 0 wierszy. Uruchamiam diagnostykę dbo.WorkMain.');
@@ -1145,6 +1145,28 @@ SELECT TOP (5) * FROM dbo.WorkMain ORDER BY id;`;
               console.warn(`[MTGO SQL] /api/workmain: diagnostyka dbo.WorkMain:\n${debugOutput}`);
             } catch (debugError) {
               console.warn(`[MTGO SQL] /api/workmain: diagnostyka nieudana: ${debugError.message || debugError}`);
+            }
+
+            try {
+              const fallbackSqlText = `SET NOCOUNT ON;
+SELECT TOP (500) *
+FROM dbo.WorkMain
+ORDER BY id
+FOR JSON PATH, INCLUDE_NULL_VALUES;`;
+              const fallbackOutput = await executeSqlQuery(fallbackSqlText);
+              const fallbackStartIndex = fallbackOutput.indexOf('[');
+              const fallbackEndIndex = fallbackOutput.lastIndexOf(']');
+              const fallbackNormalizedOutput =
+                fallbackStartIndex >= 0 && fallbackEndIndex >= fallbackStartIndex
+                  ? fallbackOutput.slice(fallbackStartIndex, fallbackEndIndex + 1).replace(/\r?\n/g, '').trim()
+                  : '';
+              const fallbackRows = fallbackNormalizedOutput ? JSON.parse(fallbackNormalizedOutput) : [];
+              if (Array.isArray(fallbackRows) && fallbackRows.length) {
+                normalizedRows = fallbackRows;
+                console.warn(`[MTGO SQL] /api/workmain: fallback SELECT * zwrócił ${fallbackRows.length} wierszy.`);
+              }
+            } catch (fallbackError) {
+              console.warn(`[MTGO SQL] /api/workmain: fallback SELECT * nieudany: ${fallbackError.message || fallbackError}`);
             }
           }
           sendJson(res, 200, { rows: normalizedRows });
