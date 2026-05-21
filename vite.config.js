@@ -117,11 +117,57 @@ async function resolveUniqueProductFilePath(fileName) {
   }
 }
 
+function padDateTimePart(value) {
+  return String(value).padStart(2, '0');
+}
+
+function formatRecipeTimestamp(date = new Date()) {
+  return `${date.getFullYear()}-${padDateTimePart(date.getMonth() + 1)}-${padDateTimePart(date.getDate())} ${padDateTimePart(date.getHours())}:${padDateTimePart(date.getMinutes())}:${padDateTimePart(date.getSeconds())}`;
+}
+
+function normalizeRecipeTimestamp(value) {
+  if (!value) return '';
+  const raw = String(value).trim();
+  if (!raw) return '';
+
+  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(raw)) {
+    return raw;
+  }
+
+  const polishMatch = raw.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4}),?\s+(\d{1,2}):(\d{2})(?::(\d{2}))?$/);
+  if (polishMatch) {
+    const [, day, month, year, hours, minutes, seconds = '00'] = polishMatch;
+    return `${year}-${padDateTimePart(month)}-${padDateTimePart(day)} ${padDateTimePart(hours)}:${padDateTimePart(minutes)}:${padDateTimePart(seconds)}`;
+  }
+
+  const parsed = new Date(raw);
+  if (!Number.isNaN(parsed.getTime())) {
+    return formatRecipeTimestamp(parsed);
+  }
+
+  return raw;
+}
+
+function normalizeRecipeEntry(entry) {
+  const createdAt = normalizeRecipeTimestamp(entry?.createdAt || entry?.CzasOdloz || '') || formatRecipeTimestamp(new Date());
+  const lastUsedAt = normalizeRecipeTimestamp(entry?.lastUsedAt || '');
+  return {
+    ...entry,
+    idRap: entry?.idRap ?? Date.now(),
+    nazwaReceptury: String(entry?.nazwaReceptury || '').trim(),
+    CzasOdloz: createdAt,
+    createdAt,
+    lastUsedAt,
+    Usr: entry?.Usr ?? 'Default',
+    rows: Array.isArray(entry?.rows) ? entry.rows : [],
+  };
+}
+
 async function readRecipeCatalog() {
   try {
     const content = await fs.readFile(recipesFilePath, 'utf8');
     const payload = JSON.parse(content);
-    return Array.isArray(payload?.recipes) ? payload.recipes : [];
+    return Array.isArray(payload?.recipes) ? payload.recipes.map((entry) => normalizeRecipeEntry(entry)) : [];
   } catch (error) {
     if (error?.code === 'ENOENT') {
       return [];
@@ -133,7 +179,7 @@ async function readRecipeCatalog() {
 async function writeRecipeCatalog(recipes) {
   await fs.writeFile(
     recipesFilePath,
-    JSON.stringify({ recipes }, null, 2),
+    JSON.stringify({ recipes: Array.isArray(recipes) ? recipes.map((entry) => normalizeRecipeEntry(entry)) : [] }, null, 2),
     'utf8',
   );
 }
@@ -777,10 +823,14 @@ function productSavePlugin() {
             return;
           }
 
+          const createdAt = normalizeRecipeTimestamp(recipe.createdAt) || formatRecipeTimestamp(new Date());
+
           const nextRecipe = {
             idRap: recipe.idRap ?? Date.now(),
             nazwaReceptury: recipeName,
-            CzasOdloz: recipe.CzasOdloz ?? new Date().toLocaleString('pl-PL'),
+            CzasOdloz: createdAt,
+            createdAt,
+            lastUsedAt: normalizeRecipeTimestamp(recipe.lastUsedAt),
             Usr: recipe.Usr ?? 'Default',
             rows,
           };
@@ -825,6 +875,9 @@ function productSavePlugin() {
           const currentRecipe = recipes[recipeIndex];
           const nextRecipe = {
             ...currentRecipe,
+            CzasOdloz: normalizeRecipeTimestamp(currentRecipe.CzasOdloz || currentRecipe.createdAt) || formatRecipeTimestamp(new Date()),
+            createdAt: normalizeRecipeTimestamp(currentRecipe.createdAt || currentRecipe.CzasOdloz) || formatRecipeTimestamp(new Date()),
+            lastUsedAt: normalizeRecipeTimestamp(currentRecipe.lastUsedAt),
             rows,
           };
 
@@ -863,6 +916,41 @@ function productSavePlugin() {
           sendJson(res, 200, { ok: true });
         } catch (error) {
           sendJson(res, 500, { error: error.message || 'Błąd usuwania receptury.' });
+        }
+      });
+
+      server.middlewares.use('/api/recipes/mark-used', async (req, res) => {
+        if (req.method !== 'POST') {
+          sendJson(res, 405, { error: 'Method not allowed' });
+          return;
+        }
+
+        try {
+          const body = await readJsonBody(req);
+          const recipeName = String(body?.recipeName || '').trim();
+
+          if (!recipeName) {
+            sendJson(res, 400, { error: 'Nazwa receptury jest wymagana.' });
+            return;
+          }
+
+          const recipes = await readRecipeCatalog();
+          const recipeIndex = recipes.findIndex((entry) => entry?.nazwaReceptury === recipeName);
+          if (recipeIndex === -1) {
+            sendJson(res, 404, { error: 'Nie znaleziono receptury do aktualizacji użycia.' });
+            return;
+          }
+
+          const nextRecipe = {
+            ...recipes[recipeIndex],
+            lastUsedAt: formatRecipeTimestamp(new Date()),
+          };
+
+          recipes[recipeIndex] = nextRecipe;
+          await writeRecipeCatalog(recipes);
+          sendJson(res, 200, { ok: true, recipe: nextRecipe });
+        } catch (error) {
+          sendJson(res, 500, { error: error.message || 'Błąd aktualizacji użycia receptury.' });
         }
       });
 

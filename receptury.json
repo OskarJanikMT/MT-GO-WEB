@@ -3,12 +3,10 @@
     {
       "idRap": 1779272184282,
       "nazwaReceptury": "test",
-      "CzasOdloz": "20.05.2026, 12:16:24",
+      "CzasOdloz": "2026-05-20 12:16:24",
       "Usr": "Default",
       "rows": [
         {
-          "nazwaReceptury": "test",
-          "nazwaProduktu": "BULL STANOWISKO 2",
           "nazwaSkladowej": "BULL S",
           "dlugosc": "520",
           "grubosc": "30",
@@ -27,8 +25,6 @@
           "TekstDoDruku": "BULL S 52 "
         },
         {
-          "nazwaReceptury": "test",
-          "nazwaProduktu": "BULL STANOWISKO 2",
           "nazwaSkladowej": "BULL S",
           "dlugosc": "151",
           "grubosc": "30",
@@ -47,8 +43,6 @@
           "TekstDoDruku": "BULL S 15.1 "
         },
         {
-          "nazwaReceptury": "test",
-          "nazwaProduktu": "BULL STANOWISKO 2",
           "nazwaSkladowej": "BULL S",
           "dlugosc": "91",
           "grubosc": "30",
@@ -67,8 +61,6 @@
           "TekstDoDruku": "BULL S 9.1 "
         },
         {
-          "nazwaReceptury": "test",
-          "nazwaProduktu": "BULL STANOWISKO 2",
           "nazwaSkladowej": "BULL S",
           "dlugosc": "220",
           "grubosc": "30",
@@ -87,8 +79,6 @@
           "TekstDoDruku": "BULL S 22 "
         },
         {
-          "nazwaReceptury": "test",
-          "nazwaProduktu": "BULL STANOWISKO 2",
           "nazwaSkladowej": "BULL S",
           "dlugosc": "995",
           "grubosc": "25",
@@ -107,8 +97,6 @@
           "TekstDoDruku": "BULL S 99.5 "
         },
         {
-          "nazwaReceptury": "test",
-          "nazwaProduktu": "BULL STANOWISKO 2",
           "nazwaSkladowej": "BULL S",
           "dlugosc": "115",
           "grubosc": "25",
@@ -127,8 +115,6 @@
           "TekstDoDruku": "BULL S 11.5 "
         },
         {
-          "nazwaReceptury": "test",
-          "nazwaProduktu": "BULL STANOWISKO 2",
           "nazwaSkladowej": "BULL S",
           "dlugosc": "75",
           "grubosc": "25",
@@ -147,8 +133,6 @@
           "TekstDoDruku": "BULL S 7.5 "
         },
         {
-          "nazwaReceptury": "test",
-          "nazwaProduktu": "BULL STANOWISKO 2",
           "nazwaSkladowej": "BULL S",
           "dlugosc": "65",
           "grubosc": "25",
@@ -167,8 +151,6 @@
           "TekstDoDruku": "BULL S 6.5 "
         },
         {
-          "nazwaReceptury": "test",
-          "nazwaProduktu": "BULL STANOWISKO 2",
           "nazwaSkladowej": "BULL S",
           "dlugosc": "920",
           "grubosc": "25",
@@ -187,8 +169,6 @@
           "TekstDoDruku": "BULL S 92 "
         },
         {
-          "nazwaReceptury": "test",
-          "nazwaProduktu": "BULL STANOWISKO 2",
           "nazwaSkladowej": "BULL S",
           "dlugosc": "820",
           "grubosc": "25",
@@ -207,8 +187,6 @@
           "TekstDoDruku": "BULL S 82 "
         },
         {
-          "nazwaReceptury": "test",
-          "nazwaProduktu": "BULL STANOWISKO 2",
           "nazwaSkladowej": "BULL S",
           "dlugosc": "525",
           "grubosc": "25",
@@ -227,8 +205,6 @@
           "TekstDoDruku": "BULL S 52.5 "
         },
         {
-          "nazwaReceptury": "test",
-          "nazwaProduktu": "BULL STANOWISKO 2",
           "nazwaSkladowej": "BULL S",
           "dlugosc": "185",
           "grubosc": "25",
@@ -246,7 +222,9 @@
           "Informacje": "Kopia tymczasowa",
           "TekstDoDruku": "BULL S 18.5 "
         }
-      ]
+      ],
+      "createdAt": "2026-05-20 12:16:24",
+      "lastUsedAt": "2026-05-21 11:27:37"
     }
   ]
 }

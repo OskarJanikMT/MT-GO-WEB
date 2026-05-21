@@ -35,6 +35,9 @@
             </template>
           </div>
           <div class="filter-actions">
+            <button class="tool-btn" :class="{ primary: activeTab === 'recipes' }" @click="activeTab = 'recipes'">
+              Receptury
+            </button>
             <button class="tool-btn" :class="{ primary: isConfigPanelOpen }" @click="toggleConfigPanel">
               Config
             </button>
@@ -116,6 +119,7 @@
                           placeholder="Min"
                           @input="updateConfigStationLengthRange(station.id, 'minLength', $event.target.value)"
                         />
+                        <span class="config-input-unit">[mm]</span>
                         <span class="config-length-separator">do</span>
                         <input
                           class="text-input config-length-input"
@@ -124,6 +128,7 @@
                           placeholder="Max"
                           @input="updateConfigStationLengthRange(station.id, 'maxLength', $event.target.value)"
                         />
+                        <span class="config-input-unit">[mm]</span>
                       </div>
                     </div>
                   </article>
@@ -154,16 +159,19 @@
                           <span class="config-punch-node-label">Wybijak</span>
                         </div>
                         <div class="config-distance-link">
-                          <span class="config-distance-caption">{{ rule.leftPunch }}-{{ rule.rightPunch }}</span>
-                          <input
-                            class="text-input config-distance-input"
-                            :value="rule.distance"
-                            inputmode="numeric"
-                            :placeholder="`Odległość ${rule.leftPunch}-${rule.rightPunch}`"
-                            @focus="rememberConfigDistanceEditStart(station.id, rule.id, rule.distance)"
-                            @input="updateConfigStationDistance(station.id, rule.id, 'distance', $event.target.value)"
-                            @blur="handleConfigDistanceEditBlur(station.id, rule.id)"
-                          />
+                          <div class="config-distance-input-wrap">
+                            <input
+                              class="text-input config-distance-input"
+                              :value="rule.distance"
+                              inputmode="numeric"
+                              :placeholder="`Odległość ${rule.leftPunch}-${rule.rightPunch}`"
+                              @focus="rememberConfigDistanceEditStart(station.id, rule.id, rule.distance)"
+                              @input="updateConfigStationDistance(station.id, rule.id, 'distance', $event.target.value)"
+                              @blur="handleConfigDistanceEditBlur(station.id, rule.id)"
+                            />
+                            <span class="config-input-unit">[mm]</span>
+                          </div>
+                          <span class="config-distance-arrow" aria-hidden="true">⟷</span>
                         </div>
                         <div class="config-punch-node">
                           <span class="config-punch-node-number">{{ rule.rightPunch }}</span>
@@ -297,7 +305,7 @@
             {{ productFileActionMessage }}
           </div>
 
-          <div class="produkcja-container">
+          <div class="produkcja-container products-summary-panel">
             <DataTable
               :columns="productSummaryColumns"
               :rows="filteredProductSummaries"
@@ -329,8 +337,8 @@
                   </template>
                   <span v-else class="panel-caption">{{ selectedProductName }}</span>
                 </div>
-                <span class="row-limit modal-row-limit" :class="{ warn: selectedProductSourceRows.length >= activeRowLimit }">
-                  Pozycje: {{ selectedProductSourceRows.length }} / {{ activeRowLimit }}
+                <span class="row-limit modal-row-limit">
+                  Ilość pozycji: {{ selectedProductSourceRows.length }}
                 </span>
                 <div class="panel-actions">
                   <button
@@ -401,7 +409,8 @@
                         @click="!isEditMode && column !== 'Nr' ? sortNestedProductsBy(column) : undefined"
                         :class="{ sorted: !isEditMode && nestedProductSortKey === column, disabled: column === 'Nr' || isEditMode }"
                       >
-                        {{ productColumnLabels[column] ?? column }}
+                          <span>{{ getColumnLabelText(column, productColumnLabels) }}</span>
+                          <span v-if="isDimensionColumn(column)" class="dimension-unit">₍ₘₘ₎</span>
                         <span v-if="!isEditMode && column !== 'Nr' && nestedProductSortKey === column" class="sort-mark">
                           {{ nestedProductSortDirection > 0 ? '▲' : '▼' }}
                         </span>
@@ -793,7 +802,8 @@
                           @click="column !== 'Nr' ? sortMergePreviewProductsBy(column) : undefined"
                           :class="{ sorted: column !== 'Nr' && mergePreviewSortKey === column, disabled: column === 'Nr' }"
                         >
-                          {{ productColumnLabels[column] ?? column }}
+                          <span>{{ getColumnLabelText(column, productColumnLabels) }}</span>
+                          <span v-if="isDimensionColumn(column)" class="dimension-unit">₍ₘₘ₎</span>
                           <span v-if="column !== 'Nr' && mergePreviewSortKey === column" class="sort-mark">
                             {{ mergePreviewSortDirection > 0 ? '▲' : '▼' }}
                           </span>
@@ -856,7 +866,14 @@
                   class="recipe-group"
                   :class="`recipe-group-${(groupIndex % 4) + 1}`"
                 >
-                  <button class="recipe-group-header" @click="toggleRecipeGroup(group.productName)">
+                  <div
+                    class="recipe-group-header"
+                    role="button"
+                    tabindex="0"
+                    @click="toggleRecipeGroup(group.productName)"
+                    @keydown.enter.prevent="toggleRecipeGroup(group.productName)"
+                    @keydown.space.prevent="toggleRecipeGroup(group.productName)"
+                  >
                     <span class="recipe-group-toggle">{{ isRecipeGroupCollapsed(group.productName) ? '▸' : '▾' }}</span>
                     <div class="recipe-group-meta">
                       <strong>{{ getMergeProductDisplayName(group.productName) }}</strong>
@@ -888,7 +905,7 @@
                       {{ isMergeProductEditMode(group.productName) ? 'Zakończ edycję' : 'Edytuj recepturę' }}
                     </button>
                     <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
-                  </button>
+                  </div>
 
                   <div v-if="!isRecipeGroupCollapsed(group.productName)" class="table-wrap recipe-group-table-wrap">
                     <table class="data-table recipe-group-table">
@@ -900,7 +917,8 @@
                             @click="!isMergeProductEditMode(group.productName) ? sortMergeRecipeBy(column) : undefined"
                             :class="{ sorted: !isMergeProductEditMode(group.productName) && mergeRecipeSortKey === column, disabled: isMergeProductEditMode(group.productName) }"
                           >
-                            {{ recipeColumnLabels[column] ?? column }}
+                            <span>{{ getColumnLabelText(column, recipeColumnLabels) }}</span>
+                            <span v-if="isDimensionColumn(column)" class="dimension-unit">₍ₘₘ₎</span>
                             <span v-if="!isMergeProductEditMode(group.productName) && mergeRecipeSortKey === column" class="sort-mark">
                               {{ mergeRecipeSortDirection > 0 ? '▲' : '▼' }}
                             </span>
@@ -1003,84 +1021,109 @@
             </div>
           </div>
 
-          <div class="recipe-preview-section" :class="{ collapsed: isRecipeCatalogCollapsed }">
-            <div class="panel recipe-catalog-panel" :class="{ collapsed: isRecipeCatalogCollapsed }">
-              <div class="panel-header">
-                <span v-if="!isRecipeCatalogCollapsed">Zapisane receptury</span>
-                <span v-if="!isRecipeCatalogCollapsed" class="panel-caption">{{ recipeCatalog.length }}</span>
-              </div>
-              <div class="recipe-catalog-body">
-                <div v-if="!isRecipeCatalogCollapsed" class="recipe-catalog-content">
-                  <div class="merge-search recipe-catalog-search">
-                    <div class="search-input-wrap">
-                      <span class="search-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" focusable="false">
-                          <path
-                            d="M10.5 4a6.5 6.5 0 1 0 4.06 11.58l4.43 4.43 1.41-1.41-4.43-4.43A6.5 6.5 0 0 0 10.5 4Zm0 2a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Z"
-                            fill="currentColor"
-                          />
-                        </svg>
-                      </span>
-                      <input v-model="recipeCatalogSearch" class="text-input merge-search-input" placeholder="Szukaj receptury" />
-                    </div>
-                  </div>
-                  <DataTable
-                    :columns="recipeCatalogColumns"
-                    :rows="filteredRecipeCatalog"
-                    :labels="recipeSummaryLabels"
-                    empty-text="Brak receptur"
-                    @row-click="selectRecipePreview"
+        </section>
+
+        <section v-if="activeTab === 'recipes'" class="section">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">Receptury</h2>
+              <p class="section-subtitle">Katalog wszystkich zapisanych receptur z filtrowaniem i podglądem.</p>
+            </div>
+          </div>
+
+          <div class="panel recipe-library-panel">
+            <div class="panel-header">
+              <span>Zapisane receptury</span>
+              <span class="panel-caption">{{ filteredRecipeCatalog.length }} / {{ recipeCatalog.length }}</span>
+            </div>
+            <div class="recipe-library-filters">
+              <div class="merge-search recipe-catalog-search recipe-library-search">
+                <div class="search-input-wrap">
+                  <span class="search-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false">
+                      <path
+                        d="M10.5 4a6.5 6.5 0 1 0 4.06 11.58l4.43 4.43 1.41-1.41-4.43-4.43A6.5 6.5 0 0 0 10.5 4Zm0 2a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Z"
+                        fill="currentColor"
+                      />
+                    </svg>
+                  </span>
+                  <input
+                    v-model="recipeCatalogSearch"
+                    class="text-input merge-search-input"
+                    placeholder="Szukaj po nazwie, materiale albo dacie"
                   />
                 </div>
-                <button
-                  class="recipe-catalog-toggle"
-                  type="button"
-                  :aria-expanded="(!isRecipeCatalogCollapsed).toString()"
-                  @click="toggleRecipeCatalogPanel"
+              </div>
+              <select v-model="recipeCatalogMaterialFilter" class="select-input recipe-filter-select">
+                <option value="">Wszystkie materiały</option>
+                <option v-for="material in recipeCatalogMaterials" :key="material" :value="material">{{ material }}</option>
+              </select>
+              <select v-model="recipeCatalogUsageFilter" class="select-input recipe-filter-select">
+                <option value="all">Wszystkie receptury</option>
+                <option value="used">Tylko używane</option>
+                <option value="unused">Nigdy nieużyte</option>
+              </select>
+              <button
+                class="tool-btn compact"
+                :disabled="!recipeCatalogSearch && !recipeCatalogMaterialFilter && recipeCatalogUsageFilter === 'all'"
+                @click="resetRecipeCatalogFilters"
+              >
+                Wyczyść filtry
+              </button>
+            </div>
+            <DataTable
+              :columns="recipeCatalogColumns"
+              :rows="filteredRecipeCatalog"
+              :labels="recipeSummaryLabels"
+              empty-text="Brak receptur"
+              @row-click="selectRecipePreview"
+            />
+          </div>
+        </section>
+
+        <div v-if="isSavedRecipePreviewOpen" class="confirm-modal-overlay saved-recipe-preview-overlay" @click.self="closeSavedRecipePreview">
+          <div class="confirm-modal panel panel-wide work-recipe-preview-modal saved-recipe-preview-modal" @click.stop>
+            <div class="panel-header">
+              <span>Podgląd receptury</span>
+              <div class="panel-actions">
+                <span
+                  v-if="recipePreviewSaveMessage"
+                  class="panel-caption"
+                  :class="{ error: recipePreviewSaveError, success: !recipePreviewSaveError }"
                 >
-                  <span class="recipe-catalog-toggle-icon">{{ isRecipeCatalogCollapsed ? '▸' : '◂' }}</span>
+                  {{ recipePreviewSaveMessage }}
+                </span>
+                <span class="panel-caption">{{ selectedRecipePreviewName || 'Wybierz recepturę' }}</span>
+                <button v-if="selectedRecipePreviewName && !isRecipePreviewEditMode" class="tool-btn compact" type="button" @click.stop="startRecipePreviewEdit">
+                  Edytuj
+                </button>
+                <button v-if="selectedRecipePreviewName && !isRecipePreviewEditMode" class="tool-btn compact danger" type="button" @click.stop="requestDeleteRecipePreview">
+                  Usuń recepturę
+                </button>
+                <button v-if="selectedRecipePreviewName && isRecipePreviewEditMode" class="tool-btn compact" type="button" @click.stop="requestCancelRecipePreviewEdit">
+                  Anuluj
+                </button>
+                <button v-if="selectedRecipePreviewName && isRecipePreviewEditMode" class="tool-btn compact primary" type="button" @click.stop="saveRecipePreviewChanges">
+                  Zapisz
+                </button>
+                <button class="tool-btn compact" type="button" @click.stop="closeSavedRecipePreview">
+                  Zamknij
                 </button>
               </div>
             </div>
-            <div class="panel panel-wide">
-              <div class="panel-header">
-                <span>Podgląd receptury</span>
-                <div class="panel-actions">
-                  <span
-                    v-if="recipePreviewSaveMessage"
-                    class="panel-caption"
-                    :class="{ error: recipePreviewSaveError, success: !recipePreviewSaveError }"
-                  >
-                    {{ recipePreviewSaveMessage }}
-                  </span>
-                  <span class="panel-caption">{{ selectedRecipePreviewName || 'Wybierz recepturę' }}</span>
-                  <button v-if="selectedRecipePreviewName && !isRecipePreviewEditMode" class="tool-btn compact" type="button" @click.stop="startRecipePreviewEdit">
-                    Edytuj
-                  </button>
-                  <button v-if="selectedRecipePreviewName && !isRecipePreviewEditMode" class="tool-btn compact danger" type="button" @click.stop="requestDeleteRecipePreview">
-                    Usuń
-                  </button>
-                  <button v-if="selectedRecipePreviewName && isRecipePreviewEditMode" class="tool-btn compact" type="button" @click.stop="requestCancelRecipePreviewEdit">
-                    Anuluj
-                  </button>
-                  <button v-if="selectedRecipePreviewName && isRecipePreviewEditMode" class="tool-btn compact primary" type="button" @click.stop="saveRecipePreviewChanges">
-                    Zapisz
-                  </button>
-                </div>
-              </div>
-              <RecipePreviewTable
-                :columns="workRecipePreviewColumns"
-                :rows="recipePreviewRows"
-                :labels="recipeColumnLabels"
-                :is-edit-mode="isRecipePreviewEditMode"
-                empty-text="Wybierz recepturę, aby zobaczyć jej skład"
-              />
-              <div v-if="selectedRecipePreviewName && isRecipePreviewEditMode" class="work-table-footer">
-                <button class="tool-btn" :disabled="recipePreviewDraftRows.length >= activeRowLimit" @click="addRecipePreviewRow">Dodaj nowy wiersz</button>
-              </div>
+            <div v-if="recipePreviewSaveMessage" class="save-status" :class="{ error: recipePreviewSaveError }">{{ recipePreviewSaveMessage }}</div>
+            <RecipePreviewTable
+              :columns="workRecipePreviewColumns"
+              :rows="recipePreviewRows"
+              :labels="recipeColumnLabels"
+              :is-edit-mode="isRecipePreviewEditMode"
+              empty-text="Wybierz recepturę, aby zobaczyć jej skład"
+            />
+            <div v-if="selectedRecipePreviewName && isRecipePreviewEditMode" class="work-table-footer">
+              <button class="tool-btn" :disabled="recipePreviewDraftRows.length >= activeRowLimit" @click="addRecipePreviewRow">Dodaj nowy wiersz</button>
             </div>
           </div>
-        </section>
+        </div>
 
         <section v-if="activeTab === 'work'" class="section">
           <div class="section-header">
@@ -1240,6 +1283,20 @@
                       <td v-for="column in savedColumns" :key="`${row.idRap}-${column}`">{{ row[column] ?? '' }}</td>
                       <td class="row-actions-cell saved-row-actions">
                         <button
+                          class="tool-btn compact product-preview-btn"
+                          type="button"
+                          title="Podgląd odłożonej pracy"
+                          :disabled="!row.rows"
+                          @click.stop.prevent="openSavedWorkPreview(row.idRap)"
+                        >
+                          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <path
+                              d="M10.5 4a6.5 6.5 0 1 0 4.06 11.58l4.43 4.43 1.41-1.41-4.43-4.43A6.5 6.5 0 0 0 10.5 4Zm0 2a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Z"
+                              fill="currentColor"
+                            />
+                          </svg>
+                        </button>
+                        <button
                           class="tool-btn compact primary"
                           type="button"
                           :disabled="!row.rows"
@@ -1259,6 +1316,27 @@
             </div>
           </aside>
 
+          <div v-if="selectedSavedWorkPreview" class="confirm-modal-overlay saved-work-preview-overlay" @click.self="closeSavedWorkPreview">
+            <div class="confirm-modal panel panel-wide work-recipe-preview-modal saved-work-preview-modal" @click.stop>
+              <div class="panel-header">
+                <span>Podgląd odłożonej pracy</span>
+                <div class="panel-actions">
+                  <span class="panel-caption">{{ selectedSavedWorkPreview.NazwaRec || 'Odłożona praca' }}</span>
+                  <button class="tool-btn compact" type="button" @click.stop="closeSavedWorkPreview">Zamknij</button>
+                </div>
+              </div>
+              <RecipePreviewTable
+                :columns="savedWorkPreviewColumns"
+                :rows="savedWorkPreviewRows"
+                :labels="workColumnLabels"
+                empty-text="Brak pozycji w odłożonej pracy"
+              />
+              <div class="confirm-modal-actions">
+                <button class="tool-btn compact" @click="closeSavedWorkPreview">Zamknij</button>
+              </div>
+            </div>
+          </div>
+
           <div v-if="isWorkProductModalOpen" class="confirm-modal-overlay single-element-overlay" @click.self="closeWorkProductModal">
             <div class="confirm-modal panel single-element-modal" @click.stop>
               <div class="panel-header">
@@ -1275,15 +1353,19 @@
                     </option>
                   </select>
                 </label>
+                <label v-if="workSourceRowOptions.length" class="rename-field">
+                  <span>Szukaj elementu po nazwie</span>
+                  <input v-model="workSourceRowSearch" class="text-input" placeholder="Wpisz nazwę elementu" />
+                </label>
                 <div class="single-element-summary">
-                  <span>{{ workSourceRowOptions.length }} elementów w produkcie</span>
+                  <span>{{ filteredWorkSourceRowOptions.length }} / {{ workSourceRowOptions.length }} elementów w produkcie</span>
                   <span>Zaznaczone: {{ selectedWorkRowCount }}</span>
                 </div>
                 <div v-if="workSourceRowOptions.length" class="favorite-elements-legend">
                   Kod | Długość x Grubość x Szerokość | Materiał
                 </div>
-                <div v-if="workSourceRowOptions.length" class="single-element-list">
-                  <div v-for="row in workSourceRowOptions" :key="row._localId" class="single-element-row">
+                <div v-if="filteredWorkSourceRowOptions.length" class="single-element-list">
+                  <div v-for="row in filteredWorkSourceRowOptions" :key="row._localId" class="single-element-row">
                     <label class="single-element-check">
                       <input
                         type="checkbox"
@@ -1294,6 +1376,9 @@
                       <span class="single-element-row-text">{{ formatTemporaryRowOption(row) }}</span>
                     </label>
                   </div>
+                </div>
+                <div v-else-if="workSourceRowOptions.length" class="expanded-empty single-element-empty">
+                  Brak elementów pasujących do wpisanej nazwy.
                 </div>
                 <div v-else class="expanded-empty single-element-empty">
                   Wybierz produkt, aby zobaczyć jego elementy.
@@ -1312,6 +1397,11 @@
           </div>
         </section>
       </main>
+      <footer class="app-footer">
+        <a class="app-footer-copy app-footer-link" href="https://metal-technika.com.pl/" target="_blank" rel="noopener noreferrer">
+          © Metal-Technika
+        </a>
+      </footer>
     </div>
   </div>
 </template>
@@ -1364,12 +1454,15 @@ const productColumnLabels = {
 };
 const editableProductColumns = ['Nazwa', 'Długość', 'Grubość', 'Szerokość', 'Materiał', 'Kod', 'Grupa', 'Priorytet', 'ilość', 'Wybijak'];
 
-const recipeSummaryColumns = ['nazwaReceptury', 'liczbaPozycji', 'sumaElementow', 'materialy'];
-const recipeCatalogColumns = ['nazwaReceptury', 'liczbaPozycji', 'sumaElementow'];
+const recipeSummaryColumns = ['nazwaReceptury', 'liczbaPozycji', 'sumaElementow', 'materialy', 'createdAt', 'lastUsedAt'];
+const recipeCatalogColumns = ['nazwaReceptury', 'liczbaPozycji', 'sumaElementow', 'materialy', 'createdAt', 'lastUsedAt'];
 const recipeSummaryLabels = {
+  nazwaReceptury: 'Nazwa receptury',
   liczbaPozycji: 'Pozycje',
   sumaElementow: 'Elementy',
   materialy: 'Materiały',
+  createdAt: 'Data utworzenia',
+  lastUsedAt: 'Ostatnio użyta',
 };
 
 const recipeColumns = [
@@ -1393,9 +1486,20 @@ const recipeColumns = [
 const workRecipePreviewColumns = recipeColumns.filter(
   (column) => !['idReceptury', 'idSkladowej', 'iloscWykonana', 'Informacje'].includes(column),
 );
-const mergeRecipeColumns = recipeColumns.filter(
-  (column) => !['Informacje', 'idReceptury', 'idSkladowej', 'iloscWykonana'].includes(column),
-);
+const mergeRecipeColumns = [
+  'nazwaSkladowej',
+  'TekstDoDruku',
+  'dlugosc',
+  'grubosc',
+  'szerokosc',
+  'material',
+  'grupa',
+  'priorytet',
+  'ilosc',
+  'Klasa',
+  'wybijak',
+  'Stanowisko',
+];
 const recipeColumnLabels = {
   nazwaSkladowej: 'Nazwa',
   dlugosc: 'Długość',
@@ -1418,16 +1522,30 @@ const recipeColumnLabels = {
 const workColumns = [
   'id',
   'Nazwa',
-  'Material',
+  'Dlugosc',
   'Grubosc',
   'Szerokosc',
-  'Dlugosc',
-  'Wybijak',
+  'Material',
   'TekstDoDruku',
+  'Wybijak',
+  'Stanowisko',
   'Klasa',
   'Sztuk',
-  'Stanowisko',
   'Progress',
+];
+const savedWorkPreviewColumns = [
+  'id',
+  'Nazwa',
+  'Dlugosc',
+  'Grubosc',
+  'Szerokosc',
+  'Material',
+  'TekstDoDruku',
+  'Wybijak',
+  'Stanowisko',
+  'Klasa',
+  'Sztuk',
+  'ProgressLabel',
 ];
 const workColumnLabels = {
   id: 'ID',
@@ -1442,6 +1560,7 @@ const workColumnLabels = {
   Klasa: 'Klasa',
   Sztuk: 'Ilość',
   Stanowisko: 'Stanowisko',
+  ProgressLabel: 'Progress',
 };
 
 const savedColumns = ['idRap', 'NazwaRec', 'Wiersze', 'CzasOdloz', 'Usr'];
@@ -1487,7 +1606,6 @@ const lastMergeInteractedProduct = ref('');
 const mergeCheckboxResetProduct = ref('');
 const mergeCheckboxResetVersion = ref(0);
 const isMergeSelectionCollapsed = ref(false);
-const isRecipeCatalogCollapsed = ref(false);
 const mergeEditModes = ref({});
 const mergeEditingCell = ref(null);
 const mergeRecipeDrafts = ref({});
@@ -1507,6 +1625,8 @@ const temporarySelectedRowIds = ref({});
 const selectedRecipe = ref('');
 const selectedRecipePreviewName = ref('');
 const recipeCatalogSearch = ref('');
+const recipeCatalogMaterialFilter = ref('');
+const recipeCatalogUsageFilter = ref('all');
 const isRecipePreviewEditMode = ref(false);
 const recipePreviewDraftRows = ref([]);
 const recipePreviewEditingCell = ref(null);
@@ -1514,6 +1634,8 @@ const recipePreviewSaveMessage = ref('');
 const recipePreviewSaveError = ref(false);
 const isWorkRecipeMenuOpen = ref(false);
 const isWorkRecipePreviewOpen = ref(false);
+const isSavedRecipePreviewOpen = ref(false);
+const savedWorkPreviewId = ref('');
 const workRecipeSearch = ref('');
 const selectedProductName = ref('');
 const productsLoading = ref(false);
@@ -1538,6 +1660,7 @@ const workUploadError = ref(false);
 const workEditingRowId = ref(null);
 const isWorkProductModalOpen = ref(false);
 const workSourceProductName = ref('');
+const workSourceRowSearch = ref('');
 const workSelectedRowIds = ref({});
 const workCorrectionDrafts = ref({});
 const isFileActionLoading = ref(false);
@@ -1747,12 +1870,41 @@ const recipeCatalog = computed(() =>
     liczbaPozycji: entry.rows.length,
     sumaElementow: entry.rows.reduce((sum, row) => sum + Number(row.ilosc || 0), 0),
     materialy: [...new Set(entry.rows.map((row) => row.material).filter(Boolean))].join(', '),
+    createdAt: entry.createdAt || entry.CzasOdloz || '',
+    lastUsedAt: entry.lastUsedAt || 'Nigdy',
   })),
+);
+const recipeCatalogMaterials = computed(() =>
+  [...new Set(recipeCatalog.value.flatMap((entry) => String(entry.materialy || '').split(',').map((item) => item.trim()).filter(Boolean)))].sort((a, b) =>
+    a.localeCompare(b, 'pl', { sensitivity: 'base' }),
+  ),
 );
 const filteredRecipeCatalog = computed(() => {
   const query = recipeCatalogSearch.value.trim().toLowerCase();
-  if (!query) return recipeCatalog.value;
-  return recipeCatalog.value.filter((entry) => String(entry.nazwaReceptury || '').toLowerCase().includes(query));
+  return recipeCatalog.value.filter((entry) => {
+    const matchesQuery =
+      !query ||
+      [
+        entry.nazwaReceptury,
+        entry.materialy,
+        entry.createdAt,
+        entry.lastUsedAt,
+      ]
+        .join(' ')
+        .toLowerCase()
+        .includes(query);
+    const matchesMaterial =
+      !recipeCatalogMaterialFilter.value ||
+      String(entry.materialy || '')
+        .split(',')
+        .map((item) => item.trim())
+        .includes(recipeCatalogMaterialFilter.value);
+    const matchesUsage =
+      recipeCatalogUsageFilter.value === 'all' ||
+      (recipeCatalogUsageFilter.value === 'used' && entry.lastUsedAt !== 'Nigdy') ||
+      (recipeCatalogUsageFilter.value === 'unused' && entry.lastUsedAt === 'Nigdy');
+    return matchesQuery && matchesMaterial && matchesUsage;
+  });
 });
 
 const selectedRecipePreviewRows = computed(() => {
@@ -1767,7 +1919,36 @@ const filteredWorkRecipeNames = computed(() => {
   if (!query) return recipeNames.value;
   return recipeNames.value.filter((name) => name.toLowerCase().includes(query));
 });
+const selectedSavedWorkPreview = computed(
+  () => savedRows.value.find((row) => String(row.idRap) === String(savedWorkPreviewId.value)) || null,
+);
+const savedWorkPreviewRows = computed(() => {
+  if (!selectedSavedWorkPreview.value?.rows) return [];
+  try {
+    const parsedRows = JSON.parse(selectedSavedWorkPreview.value.rows);
+    if (!Array.isArray(parsedRows)) return [];
+    return parsedRows.map((row) => {
+      const doneValue = getWorkDisplayedDoneValue('', row?.Progress?.done ?? row?.WykonaneSztuki ?? 0);
+      const totalValue = getWorkDisplayedTotalValue('', row?.Progress?.total ?? row?.Sztuk ?? 0);
+      return {
+        ...row,
+        ProgressLabel: `${doneValue}/${totalValue}`,
+      };
+    });
+  } catch {
+    return [];
+  }
+});
 const workSourceRowOptions = computed(() => productRowsByName.value[workSourceProductName.value] ?? []);
+const filteredWorkSourceRowOptions = computed(() => {
+  const query = workSourceRowSearch.value.trim().toLowerCase();
+  if (!query) return workSourceRowOptions.value;
+  return workSourceRowOptions.value.filter((row) =>
+    String(row?.Nazwa ?? row?.nazwaSkladowej ?? '')
+      .toLowerCase()
+      .includes(query),
+  );
+});
 const selectedWorkRowCount = computed(() => Object.values(workSelectedRowIds.value).filter(Boolean).length);
 const projectedWorkRowCount = computed(() => workRows.value.length + selectedWorkRowCount.value);
 const workRemainingCapacity = computed(() => Math.max(0, activeRowLimit.value - workRows.value.length));
@@ -2065,17 +2246,20 @@ function openWorkProductModal() {
   if (!workSourceProductName.value || !availableProductNames.value.includes(workSourceProductName.value)) {
     workSourceProductName.value = availableProductNames.value[0] || '';
   }
+  workSourceRowSearch.value = '';
   resetWorkSourceSelection();
   isWorkProductModalOpen.value = true;
 }
 
 function closeWorkProductModal() {
   isWorkProductModalOpen.value = false;
+  workSourceRowSearch.value = '';
   resetWorkSourceSelection();
 }
 
 function handleWorkSourceProductChange(nextProductName) {
   workSourceProductName.value = nextProductName;
+  workSourceRowSearch.value = '';
   resetWorkSourceSelection();
 }
 
@@ -2159,7 +2343,18 @@ function addSelectedWorkRows() {
   closeWorkProductModal();
 }
 
+function openSavedWorkPreview(idRap) {
+  savedWorkPreviewId.value = String(idRap);
+}
+
+function closeSavedWorkPreview() {
+  savedWorkPreviewId.value = '';
+}
+
 function removeSavedRow(idRap) {
+  if (String(savedWorkPreviewId.value) === String(idRap)) {
+    closeSavedWorkPreview();
+  }
   savedRows.value = savedRows.value.filter((row) => String(row.idRap) !== String(idRap));
   persistSavedRows();
 }
@@ -3142,6 +3337,14 @@ function isStationColumn(column) {
   return column === 'Stanowisko' || column === 'stanowisko';
 }
 
+function isDimensionColumn(column) {
+  return ['Długość', 'Grubość', 'Szerokość', 'dlugosc', 'grubosc', 'szerokosc', 'Dlugosc', 'Grubosc', 'Szerokosc'].includes(column);
+}
+
+function getColumnLabelText(column, labels = {}) {
+  return labels[column] ?? column;
+}
+
 function getStationDropdownOptions(currentValue = '') {
   const normalizedCurrentValue = normalizeStationValue(currentValue);
   const options = [...stationOptions.value];
@@ -3910,12 +4113,60 @@ function getMergeEditInputStyle(column, value) {
 }
 
 function getRecipePreviewEditInputStyle(column, value) {
-  const length = String(value ?? '').length;
-  const isWideColumn = ['nazwaSkladowej', 'material', 'TekstDoDruku'].includes(column);
-  const minWidth = isWideColumn ? 10 : 4;
-  const maxWidth = isWideColumn ? 20 : 8;
-  const chWidth = Math.max(minWidth, Math.min(length + 1, maxWidth));
-  return { width: `${chWidth}ch` };
+  let contentLength = String(value ?? '').length;
+  if (isStationColumn(column)) {
+    const selectedOption = getStationDropdownOptions(value).find((option) => option.value === normalizeStationValue(value));
+    contentLength = String(selectedOption?.label || value || '').length;
+  }
+  const widthConfig = {
+    nazwaSkladowej: { min: 14, max: 34 },
+    material: { min: 8, max: 16 },
+    TekstDoDruku: { min: 12, max: 26 },
+    dlugosc: { min: 6, max: 10 },
+    grubosc: { min: 6, max: 10 },
+    szerokosc: { min: 6, max: 10 },
+    wybijak: { min: 6, max: 10 },
+    grupa: { min: 4, max: 6 },
+    priorytet: { min: 4, max: 6 },
+    ilosc: { min: 5, max: 8 },
+    Stanowisko: { min: 14, max: 18 },
+    Klasa: { min: 5, max: 8 },
+  };
+  const { min = 7, max = 14 } = widthConfig[column] ?? {};
+  const chWidth = Math.max(min, Math.min(contentLength + 2, max));
+  return {
+    width: isStationColumn(column) ? `calc(${chWidth}ch + 20px)` : `${chWidth}ch`,
+    minWidth: `${min}ch`,
+  };
+}
+
+function getWorkEditInputStyle(column, value) {
+  let contentLength = String(value ?? '').length;
+  if (isStationColumn(column)) {
+    const selectedOption = getStationDropdownOptions(value).find((option) => option.value === normalizeStationValue(value));
+    contentLength = String(selectedOption?.label || value || '').length;
+  }
+
+  const widthConfig = {
+    Nazwa: { min: 14, max: 30 },
+    Dlugosc: { min: 6, max: 10 },
+    Grubosc: { min: 6, max: 10 },
+    Szerokosc: { min: 6, max: 10 },
+    Material: { min: 8, max: 16 },
+    TekstDoDruku: { min: 12, max: 28 },
+    Wybijak: { min: 6, max: 10 },
+    Stanowisko: { min: 14, max: 18 },
+    Klasa: { min: 5, max: 8 },
+    Sztuk: { min: 5, max: 8 },
+  };
+
+  const { min = 7, max = 14 } = widthConfig[column] ?? {};
+  const chWidth = Math.max(min, Math.min(contentLength + 2, max));
+
+  return {
+    width: isStationColumn(column) ? `calc(${chWidth}ch + 20px)` : `${chWidth}ch`,
+    minWidth: `${min}ch`,
+  };
 }
 
 async function saveProductChanges() {
@@ -4026,10 +4277,6 @@ function closeMergeAlert() {
 
 function toggleMergeSelectionPanel() {
   isMergeSelectionCollapsed.value = !isMergeSelectionCollapsed.value;
-}
-
-function toggleRecipeCatalogPanel() {
-  isRecipeCatalogCollapsed.value = !isRecipeCatalogCollapsed.value;
 }
 
 function openSaveRecipeDialog() {
@@ -4294,6 +4541,13 @@ function selectRecipePreview(row) {
   recipePreviewSaveMessage.value = '';
   recipePreviewSaveError.value = false;
   selectedRecipePreviewName.value = row.nazwaReceptury;
+  isSavedRecipePreviewOpen.value = true;
+}
+
+function resetRecipeCatalogFilters() {
+  recipeCatalogSearch.value = '';
+  recipeCatalogMaterialFilter.value = '';
+  recipeCatalogUsageFilter.value = 'all';
 }
 
 function requestDeleteRecipePreview() {
@@ -4352,6 +4606,7 @@ async function executeDeleteRecipePreview() {
     isRecipePreviewEditMode.value = false;
     recipePreviewDraftRows.value = [];
     recipePreviewEditingCell.value = null;
+    isSavedRecipePreviewOpen.value = false;
 
     const fallbackName = savedRecipeCatalog.value[0]?.nazwaReceptury || '';
     selectedRecipePreviewName.value = savedRecipeCatalog.value.some((entry) => entry.nazwaReceptury === selectedRecipePreviewName.value)
@@ -4373,6 +4628,11 @@ function openRecipePreviewEditor(recipeName) {
   recipePreviewEditingCell.value = null;
   clearRecipePreviewStatusMessage();
   selectedRecipePreviewName.value = recipeName;
+}
+
+function closeSavedRecipePreview() {
+  isSavedRecipePreviewOpen.value = false;
+  cancelRecipePreviewEdit();
 }
 
 function startRecipePreviewEdit() {
@@ -4507,6 +4767,16 @@ function closeMergeProductPreview() {
 
 function handleGlobalEscape(event) {
   if (event.key !== 'Escape') return;
+
+  if (selectedSavedWorkPreview.value) {
+    closeSavedWorkPreview();
+    return;
+  }
+
+  if (isSavedRecipePreviewOpen.value) {
+    closeSavedRecipePreview();
+    return;
+  }
 
   if (isWorkRecipePreviewOpen.value) {
     closeWorkRecipePreview();
@@ -4868,6 +5138,25 @@ async function loadRecipeToWorkMain() {
   clearWorkCorrectionState();
   workUploadError.value = false;
   workUploadMessage.value = `Wczytano recepturę "${selectedRecipe.value}" do podglądu. Stanowiska możesz przydzielić automatycznie, a zapis wykonasz później do bazy danych.`;
+
+  try {
+    const response = await fetch('/api/recipes/mark-used', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ recipeName: selectedRecipe.value }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload.error || 'Nie udało się zaktualizować czasu użycia receptury.');
+    }
+    if (payload.recipe) {
+      savedRecipeCatalog.value = savedRecipeCatalog.value.map((entry) =>
+        entry.nazwaReceptury === payload.recipe.nazwaReceptury ? payload.recipe : entry,
+      );
+    }
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 function autoAssignWorkStations() {
@@ -5000,6 +5289,10 @@ onMounted(() => {
 });
 
 watch(activeTab, (tab) => {
+  if (tab !== 'recipes' && isSavedRecipePreviewOpen.value) {
+    closeSavedRecipePreview();
+  }
+
   if (tab === 'work') {
     loadWorkMainRows().catch(() => {});
     startWorkMainAutoRefresh();
@@ -5089,7 +5382,8 @@ const WorkTable = defineComponent({
                       class: { sorted: isSorted(column) },
                     },
                     [
-                      props.labels[column] ?? column,
+                      h('span', getColumnLabelText(column, props.labels)),
+                      isDimensionColumn(column) ? h('span', { class: 'dimension-unit' }, '₍ₘₘ₎') : null,
                       isSorted(column) ? h('span', { class: 'sort-mark' }, sortDirection.value > 0 ? '▲' : '▼') : null,
                     ],
                   ),
@@ -5125,6 +5419,7 @@ const WorkTable = defineComponent({
                               {
                                 class: 'edit-input work-cell-input',
                                 value: row[column] ?? '',
+                                style: getWorkEditInputStyle(column, row[column]),
                                 onInput: (event) => updateWorkCell(row.__clientId, column, event.target.value),
                               },
                               [
@@ -5141,6 +5436,7 @@ const WorkTable = defineComponent({
                           h('input', {
                             class: 'edit-input work-cell-input',
                             value: row[column] ?? '',
+                            style: getWorkEditInputStyle(column, row[column]),
                             inputmode: ['Dlugosc', 'Wybijak', 'Klasa', 'Grubosc', 'Szerokosc', 'Sztuk', 'Stanowisko'].includes(column) ? 'numeric' : undefined,
                             onInput: (event) => updateWorkCell(row.__clientId, column, event.target.value),
                           }),
@@ -5274,7 +5570,12 @@ const RecipePreviewTable = defineComponent({
             h(
               'tr',
               [
-                ...props.columns.map((column) => h('th', props.labels[column] ?? column)),
+                ...props.columns.map((column) =>
+                  h('th', [
+                    h('span', getColumnLabelText(column, props.labels)),
+                    isDimensionColumn(column) ? h('span', { class: 'dimension-unit' }, '₍ₘₘ₎') : null,
+                  ]),
+                ),
                 props.isEditMode ? h('th', { class: 'actions-column' }, 'Akcje') : null,
               ].filter(Boolean),
             ),
@@ -5285,7 +5586,10 @@ const RecipePreviewTable = defineComponent({
               ? props.rows.map((row) =>
                   h(
                     'tr',
-                    { key: row._localId ?? `${row.nazwaSkladowej}-${row.idSkladowej}` },
+                    {
+                      key: row._localId ?? `${row.nazwaSkladowej}-${row.idSkladowej}`,
+                      class: { disabled: row.__disabled },
+                    },
                     [
                       ...props.columns.map((column) => {
                         if (!props.isEditMode) {
@@ -5421,7 +5725,8 @@ const DataTable = defineComponent({
                     class: { sorted: isSorted(column) },
                   },
                   [
-                    props.labels[column] ?? column,
+                    h('span', getColumnLabelText(column, props.labels)),
+                    isDimensionColumn(column) ? h('span', { class: 'dimension-unit' }, '₍ₘₘ₎') : null,
                     isSorted(column) ? h('span', { class: 'sort-mark' }, currentDirection() > 0 ? '▲' : '▼') : null,
                   ],
                 ),
