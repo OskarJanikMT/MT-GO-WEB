@@ -1178,7 +1178,42 @@ EXEC sp_executesql @sql;`;
           const normalizedOutput =
             startIndex >= 0 && endIndex >= startIndex ? output.slice(startIndex, endIndex + 1).replace(/\r?\n/g, '').trim() : '';
           const rows = normalizedOutput ? JSON.parse(normalizedOutput) : [];
-          sendJson(res, 200, { status: Array.isArray(rows) ? rows[0] ?? null : null });
+          const statusRow = Array.isArray(rows) ? rows[0] ?? null : null;
+
+          if (!statusRow) {
+            console.warn('[MTGO SQL] /api/machine-status: brak wiersza dla Komenda = "statusPracy". Uruchamiam diagnostykę.');
+            try {
+              const debugSqlText = `SET NOCOUNT ON;
+DECLARE @valueColumn SYSNAME =
+  CASE
+    WHEN COL_LENGTH('dbo.StatusMain', 'Wartosc') IS NOT NULL THEN 'Wartosc'
+    WHEN COL_LENGTH('dbo.StatusMain', 'Wartość') IS NOT NULL THEN 'Wartość'
+    WHEN COL_LENGTH('dbo.StatusMain', 'Waartość') IS NOT NULL THEN 'Waartość'
+    ELSE NULL
+  END;
+
+IF @valueColumn IS NULL
+  THROW 50000, 'Brak kolumny Wartosc/Wartość/Waartość w dbo.StatusMain.', 1;
+
+DECLARE @sql NVARCHAR(MAX) = N'
+  SELECT TOP (10)
+    id,
+    Komenda,
+    ' + QUOTENAME(@valueColumn) + N' AS Wartosc,
+    Pakiet,
+    statusPracy
+  FROM dbo.StatusMain
+  ORDER BY id;
+  ';
+
+EXEC sp_executesql @sql;`;
+              const debugOutput = await executeSqlQuery(debugSqlText);
+              console.warn(`[MTGO SQL] /api/machine-status: podgląd pierwszych rekordów StatusMain:\n${debugOutput}`);
+            } catch (debugError) {
+              console.warn(`[MTGO SQL] /api/machine-status: diagnostyka nieudana: ${debugError.message || debugError}`);
+            }
+          }
+          sendJson(res, 200, { status: statusRow });
         } catch (error) {
           sendJson(res, 500, { error: error.message || 'Błąd odczytu statusu maszyny.' });
         }
