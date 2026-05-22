@@ -543,6 +543,24 @@ ${insertRowsSql}
       ELSE NULL
     END;
 
+  DECLARE @recipeNameColumn SYSNAME =
+    CASE
+      WHEN COL_LENGTH('dbo.WorkMain', 'NazwaRec') IS NOT NULL THEN 'NazwaRec'
+      ELSE NULL
+    END;
+
+  DECLARE @userColumn SYSNAME =
+    CASE
+      WHEN COL_LENGTH('dbo.WorkMain', 'Usr') IS NOT NULL THEN 'Usr'
+      ELSE NULL
+    END;
+
+  DECLARE @createdAtColumn SYSNAME =
+    CASE
+      WHEN COL_LENGTH('dbo.WorkMain', 'CzasUtw') IS NOT NULL THEN 'CzasUtw'
+      ELSE NULL
+    END;
+
   DECLARE @doneColumn SYSNAME =
     CASE
       WHEN COL_LENGTH('dbo.WorkMain', 'WykonaneSztuki') IS NOT NULL THEN 'WykonaneSztuki'
