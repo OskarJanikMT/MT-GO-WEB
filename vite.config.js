@@ -279,9 +279,6 @@ BEGIN TRY
       ELSE NULL
     END;
 
-  IF @countColumn IS NULL
-    THROW 50000, 'Brak kolumny zliczana ilość w dbo.WorkMain.', 1;
-
   DECLARE @sql NVARCHAR(MAX) = N'
     INSERT INTO dbo.WorkMain (
       id,
@@ -293,8 +290,8 @@ BEGIN TRY
       TekstDoDruku,
       Klasa,
       Nazwa,
-      Stanowisko,
-      ' + QUOTENAME(@countColumn) + N'
+      Stanowisko' + CASE WHEN @countColumn IS NOT NULL THEN N',
+      ' + QUOTENAME(@countColumn) ELSE N'' END + N'
     )
     SELECT
       id,
@@ -306,8 +303,8 @@ BEGIN TRY
       TekstDoDruku,
       Klasa,
       Nazwa,
-      Stanowisko,
-      zliczonaIloscIn
+      Stanowisko' + CASE WHEN @countColumn IS NOT NULL THEN N',
+      zliczonaIloscIn' ELSE N'' END + N'
     FROM #WorkMainUpload;
   ';
 
@@ -450,9 +447,6 @@ ${insertRowsSql}
       ELSE NULL
     END;
 
-  IF @countColumn IS NULL
-    THROW 50000, 'Brak kolumny zliczana ilość w dbo.WorkMain.', 1;
-
   DECLARE @sql NVARCHAR(MAX) = N'
     INSERT INTO dbo.WorkMain (
       id,
@@ -464,8 +458,8 @@ ${insertRowsSql}
       TekstDoDruku,
       Klasa,
       Nazwa,
-      Stanowisko,
-      ' + QUOTENAME(@countColumn) + N'' + CASE WHEN @doneColumn IS NOT NULL THEN N',
+      Stanowisko' + CASE WHEN @countColumn IS NOT NULL THEN N',
+      ' + QUOTENAME(@countColumn) ELSE N'' END + N'' + CASE WHEN @doneColumn IS NOT NULL THEN N',
       ' + QUOTENAME(@doneColumn) ELSE N'' END + N'
     )
     SELECT
@@ -478,8 +472,8 @@ ${insertRowsSql}
       TekstDoDruku,
       Klasa,
       Nazwa,
-      Stanowisko,
-      zliczonaIloscIn' + CASE WHEN @doneColumn IS NOT NULL THEN N',
+      Stanowisko' + CASE WHEN @countColumn IS NOT NULL THEN N',
+      zliczonaIloscIn' ELSE N'' END + CASE WHEN @doneColumn IS NOT NULL THEN N',
       WykonaneSztuki' ELSE N'' END + N'
     FROM #WorkMainSave;
   ';
@@ -1103,9 +1097,6 @@ DECLARE @wykonaneExpr NVARCHAR(200) =
     ELSE N'CAST(NULL AS INT)'
   END;
 
-IF @countColumn IS NULL
-  THROW 50000, 'Brak kolumny zliczana ilość w dbo.WorkMain.', 1;
-
 DECLARE @sql NVARCHAR(MAX) = N'
   SELECT
     id,
@@ -1117,7 +1108,10 @@ DECLARE @sql NVARCHAR(MAX) = N'
     TekstDoDruku,
     Klasa,
     Nazwa,
-    ' + QUOTENAME(@countColumn) + N' AS zliczonaIloscIn,
+    ' + CASE
+      WHEN @countColumn IS NOT NULL THEN QUOTENAME(@countColumn) + N' AS zliczonaIloscIn'
+      ELSE N'CAST(NULL AS INT) AS zliczonaIloscIn'
+    END + N',
     ' + @stanowiskoExpr + N' AS Stanowisko,
     ' + @wykonaneExpr + N' AS WykonaneSztuki
   FROM dbo.WorkMain
