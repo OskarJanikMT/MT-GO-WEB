@@ -233,6 +233,8 @@ ${toSqlNumber(row.Wybijaki)},
 ${toSqlLiteral(row.TekstDoDruku)},
 ${toSqlNumber(row.Klasa)},
 ${toSqlLiteral(row.Nazwa)},
+${toSqlLiteral(row.NazwaRec)},
+${toSqlLiteral(row.Usr || 'Default')},
 ${toSqlNumber(row.Stanowisko)},
 ${toSqlNumber(row.zliczonaIloscIn)}
 )`)
@@ -254,6 +256,8 @@ BEGIN TRY
     TekstDoDruku NVARCHAR(255) NULL,
     Klasa INT NULL,
     Nazwa NVARCHAR(255) NULL,
+    NazwaRec NVARCHAR(255) NULL,
+    Usr NVARCHAR(255) NULL,
     Stanowisko INT NULL,
     zliczonaIloscIn INT NULL
   );
@@ -270,6 +274,8 @@ BEGIN TRY
     TekstDoDruku,
     Klasa,
     Nazwa,
+    NazwaRec,
+    Usr,
     Stanowisko,
     zliczonaIloscIn
   )
@@ -309,6 +315,24 @@ BEGIN TRY
       ELSE NULL
     END;
 
+  DECLARE @recipeNameColumn SYSNAME =
+    CASE
+      WHEN COL_LENGTH('dbo.WorkMain', 'NazwaRec') IS NOT NULL THEN 'NazwaRec'
+      ELSE NULL
+    END;
+
+  DECLARE @userColumn SYSNAME =
+    CASE
+      WHEN COL_LENGTH('dbo.WorkMain', 'Usr') IS NOT NULL THEN 'Usr'
+      ELSE NULL
+    END;
+
+  DECLARE @createdAtColumn SYSNAME =
+    CASE
+      WHEN COL_LENGTH('dbo.WorkMain', 'CzasUtw') IS NOT NULL THEN 'CzasUtw'
+      ELSE NULL
+    END;
+
   DECLARE @sql NVARCHAR(MAX) = N'
     INSERT INTO dbo.WorkMain (
       id,
@@ -322,7 +346,10 @@ BEGIN TRY
       Wybijak,
       TekstDoDruku' + CASE WHEN @classColumn IS NOT NULL THEN N',
       ' + QUOTENAME(@classColumn) ELSE N'' END + N',
-      Nazwa' + CASE WHEN @stationColumn IS NOT NULL THEN N',
+      Nazwa' + CASE WHEN @recipeNameColumn IS NOT NULL THEN N',
+      ' + QUOTENAME(@recipeNameColumn) ELSE N'' END + CASE WHEN @userColumn IS NOT NULL THEN N',
+      ' + QUOTENAME(@userColumn) ELSE N'' END + CASE WHEN @createdAtColumn IS NOT NULL THEN N',
+      ' + QUOTENAME(@createdAtColumn) ELSE N'' END + CASE WHEN @stationColumn IS NOT NULL THEN N',
       ' + QUOTENAME(@stationColumn) ELSE N'' END + CASE WHEN @countColumn IS NOT NULL THEN N',
       ' + QUOTENAME(@countColumn) ELSE N'' END + N'
     )
@@ -338,7 +365,10 @@ BEGIN TRY
       Wybijak,
       TekstDoDruku' + CASE WHEN @classColumn IS NOT NULL THEN N',
       Klasa' ELSE N'' END + N',
-      Nazwa' + CASE WHEN @stationColumn IS NOT NULL THEN N',
+      Nazwa' + CASE WHEN @recipeNameColumn IS NOT NULL THEN N',
+      NazwaRec' ELSE N'' END + CASE WHEN @userColumn IS NOT NULL THEN N',
+      Usr' ELSE N'' END + CASE WHEN @createdAtColumn IS NOT NULL THEN N',
+      CONVERT(VARCHAR(19), GETDATE(), 120)' ELSE N'' END + CASE WHEN @stationColumn IS NOT NULL THEN N',
       Stanowisko' ELSE N'' END + CASE WHEN @countColumn IS NOT NULL THEN N',
       zliczonaIloscIn' ELSE N'' END + N'
     FROM #WorkMainUpload;
@@ -425,6 +455,8 @@ ${toSqlNumber(row.Wybijak)},
 ${toSqlLiteral(row.TekstDoDruku)},
 ${toSqlNumber(row.Klasa)},
 ${toSqlLiteral(row.Nazwa)},
+${toSqlLiteral(row.NazwaRec)},
+${toSqlLiteral(row.Usr || 'Default')},
 ${toSqlNumber(row.Stanowisko)},
 ${toSqlNumber(row.zliczonaIloscIn)}
 )`)
@@ -443,6 +475,8 @@ ${toSqlNumber(row.zliczonaIloscIn)}
     TekstDoDruku,
     Klasa,
     Nazwa,
+    NazwaRec,
+    Usr,
     Stanowisko,
     zliczonaIloscIn
   )
@@ -469,6 +503,8 @@ BEGIN TRY
     TekstDoDruku NVARCHAR(255) NULL,
     Klasa INT NULL,
     Nazwa NVARCHAR(255) NULL,
+    NazwaRec NVARCHAR(255) NULL,
+    Usr NVARCHAR(255) NULL,
     Stanowisko INT NULL,
     zliczonaIloscIn INT NULL
   );
@@ -526,7 +562,10 @@ ${insertRowsSql}
       Wybijak,
       TekstDoDruku' + CASE WHEN @classColumn IS NOT NULL THEN N',
       ' + QUOTENAME(@classColumn) ELSE N'' END + N',
-      Nazwa' + CASE WHEN @stationColumn IS NOT NULL THEN N',
+      Nazwa' + CASE WHEN @recipeNameColumn IS NOT NULL THEN N',
+      ' + QUOTENAME(@recipeNameColumn) ELSE N'' END + CASE WHEN @userColumn IS NOT NULL THEN N',
+      ' + QUOTENAME(@userColumn) ELSE N'' END + CASE WHEN @createdAtColumn IS NOT NULL THEN N',
+      ' + QUOTENAME(@createdAtColumn) ELSE N'' END + CASE WHEN @stationColumn IS NOT NULL THEN N',
       ' + QUOTENAME(@stationColumn) ELSE N'' END + CASE WHEN @countColumn IS NOT NULL THEN N',
       ' + QUOTENAME(@countColumn) ELSE N'' END + N'' + CASE WHEN @doneColumn IS NOT NULL THEN N',
       ' + QUOTENAME(@doneColumn) ELSE N'' END + N'
@@ -543,7 +582,10 @@ ${insertRowsSql}
       Wybijak,
       TekstDoDruku' + CASE WHEN @classColumn IS NOT NULL THEN N',
       Klasa' ELSE N'' END + N',
-      Nazwa' + CASE WHEN @stationColumn IS NOT NULL THEN N',
+      Nazwa' + CASE WHEN @recipeNameColumn IS NOT NULL THEN N',
+      NazwaRec' ELSE N'' END + CASE WHEN @userColumn IS NOT NULL THEN N',
+      Usr' ELSE N'' END + CASE WHEN @createdAtColumn IS NOT NULL THEN N',
+      CONVERT(VARCHAR(19), GETDATE(), 120)' ELSE N'' END + CASE WHEN @stationColumn IS NOT NULL THEN N',
       Stanowisko' ELSE N'' END + CASE WHEN @countColumn IS NOT NULL THEN N',
       zliczonaIloscIn' ELSE N'' END + CASE WHEN @doneColumn IS NOT NULL THEN N',
       WykonaneSztuki' ELSE N'' END + N'

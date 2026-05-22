@@ -2097,6 +2097,7 @@ function getWorkRowPayload(row, index = 0) {
   return {
     id: normalizeWorkCorrectionValue(row?.id || index + 1),
     Nazwa: String(row?.Nazwa ?? '').trim(),
+    NazwaRec: String(row?.NazwaRec ?? '').trim(),
     Material: String(row?.Material ?? '').trim(),
     Przekroj: buildPrzekrojValue(grubosc, szerokosc),
     Grubosc: grubosc,
@@ -2107,6 +2108,7 @@ function getWorkRowPayload(row, index = 0) {
     Wybijak: wybijak,
     TekstDoDruku: String(row?.TekstDoDruku ?? '').trim(),
     Klasa: normalizeWorkCorrectionValue(row?.Klasa),
+    Usr: String(row?.Usr ?? 'Default').trim() || 'Default',
     zliczonaIloscIn: sztuk,
     Stanowisko: stanowisko,
   };
