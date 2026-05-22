@@ -231,6 +231,8 @@ ${toSqlNumber(row.Dlugosc)},
 ${toSqlNumber(row.Sztuk)},
 ${toSqlNumber(row.Wybijaki)},
 ${toSqlLiteral(row.TekstDoDruku)},
+${toSqlLiteral(row.Grupa)},
+${toSqlLiteral(row.Priorytet)},
 ${toSqlNumber(row.Klasa)},
 ${toSqlLiteral(row.Nazwa)},
 ${toSqlLiteral(row.NazwaRec)},
@@ -254,6 +256,8 @@ BEGIN TRY
     Sztuk INT NULL,
     Wybijak INT NULL,
     TekstDoDruku NVARCHAR(255) NULL,
+    Grupa NVARCHAR(255) NULL,
+    Priorytet NVARCHAR(255) NULL,
     Klasa INT NULL,
     Nazwa NVARCHAR(255) NULL,
     NazwaRec NVARCHAR(255) NULL,
@@ -272,6 +276,8 @@ BEGIN TRY
     Sztuk,
     Wybijak,
     TekstDoDruku,
+    Grupa,
+    Priorytet,
     Klasa,
     Nazwa,
     NazwaRec,
@@ -294,6 +300,18 @@ BEGIN TRY
   DECLARE @classColumn SYSNAME =
     CASE
       WHEN COL_LENGTH('dbo.WorkMain', 'Klasa') IS NOT NULL THEN 'Klasa'
+      ELSE NULL
+    END;
+
+  DECLARE @groupColumn SYSNAME =
+    CASE
+      WHEN COL_LENGTH('dbo.WorkMain', 'Grupa') IS NOT NULL THEN 'Grupa'
+      ELSE NULL
+    END;
+
+  DECLARE @priorityColumn SYSNAME =
+    CASE
+      WHEN COL_LENGTH('dbo.WorkMain', 'Priorytet') IS NOT NULL THEN 'Priorytet'
       ELSE NULL
     END;
 
@@ -344,7 +362,9 @@ BEGIN TRY
       Dlugosc,
       Sztuk,
       Wybijak,
-      TekstDoDruku' + CASE WHEN @classColumn IS NOT NULL THEN N',
+      TekstDoDruku' + CASE WHEN @groupColumn IS NOT NULL THEN N',
+      ' + QUOTENAME(@groupColumn) ELSE N'' END + CASE WHEN @priorityColumn IS NOT NULL THEN N',
+      ' + QUOTENAME(@priorityColumn) ELSE N'' END + CASE WHEN @classColumn IS NOT NULL THEN N',
       ' + QUOTENAME(@classColumn) ELSE N'' END + N',
       Nazwa' + CASE WHEN @recipeNameColumn IS NOT NULL THEN N',
       ' + QUOTENAME(@recipeNameColumn) ELSE N'' END + CASE WHEN @userColumn IS NOT NULL THEN N',
@@ -363,7 +383,9 @@ BEGIN TRY
       Dlugosc,
       Sztuk,
       Wybijak,
-      TekstDoDruku' + CASE WHEN @classColumn IS NOT NULL THEN N',
+      TekstDoDruku' + CASE WHEN @groupColumn IS NOT NULL THEN N',
+      Grupa' ELSE N'' END + CASE WHEN @priorityColumn IS NOT NULL THEN N',
+      Priorytet' ELSE N'' END + CASE WHEN @classColumn IS NOT NULL THEN N',
       Klasa' ELSE N'' END + N',
       Nazwa' + CASE WHEN @recipeNameColumn IS NOT NULL THEN N',
       NazwaRec' ELSE N'' END + CASE WHEN @userColumn IS NOT NULL THEN N',
@@ -453,6 +475,8 @@ ${toSqlNumber(row.Sztuk)},
 ${toSqlNumber(row.WykonaneSztuki)},
 ${toSqlNumber(row.Wybijak)},
 ${toSqlLiteral(row.TekstDoDruku)},
+${toSqlLiteral(row.Grupa)},
+${toSqlLiteral(row.Priorytet)},
 ${toSqlNumber(row.Klasa)},
 ${toSqlLiteral(row.Nazwa)},
 ${toSqlLiteral(row.NazwaRec)},
@@ -473,6 +497,8 @@ ${toSqlNumber(row.zliczonaIloscIn)}
     WykonaneSztuki,
     Wybijak,
     TekstDoDruku,
+    Grupa,
+    Priorytet,
     Klasa,
     Nazwa,
     NazwaRec,
@@ -501,6 +527,8 @@ BEGIN TRY
     WykonaneSztuki INT NULL,
     Wybijak INT NULL,
     TekstDoDruku NVARCHAR(255) NULL,
+    Grupa NVARCHAR(255) NULL,
+    Priorytet NVARCHAR(255) NULL,
     Klasa INT NULL,
     Nazwa NVARCHAR(255) NULL,
     NazwaRec NVARCHAR(255) NULL,
@@ -522,6 +550,18 @@ ${insertRowsSql}
   DECLARE @classColumn SYSNAME =
     CASE
       WHEN COL_LENGTH('dbo.WorkMain', 'Klasa') IS NOT NULL THEN 'Klasa'
+      ELSE NULL
+    END;
+
+  DECLARE @groupColumn SYSNAME =
+    CASE
+      WHEN COL_LENGTH('dbo.WorkMain', 'Grupa') IS NOT NULL THEN 'Grupa'
+      ELSE NULL
+    END;
+
+  DECLARE @priorityColumn SYSNAME =
+    CASE
+      WHEN COL_LENGTH('dbo.WorkMain', 'Priorytet') IS NOT NULL THEN 'Priorytet'
       ELSE NULL
     END;
 
@@ -578,7 +618,9 @@ ${insertRowsSql}
       Dlugosc,
       Sztuk,
       Wybijak,
-      TekstDoDruku' + CASE WHEN @classColumn IS NOT NULL THEN N',
+      TekstDoDruku' + CASE WHEN @groupColumn IS NOT NULL THEN N',
+      ' + QUOTENAME(@groupColumn) ELSE N'' END + CASE WHEN @priorityColumn IS NOT NULL THEN N',
+      ' + QUOTENAME(@priorityColumn) ELSE N'' END + CASE WHEN @classColumn IS NOT NULL THEN N',
       ' + QUOTENAME(@classColumn) ELSE N'' END + N',
       Nazwa' + CASE WHEN @recipeNameColumn IS NOT NULL THEN N',
       ' + QUOTENAME(@recipeNameColumn) ELSE N'' END + CASE WHEN @userColumn IS NOT NULL THEN N',
@@ -598,7 +640,9 @@ ${insertRowsSql}
       Dlugosc,
       Sztuk,
       Wybijak,
-      TekstDoDruku' + CASE WHEN @classColumn IS NOT NULL THEN N',
+      TekstDoDruku' + CASE WHEN @groupColumn IS NOT NULL THEN N',
+      Grupa' ELSE N'' END + CASE WHEN @priorityColumn IS NOT NULL THEN N',
+      Priorytet' ELSE N'' END + CASE WHEN @classColumn IS NOT NULL THEN N',
       Klasa' ELSE N'' END + N',
       Nazwa' + CASE WHEN @recipeNameColumn IS NOT NULL THEN N',
       NazwaRec' ELSE N'' END + CASE WHEN @userColumn IS NOT NULL THEN N',
@@ -1229,6 +1273,18 @@ DECLARE @klasaExpr NVARCHAR(200) =
     ELSE N'CAST(NULL AS INT)'
   END;
 
+DECLARE @grupaExpr NVARCHAR(200) =
+  CASE
+    WHEN COL_LENGTH('dbo.WorkMain', 'Grupa') IS NOT NULL THEN N'Grupa'
+    ELSE N'CAST(NULL AS NVARCHAR(255))'
+  END;
+
+DECLARE @priorytetExpr NVARCHAR(200) =
+  CASE
+    WHEN COL_LENGTH('dbo.WorkMain', 'Priorytet') IS NOT NULL THEN N'Priorytet'
+    ELSE N'CAST(NULL AS NVARCHAR(255))'
+  END;
+
 DECLARE @gruboscExpr NVARCHAR(200) =
   CASE
     WHEN COL_LENGTH('dbo.WorkMain', 'gr') IS NOT NULL THEN N'gr'
@@ -1258,6 +1314,8 @@ DECLARE @sql NVARCHAR(MAX) = N'
     Sztuk,
     Wybijak,
     TekstDoDruku,
+    ' + @grupaExpr + N' AS Grupa,
+    ' + @priorytetExpr + N' AS Priorytet,
     ' + @klasaExpr + N' AS Klasa,
     Nazwa,
     ' + CASE

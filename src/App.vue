@@ -2107,6 +2107,8 @@ function getWorkRowPayload(row, index = 0) {
     WykonaneSztuki: normalizeWorkCorrectionValue(row?.WykonaneSztuki),
     Wybijak: wybijak,
     TekstDoDruku: String(row?.TekstDoDruku ?? '').trim(),
+    Grupa: normalizeGroupValue(row?.Grupa ?? row?.grupa ?? ''),
+    Priorytet: normalizePriorityValue(row?.Priorytet ?? row?.priorytet ?? ''),
     Klasa: normalizeWorkCorrectionValue(row?.Klasa),
     Usr: String(row?.Usr ?? 'Default').trim() || 'Default',
     zliczonaIloscIn: sztuk,
