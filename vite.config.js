@@ -225,6 +225,8 @@ function buildWorkMainUploadSql(rows) {
 ${index + 1},
 ${toSqlLiteral(row.Material)},
 ${toSqlLiteral(row.Przekroj)},
+${toSqlNumber(row.Grubosc)},
+${toSqlNumber(row.Szerokosc)},
 ${toSqlNumber(row.Dlugosc)},
 ${toSqlNumber(row.Sztuk)},
 ${toSqlNumber(row.Wybijaki)},
@@ -244,6 +246,8 @@ BEGIN TRY
     id INT NOT NULL,
     Material NVARCHAR(255) NULL,
     Przekroj NVARCHAR(255) NULL,
+    Grubosc INT NULL,
+    Szerokosc INT NULL,
     Dlugosc INT NULL,
     Sztuk INT NULL,
     Wybijak INT NULL,
@@ -258,6 +262,8 @@ BEGIN TRY
     id,
     Material,
     Przekroj,
+    Grubosc,
+    Szerokosc,
     Dlugosc,
     Sztuk,
     Wybijak,
@@ -285,6 +291,18 @@ BEGIN TRY
       ELSE NULL
     END;
 
+  DECLARE @gruboscColumn SYSNAME =
+    CASE
+      WHEN COL_LENGTH('dbo.WorkMain', 'gr') IS NOT NULL THEN 'gr'
+      ELSE NULL
+    END;
+
+  DECLARE @szerokoscColumn SYSNAME =
+    CASE
+      WHEN COL_LENGTH('dbo.WorkMain', 'szer') IS NOT NULL THEN 'szer'
+      ELSE NULL
+    END;
+
   DECLARE @stationColumn SYSNAME =
     CASE
       WHEN COL_LENGTH('dbo.WorkMain', 'Stanowisko') IS NOT NULL THEN 'Stanowisko'
@@ -296,6 +314,9 @@ BEGIN TRY
       id,
       Material,
       Przekroj,
+      ' + CASE WHEN @gruboscColumn IS NOT NULL THEN QUOTENAME(@gruboscColumn) + N',
+      ' ELSE N'' END + CASE WHEN @szerokoscColumn IS NOT NULL THEN QUOTENAME(@szerokoscColumn) + N',
+      ' ELSE N'' END + N'
       Dlugosc,
       Sztuk,
       Wybijak,
@@ -309,6 +330,9 @@ BEGIN TRY
       id,
       Material,
       Przekroj,
+      ' + CASE WHEN @gruboscColumn IS NOT NULL THEN N'Grubosc,
+      ' ELSE N'' END + CASE WHEN @szerokoscColumn IS NOT NULL THEN N'Szerokosc,
+      ' ELSE N'' END + N'
       Dlugosc,
       Sztuk,
       Wybijak,
@@ -392,6 +416,8 @@ function buildWorkMainSaveSql(rows) {
 ${toSqlNumber(row.id, index + 1)},
 ${toSqlLiteral(row.Material)},
 ${toSqlLiteral(row.Przekroj)},
+${toSqlNumber(row.Grubosc)},
+${toSqlNumber(row.Szerokosc)},
 ${toSqlNumber(row.Dlugosc)},
 ${toSqlNumber(row.Sztuk)},
 ${toSqlNumber(row.WykonaneSztuki)},
@@ -408,6 +434,8 @@ ${toSqlNumber(row.zliczonaIloscIn)}
     id,
     Material,
     Przekroj,
+    Grubosc,
+    Szerokosc,
     Dlugosc,
     Sztuk,
     WykonaneSztuki,
@@ -432,6 +460,8 @@ BEGIN TRY
     id INT NOT NULL,
     Material NVARCHAR(255) NULL,
     Przekroj NVARCHAR(255) NULL,
+    Grubosc INT NULL,
+    Szerokosc INT NULL,
     Dlugosc INT NULL,
     Sztuk INT NULL,
     WykonaneSztuki INT NULL,
@@ -459,6 +489,18 @@ ${insertRowsSql}
       ELSE NULL
     END;
 
+  DECLARE @gruboscColumn SYSNAME =
+    CASE
+      WHEN COL_LENGTH('dbo.WorkMain', 'gr') IS NOT NULL THEN 'gr'
+      ELSE NULL
+    END;
+
+  DECLARE @szerokoscColumn SYSNAME =
+    CASE
+      WHEN COL_LENGTH('dbo.WorkMain', 'szer') IS NOT NULL THEN 'szer'
+      ELSE NULL
+    END;
+
   DECLARE @stationColumn SYSNAME =
     CASE
       WHEN COL_LENGTH('dbo.WorkMain', 'Stanowisko') IS NOT NULL THEN 'Stanowisko'
@@ -476,6 +518,9 @@ ${insertRowsSql}
       id,
       Material,
       Przekroj,
+      ' + CASE WHEN @gruboscColumn IS NOT NULL THEN QUOTENAME(@gruboscColumn) + N',
+      ' ELSE N'' END + CASE WHEN @szerokoscColumn IS NOT NULL THEN QUOTENAME(@szerokoscColumn) + N',
+      ' ELSE N'' END + N'
       Dlugosc,
       Sztuk,
       Wybijak,
@@ -490,6 +535,9 @@ ${insertRowsSql}
       id,
       Material,
       Przekroj,
+      ' + CASE WHEN @gruboscColumn IS NOT NULL THEN N'Grubosc,
+      ' ELSE N'' END + CASE WHEN @szerokoscColumn IS NOT NULL THEN N'Szerokosc,
+      ' ELSE N'' END + N'
       Dlugosc,
       Sztuk,
       Wybijak,
@@ -1121,6 +1169,18 @@ DECLARE @klasaExpr NVARCHAR(200) =
     ELSE N'CAST(NULL AS INT)'
   END;
 
+DECLARE @gruboscExpr NVARCHAR(200) =
+  CASE
+    WHEN COL_LENGTH('dbo.WorkMain', 'gr') IS NOT NULL THEN N'gr'
+    ELSE N'CAST(NULL AS INT)'
+  END;
+
+DECLARE @szerokoscExpr NVARCHAR(200) =
+  CASE
+    WHEN COL_LENGTH('dbo.WorkMain', 'szer') IS NOT NULL THEN N'szer'
+    ELSE N'CAST(NULL AS INT)'
+  END;
+
 DECLARE @wykonaneExpr NVARCHAR(200) =
   CASE
     WHEN COL_LENGTH('dbo.WorkMain', 'WykonaneSztuki') IS NOT NULL THEN N'WykonaneSztuki'
@@ -1132,6 +1192,8 @@ DECLARE @sql NVARCHAR(MAX) = N'
     id,
     Material,
     Przekroj,
+    ' + @gruboscExpr + N' AS Grubosc,
+    ' + @szerokoscExpr + N' AS Szerokosc,
     Dlugosc,
     Sztuk,
     Wybijak,
