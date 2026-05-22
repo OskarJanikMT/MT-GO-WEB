@@ -279,6 +279,18 @@ BEGIN TRY
       ELSE NULL
     END;
 
+  DECLARE @classColumn SYSNAME =
+    CASE
+      WHEN COL_LENGTH('dbo.WorkMain', 'Klasa') IS NOT NULL THEN 'Klasa'
+      ELSE NULL
+    END;
+
+  DECLARE @stationColumn SYSNAME =
+    CASE
+      WHEN COL_LENGTH('dbo.WorkMain', 'Stanowisko') IS NOT NULL THEN 'Stanowisko'
+      ELSE NULL
+    END;
+
   DECLARE @sql NVARCHAR(MAX) = N'
     INSERT INTO dbo.WorkMain (
       id,
@@ -287,10 +299,10 @@ BEGIN TRY
       Dlugosc,
       Sztuk,
       Wybijak,
-      TekstDoDruku,
-      Klasa,
-      Nazwa,
-      Stanowisko' + CASE WHEN @countColumn IS NOT NULL THEN N',
+      TekstDoDruku' + CASE WHEN @classColumn IS NOT NULL THEN N',
+      ' + QUOTENAME(@classColumn) ELSE N'' END + N',
+      Nazwa' + CASE WHEN @stationColumn IS NOT NULL THEN N',
+      ' + QUOTENAME(@stationColumn) ELSE N'' END + CASE WHEN @countColumn IS NOT NULL THEN N',
       ' + QUOTENAME(@countColumn) ELSE N'' END + N'
     )
     SELECT
@@ -300,10 +312,10 @@ BEGIN TRY
       Dlugosc,
       Sztuk,
       Wybijak,
-      TekstDoDruku,
-      Klasa,
-      Nazwa,
-      Stanowisko' + CASE WHEN @countColumn IS NOT NULL THEN N',
+      TekstDoDruku' + CASE WHEN @classColumn IS NOT NULL THEN N',
+      Klasa' ELSE N'' END + N',
+      Nazwa' + CASE WHEN @stationColumn IS NOT NULL THEN N',
+      Stanowisko' ELSE N'' END + CASE WHEN @countColumn IS NOT NULL THEN N',
       zliczonaIloscIn' ELSE N'' END + N'
     FROM #WorkMainUpload;
   ';
@@ -441,6 +453,18 @@ ${insertRowsSql}
       ELSE NULL
     END;
 
+  DECLARE @classColumn SYSNAME =
+    CASE
+      WHEN COL_LENGTH('dbo.WorkMain', 'Klasa') IS NOT NULL THEN 'Klasa'
+      ELSE NULL
+    END;
+
+  DECLARE @stationColumn SYSNAME =
+    CASE
+      WHEN COL_LENGTH('dbo.WorkMain', 'Stanowisko') IS NOT NULL THEN 'Stanowisko'
+      ELSE NULL
+    END;
+
   DECLARE @doneColumn SYSNAME =
     CASE
       WHEN COL_LENGTH('dbo.WorkMain', 'WykonaneSztuki') IS NOT NULL THEN 'WykonaneSztuki'
@@ -455,10 +479,10 @@ ${insertRowsSql}
       Dlugosc,
       Sztuk,
       Wybijak,
-      TekstDoDruku,
-      Klasa,
-      Nazwa,
-      Stanowisko' + CASE WHEN @countColumn IS NOT NULL THEN N',
+      TekstDoDruku' + CASE WHEN @classColumn IS NOT NULL THEN N',
+      ' + QUOTENAME(@classColumn) ELSE N'' END + N',
+      Nazwa' + CASE WHEN @stationColumn IS NOT NULL THEN N',
+      ' + QUOTENAME(@stationColumn) ELSE N'' END + CASE WHEN @countColumn IS NOT NULL THEN N',
       ' + QUOTENAME(@countColumn) ELSE N'' END + N'' + CASE WHEN @doneColumn IS NOT NULL THEN N',
       ' + QUOTENAME(@doneColumn) ELSE N'' END + N'
     )
@@ -469,10 +493,10 @@ ${insertRowsSql}
       Dlugosc,
       Sztuk,
       Wybijak,
-      TekstDoDruku,
-      Klasa,
-      Nazwa,
-      Stanowisko' + CASE WHEN @countColumn IS NOT NULL THEN N',
+      TekstDoDruku' + CASE WHEN @classColumn IS NOT NULL THEN N',
+      Klasa' ELSE N'' END + N',
+      Nazwa' + CASE WHEN @stationColumn IS NOT NULL THEN N',
+      Stanowisko' ELSE N'' END + CASE WHEN @countColumn IS NOT NULL THEN N',
       zliczonaIloscIn' ELSE N'' END + CASE WHEN @doneColumn IS NOT NULL THEN N',
       WykonaneSztuki' ELSE N'' END + N'
     FROM #WorkMainSave;
@@ -1091,6 +1115,12 @@ DECLARE @stanowiskoExpr NVARCHAR(200) =
     ELSE N'CAST(NULL AS INT)'
   END;
 
+DECLARE @klasaExpr NVARCHAR(200) =
+  CASE
+    WHEN COL_LENGTH('dbo.WorkMain', 'Klasa') IS NOT NULL THEN N'Klasa'
+    ELSE N'CAST(NULL AS INT)'
+  END;
+
 DECLARE @wykonaneExpr NVARCHAR(200) =
   CASE
     WHEN COL_LENGTH('dbo.WorkMain', 'WykonaneSztuki') IS NOT NULL THEN N'WykonaneSztuki'
@@ -1106,7 +1136,7 @@ DECLARE @sql NVARCHAR(MAX) = N'
     Sztuk,
     Wybijak,
     TekstDoDruku,
-    Klasa,
+    ' + @klasaExpr + N' AS Klasa,
     Nazwa,
     ' + CASE
       WHEN @countColumn IS NOT NULL THEN QUOTENAME(@countColumn) + N' AS zliczonaIloscIn'
