@@ -89,3 +89,36 @@ MTGO_SQL_DATABASE=msm
   - scroll wewnątrz zakładek,
   - poprawione warstwy modali,
   - komunikat zapisu z odstępem od zakładek.
+## Dalsze zmiany 2026-05-22 20:47
+
+- Zakładka `1. Twoje Produkty`:
+  - dopracowano import Excel bez pełnego przeładowania aplikacji,
+  - dodano import wielu plików `.xlsx` naraz,
+  - naprawiono zapis plików po błędzie `maxProductRows is not defined`,
+  - dodano edycję `Stanowisko` przez dropdown,
+  - poprawiono szerokość dropdownu `Stanowisko`,
+  - dodano automatyczne przeliczanie `Wybijak` po zmianie `Stanowisko` lub `Długość`,
+  - rozszerzono obsługę nagłówków importu o `Długość`, `Grubość`, `Szerokość` i `Klasa`,
+  - dodano kolumnę `Klasa` do widoku i edycji produktu.
+
+- Zakładka `2. Scal produkty`:
+  - dodano animację rozwijania produktu do listy elementów,
+  - dodano animację fade przy dodawaniu i usuwaniu produktów, także dla przejścia `0 <-> 1` element,
+  - dodano animację przy zmianie ilości produktu,
+  - poprawiono ręczną edycję ilości:
+    - wyczyszczenie pola nie usuwa już od razu produktu,
+    - `Enter` zatwierdza wpisaną wartość.
+
+- Zakładka `3. Aktualnie cięte`:
+  - dodano potwierdzenie przy `Wczytaj` odłożoną pracę,
+  - użytkownik może wybrać porzucenie aktualnego stanu albo jego odłożenie przed wczytaniem,
+  - poprawiono zamykanie i responsywność tego dialogu.
+
+- Ustawienia i UI:
+  - dodano ikonę zębatki w headerze,
+  - dodano osobny panel `Ustawienia` jako overlay,
+  - dodano opcję włączania i wyłączania animacji interfejsu z zapisem do `localStorage`,
+  - dodano wspólną animację wejścia dla paneli i modali overlay.
+
+- Repo:
+  - uzupełniono `.gitignore` o `node_modules`, `dist`, `.env`, logi i lokalne pliki debug.

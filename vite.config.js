@@ -14,6 +14,7 @@ const productsDir = path.join(__dirname, 'Produkty');
 const recipesFilePath = path.join(__dirname, 'receptury.json');
 const configFilePath = path.join(__dirname, 'config.json');
 const execFileAsync = promisify(execFile);
+const DEFAULT_ROW_LIMIT = 500;
 const defaultAppConfig = {
   stations: [],
   activeMachineId: 'machine-1',
@@ -21,7 +22,7 @@ const defaultAppConfig = {
     {
       id: 'machine-1',
       name: 'Maszyna 1',
-      rowLimit: 500,
+      rowLimit: DEFAULT_ROW_LIMIT,
     },
   ],
   favoriteElements: [],
@@ -32,9 +33,10 @@ const editableColumnAliases = {
   Nazwa: ['Nazwa', 'TYTUŁ', 'Nazwa mebla'],
   ilość: ['Ilość', 'ILOŚĆ', 'Ilosc'],
   Materiał: ['Materiał', 'MATERIAŁ', 'OPIS', 'gatunek drewna'],
-  Długość: ['DŁ', 'DŁ. [mm]', 'Dł', 'Dł. [mm]', 'Dlugosc'],
-  Grubość: ['GR.', 'GR. [mm]', 'Grubosc'],
-  Szerokość: ['Sz', 'SZER. [mm]', 'Szerokosc'],
+  Długość: ['Długość', 'DŁ', 'DŁ. [mm]', 'Dł', 'Dł. [mm]', 'Dlugosc'],
+  Grubość: ['Grubość', 'GR.', 'GR. [mm]', 'Grubosc'],
+  Szerokość: ['Szerokość', 'Sz', 'SZER. [mm]', 'Szerokosc'],
+  Klasa: ['Klasa', 'KLASA'],
   Grupa: ['Grupa', 'GRUPA'],
   Priorytet: ['Priorytet', 'PRIORYTET'],
   Wybijak: ['Wybijak'],
@@ -818,8 +820,8 @@ function productSavePlugin() {
             return;
           }
 
-          if (rows.length > maxProductRows) {
-            sendJson(res, 400, { error: `Maksymalnie ${maxProductRows} pozycji w pliku.` });
+          if (rows.length > DEFAULT_ROW_LIMIT) {
+            sendJson(res, 400, { error: `Maksymalnie ${DEFAULT_ROW_LIMIT} pozycji w pliku.` });
             return;
           }
 
@@ -1376,6 +1378,20 @@ FOR JSON PATH, INCLUDE_NULL_VALUES;`;
           sendJson(res, 200, { rows: normalizedRows });
         } catch (error) {
           sendJson(res, 500, { error: error.message || 'Błąd odczytu WorkMain.' });
+        }
+      });
+
+      server.middlewares.use('/api/sql-status', async (req, res) => {
+        if (req.method !== 'GET') {
+          sendJson(res, 405, { error: 'Method not allowed' });
+          return;
+        }
+
+        try {
+          await executeSqlQuery('SET NOCOUNT ON; SELECT 1 AS ok;');
+          sendJson(res, 200, { ok: true });
+        } catch (error) {
+          sendJson(res, 500, { ok: false, error: error.message || 'Błąd połączenia z bazą danych.' });
         }
       });
 

@@ -153,6 +153,39 @@ button {
   justify-content: flex-end;
 }
 
+.settings-gear-btn {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    transform 160ms ease,
+    color 140ms ease,
+    background 140ms ease,
+    border-color 140ms ease;
+}
+
+.settings-gear-btn svg {
+  width: 17px;
+  height: 17px;
+}
+
+.settings-gear-btn:hover,
+.settings-gear-btn.active {
+  background: var(--bg-input);
+  color: var(--text-heading);
+}
+
+.settings-gear-btn:hover {
+  transform: rotate(18deg);
+}
+
 .header-logo {
   height: 42px;
   width: auto;
@@ -815,6 +848,7 @@ button {
   justify-content: center;
   padding: 24px;
   background: rgba(0, 0, 0, 0.68);
+  animation: overlay-fade-in 180ms ease;
 }
 
 .product-modal {
@@ -824,6 +858,7 @@ button {
   z-index: 41;
   display: flex;
   flex-direction: column;
+  animation: panel-pop-in 220ms ease;
 }
 
 .confirm-modal-overlay {
@@ -835,6 +870,7 @@ button {
   justify-content: center;
   padding: 24px;
   background: rgba(0, 0, 0, 0.74);
+  animation: overlay-fade-in 180ms ease;
 }
 
 .confirm-modal,
@@ -846,6 +882,7 @@ button {
   align-self: center;
   flex: 0 0 auto;
   z-index: 49;
+  animation: panel-pop-in 220ms ease;
 }
 
 .saved-recipe-preview-overlay {
@@ -1188,6 +1225,7 @@ button {
   justify-content: center;
   padding: 24px;
   background: rgba(0, 0, 0, 0.74);
+  animation: overlay-fade-in 180ms ease;
 }
 
 .config-panel {
@@ -1197,6 +1235,119 @@ button {
   z-index: 47;
   display: flex;
   flex-direction: column;
+  animation: panel-pop-in 220ms ease;
+}
+
+.settings-panel-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 46;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 86px 24px 24px;
+  background: rgba(0, 0, 0, 0.46);
+  animation: overlay-fade-in 180ms ease;
+}
+
+.settings-panel,
+.settings-panel.panel {
+  width: min(420px, calc(100vw - 48px));
+  min-height: 0;
+  max-height: min(70vh, 520px);
+  z-index: 47;
+  display: flex;
+  flex-direction: column;
+  animation: panel-pop-in 220ms ease;
+}
+
+.settings-panel-body {
+  padding: 18px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.settings-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.settings-toggle-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.settings-toggle-copy strong {
+  color: var(--text-heading);
+  font-size: 13px;
+}
+
+.settings-toggle-copy span {
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.settings-switch {
+  width: 54px;
+  height: 32px;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-input);
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+
+.settings-switch-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.28);
+  transition: transform 180ms ease, background 160ms ease;
+}
+
+.settings-switch.enabled {
+  background: rgba(34, 197, 94, 0.22);
+  border-color: rgba(34, 197, 94, 0.45);
+}
+
+.settings-switch.enabled .settings-switch-thumb {
+  transform: translateX(22px);
+  background: #86efac;
+}
+
+@keyframes overlay-fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes panel-pop-in {
+  0% {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .config-panel-body {
@@ -2180,6 +2331,11 @@ button {
   grid-template-columns: 28px 44px 28px;
   align-items: center;
   height: 32px;
+  transform-origin: center;
+}
+
+.quantity-stepper.pulse {
+  animation: quantity-stepper-pulse 240ms ease;
 }
 
 .quantity-value {
@@ -2244,6 +2400,21 @@ button {
   background: var(--bg-input);
 }
 
+@keyframes quantity-stepper-pulse {
+  0% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  35% {
+    transform: scale(1.06);
+    filter: brightness(1.18);
+  }
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
 .recipe-name-box {
   display: flex;
   align-items: center;
@@ -2296,6 +2467,44 @@ button {
   flex-direction: column;
   gap: 12px;
   padding: 14px;
+}
+
+.merge-product-fade-enter-active,
+.merge-product-fade-leave-active {
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.merge-product-fade-enter-from,
+.merge-product-fade-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.merge-product-fade-enter-to,
+.merge-product-fade-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.merge-empty-fade-enter-active,
+.merge-empty-fade-leave-active {
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+
+.merge-empty-fade-enter-from,
+.merge-empty-fade-leave-to {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.merge-empty-fade-enter-to,
+.merge-empty-fade-leave-from {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .recipe-group {
@@ -2406,6 +2615,41 @@ button {
   max-height: 320px;
   background: rgba(0, 0, 0, 0.08);
   scrollbar-color: var(--recipe-group-scrollbar) transparent;
+  transform-origin: top center;
+}
+
+.recipe-group-expand-enter-active,
+.recipe-group-expand-leave-active {
+  overflow: hidden;
+  transition:
+    max-height 220ms ease,
+    opacity 180ms ease,
+    transform 220ms ease,
+    margin-top 220ms ease;
+}
+
+.recipe-group-expand-enter-from,
+.recipe-group-expand-leave-to {
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-8px);
+  margin-top: 0;
+}
+
+.recipe-group-expand-enter-to,
+.recipe-group-expand-leave-from {
+  max-height: 320px;
+  opacity: 1;
+  transform: translateY(0);
+  margin-top: 0;
+}
+
+.animations-disabled *,
+.animations-disabled *::before,
+.animations-disabled *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
 }
 
 .recipe-group-table-wrap::-webkit-scrollbar-thumb {

@@ -143,6 +143,82 @@
         "Wybijak": 0,
         "Stanowisko": ""
       }
+    },
+    {
+      "id": "favorite-1779449934075-product-row-4031",
+      "sourceProductName": "PALLADIO L.xlsx",
+      "sourceRowIndex": 8,
+      "label": "PALLADIO L 102,5 FR+KL | 1025 x 30 x 60 | So",
+      "row": {
+        "Nazwa": "PALLADIO L",
+        "Długość": 1025,
+        "Grubość": 30,
+        "Szerokość": 60,
+        "Materiał": "So",
+        "Kod": "PALLADIO L 102,5 FR+KL",
+        "Grupa": "",
+        "Priorytet": "",
+        "ilość": 2,
+        "Wybijak": 0,
+        "Stanowisko": ""
+      }
+    },
+    {
+      "id": "favorite-1779449934516-product-row-4032",
+      "sourceProductName": "PALLADIO L.xlsx",
+      "sourceRowIndex": 9,
+      "label": "PALLADIO L 95,5  | 955 x 30 x 60 | So",
+      "row": {
+        "Nazwa": "PALLADIO L",
+        "Długość": 955,
+        "Grubość": 30,
+        "Szerokość": 60,
+        "Materiał": "So",
+        "Kod": "PALLADIO L 95,5 ",
+        "Grupa": "",
+        "Priorytet": "",
+        "ilość": 1,
+        "Wybijak": 0,
+        "Stanowisko": ""
+      }
+    },
+    {
+      "id": "favorite-1779454907301-product-row-2524",
+      "sourceProductName": "Phoenix L wzor.xlsx",
+      "sourceRowIndex": 9,
+      "label": "Phoenix 112 | 1120 x 25 x 50 | So",
+      "row": {
+        "Nazwa": "Phoenix L",
+        "Długość": 1120,
+        "Grubość": 25,
+        "Szerokość": 50,
+        "Materiał": "So",
+        "Kod": "Phoenix 112",
+        "Grupa": "",
+        "Priorytet": "",
+        "ilość": 1,
+        "Wybijak": 0,
+        "Stanowisko": ""
+      }
+    },
+    {
+      "id": "favorite-1779454907805-product-row-2525",
+      "sourceProductName": "Phoenix L wzor.xlsx",
+      "sourceRowIndex": 10,
+      "label": "Phoenix 134 | 1340 x 25 x 50 | So",
+      "row": {
+        "Nazwa": "Phoenix L",
+        "Długość": 1340,
+        "Grubość": 25,
+        "Szerokość": 50,
+        "Materiał": "So",
+        "Kod": "Phoenix 134",
+        "Grupa": "",
+        "Priorytet": "",
+        "ilość": 2,
+        "Wybijak": 0,
+        "Stanowisko": ""
+      }
     }
   ]
 }

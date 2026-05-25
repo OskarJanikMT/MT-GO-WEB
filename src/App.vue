@@ -1,5 +1,5 @@
 ﻿<template>
-  <div class="app-layout">
+  <div class="app-layout" :class="{ 'animations-disabled': !animationsEnabled }">
     <div class="app-content">
       <header class="app-header">
         <div class="header-left">
@@ -12,9 +12,24 @@
         </div>
 
         <div class="header-right">
-          <div class="connection-badge online">
+          <button
+            class="settings-gear-btn"
+            :class="{ active: isSettingsPanelOpen }"
+            type="button"
+            title="Ustawienia"
+            aria-label="Otwórz ustawienia"
+            @click="toggleSettingsPanel"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path
+                fill="currentColor"
+                d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.18 7.18 0 0 0-1.63-.94l-.36-2.54A.5.5 0 0 0 13.9 2h-3.8a.5.5 0 0 0-.49.42l-.36 2.54c-.58.23-1.13.54-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.71 8.48a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .6.22l2.39-.96c.5.4 1.05.71 1.63.94l.36 2.54a.5.5 0 0 0 .49.42h3.8a.5.5 0 0 0 .49-.42l.36-2.54c.58-.23 1.13-.54 1.63-.94l2.39.96a.5.5 0 0 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58ZM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7Z"
+              />
+            </svg>
+          </button>
+          <div class="connection-badge" :class="databaseConnectionBadgeClass">
             <div class="conn-dot"></div>
-            SQL Msm
+            {{ databaseConnectionLabel }}
           </div>
           <div class="connection-badge" :class="machineStatusBadgeClass">
             <div class="conn-dot"></div>
@@ -23,6 +38,34 @@
           <span class="timestamp">{{ currentTime }}</span>
         </div>
       </header>
+
+      <div v-if="isSettingsPanelOpen" class="settings-panel-overlay" @click.self="closeSettingsPanel">
+        <section class="settings-panel panel" @click.stop>
+          <div class="panel-header">
+            <span>Ustawienia</span>
+            <div class="panel-actions">
+              <button class="tool-btn compact" @click="closeSettingsPanel">Zamknij</button>
+            </div>
+          </div>
+          <div class="settings-panel-body">
+            <label class="settings-toggle-row">
+              <div class="settings-toggle-copy">
+                <strong>Animacje interfejsu</strong>
+                <span>Włącza lub wyłącza animacje rozwijania, przejść i efektów pomocniczych.</span>
+              </div>
+              <button
+                class="settings-switch"
+                :class="{ enabled: animationsEnabled }"
+                type="button"
+                :aria-pressed="animationsEnabled ? 'true' : 'false'"
+                @click="toggleAnimationsEnabled"
+              >
+                <span class="settings-switch-thumb"></span>
+              </button>
+            </label>
+          </div>
+        </section>
+      </div>
 
       <main class="dashboard">
         <nav class="filter-bar">
@@ -293,6 +336,7 @@
                   ref="fileImportInput"
                   type="file"
                   accept=".xlsx"
+                  multiple
                   class="visually-hidden"
                   @change="handleImportExcel"
                 />
@@ -422,20 +466,21 @@
                     <tr v-for="item in selectedProductRows" :key="item._localId">
                       <td v-for="column in productColumns" :key="column">
                         <select
-                          v-if="isEditMode && editableProductColumns.includes(column) && isDropdownColumn(column)"
+                          v-if="isEditMode && editableProductColumns.includes(column) && (isDropdownColumn(column) || isStationColumn(column))"
                           class="edit-input"
                           :value="item[column] ?? ''"
+                          :style="getEditInputStyle(item[column], item._localId, column)"
                           @focus="activeEditCell = `${item._localId}:${column}`"
                           @blur="activeEditCell = null"
                           @input="updateEditedCell(item._localId, column, $event.target.value)"
                         >
                           <option value=""></option>
                           <option
-                            v-for="option in getProductDropdownOptions(editingRows, item, column)"
-                            :key="`${column}-${item._localId}-${option}`"
-                            :value="option"
+                            v-for="option in isStationColumn(column) ? getStationDropdownOptions(item[column]) : getProductDropdownOptions(editingRows, item, column)"
+                            :key="`${column}-${item._localId}-${option.value ?? option}`"
+                            :value="option.value ?? option"
                           >
-                            {{ option }}
+                            {{ option.label ?? option }}
                           </option>
                         </select>
                         <input
@@ -859,7 +904,7 @@
                   <button class="tool-btn compact danger" @click="resetMergeSelection">Wyczyść</button>
                 </div>
               </div>
-              <div v-if="groupedRecipeRows.length" class="recipe-groups-wrap">
+              <TransitionGroup name="merge-product-fade" tag="div" class="recipe-groups-wrap">
                 <section
                   v-for="(group, groupIndex) in groupedRecipeRows"
                   :key="group.productName"
@@ -881,7 +926,7 @@
                     </div>
                     <div class="product-quantity recipe-group-quantity" @click.stop>
                       <span>Ilość</span>
-                      <div class="quantity-stepper">
+                      <div class="quantity-stepper" :class="{ pulse: mergeQuantityPulse[group.productName] }">
                         <button class="quantity-arrow" @click="stepMergeProductQuantity(group.productName, -1)">-</button>
                         <input
                           class="quantity-input"
@@ -890,10 +935,13 @@
                           step="1"
                           inputmode="numeric"
                           :max="activeRowLimit"
-                          :value="getMergeProductQuantity(group.productName)"
+                          :value="getMergeProductQuantityInputValue(group.productName)"
                           @click.stop
                           @keydown.stop
-                          @input="updateMergeProductQuantity(group.productName, $event.target.value)"
+                          @focus="startMergeProductQuantityEdit(group.productName)"
+                          @input="updateMergeProductQuantityDraft(group.productName, $event.target.value)"
+                          @keydown.enter.prevent.stop="commitMergeProductQuantity(group.productName)"
+                          @blur="commitMergeProductQuantity(group.productName)"
                         />
                         <button class="quantity-arrow" @click="stepMergeProductQuantity(group.productName, 1)">+</button>
                       </div>
@@ -907,86 +955,90 @@
                     <button class="recipe-group-remove" @click.stop="removeMergeProduct(group.productName)">Usuń</button>
                   </div>
 
-                  <div v-if="!isRecipeGroupCollapsed(group.productName)" class="table-wrap recipe-group-table-wrap">
-                    <table class="data-table recipe-group-table">
-                      <thead>
-                        <tr>
-                          <th
-                            v-for="column in mergeRecipeColumns"
-                            :key="`${group.productName}-${column}`"
-                            @click="!isMergeProductEditMode(group.productName) ? sortMergeRecipeBy(column) : undefined"
-                            :class="{ sorted: !isMergeProductEditMode(group.productName) && mergeRecipeSortKey === column, disabled: isMergeProductEditMode(group.productName) }"
-                          >
-                            <span>{{ getColumnLabelText(column, recipeColumnLabels) }}</span>
-                            <span v-if="isDimensionColumn(column)" class="dimension-unit">₍ₘₘ₎</span>
-                            <span v-if="!isMergeProductEditMode(group.productName) && mergeRecipeSortKey === column" class="sort-mark">
-                              {{ mergeRecipeSortDirection > 0 ? '▲' : '▼' }}
-                            </span>
-                          </th>
-                          <th v-if="isMergeProductEditMode(group.productName)" class="actions-column">Akcje</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr v-for="row in group.rows" :key="`${group.productName}-${row._localId}`">
-                          <td v-for="column in mergeRecipeColumns" :key="`${group.productName}-${row.idSkladowej}-${column}`">
-                            <select
-                              v-if="isMergeProductEditMode(group.productName) && (isDropdownColumn(column) || isStationColumn(column))"
-                              class="edit-input"
-                              :value="row[column] ?? ''"
-                              @focus="mergeEditingCell = `${row._localId}:${column}`"
-                              @blur="mergeEditingCell = null"
-                              @input="updateMergeRecipeCell(group.productName, row._localId, column, $event.target.value)"
+                  <transition name="recipe-group-expand">
+                    <div v-if="!isRecipeGroupCollapsed(group.productName)" class="table-wrap recipe-group-table-wrap">
+                      <table class="data-table recipe-group-table">
+                        <thead>
+                          <tr>
+                            <th
+                              v-for="column in mergeRecipeColumns"
+                              :key="`${group.productName}-${column}`"
+                              @click="!isMergeProductEditMode(group.productName) ? sortMergeRecipeBy(column) : undefined"
+                              :class="{ sorted: !isMergeProductEditMode(group.productName) && mergeRecipeSortKey === column, disabled: isMergeProductEditMode(group.productName) }"
                             >
-                              <option value=""></option>
-                              <option
-                                v-for="option in getMergeDropdownOptions(group.productName, row, column)"
-                                :key="`${column}-${row._localId}-${option.value ?? option}`"
-                                :value="option.value ?? option"
+                              <span>{{ getColumnLabelText(column, recipeColumnLabels) }}</span>
+                              <span v-if="isDimensionColumn(column)" class="dimension-unit">₍ₘₘ₎</span>
+                              <span v-if="!isMergeProductEditMode(group.productName) && mergeRecipeSortKey === column" class="sort-mark">
+                                {{ mergeRecipeSortDirection > 0 ? '▲' : '▼' }}
+                              </span>
+                            </th>
+                            <th v-if="isMergeProductEditMode(group.productName)" class="actions-column">Akcje</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr v-for="row in group.rows" :key="`${group.productName}-${row._localId}`">
+                            <td v-for="column in mergeRecipeColumns" :key="`${group.productName}-${row.idSkladowej}-${column}`">
+                              <select
+                                v-if="isMergeProductEditMode(group.productName) && (isDropdownColumn(column) || isStationColumn(column))"
+                                class="edit-input"
+                                :value="row[column] ?? ''"
+                                @focus="mergeEditingCell = `${row._localId}:${column}`"
+                                @blur="mergeEditingCell = null"
+                                @input="updateMergeRecipeCell(group.productName, row._localId, column, $event.target.value)"
                               >
-                                {{ option.label ?? option }}
-                              </option>
-                            </select>
-                            <input
-                              v-else-if="isMergeProductEditMode(group.productName)"
-                              class="edit-input"
-                              :value="row[column] ?? ''"
-                              :style="getMergeEditInputStyle(column, row[column])"
-                              @focus="mergeEditingCell = `${row._localId}:${column}`"
-                              @blur="mergeEditingCell = null"
-                              @input="updateMergeRecipeCell(group.productName, row._localId, column, $event.target.value)"
-                            />
-                            <span v-else>{{ row[column] ?? '' }}</span>
-                          </td>
-                          <td v-if="isMergeProductEditMode(group.productName)" class="row-actions-cell">
-                            <button
-                              class="tool-btn compact"
-                              :disabled="recipeRows.length >= activeRowLimit"
-                              @click="duplicateMergeRecipeRow(group.productName, row._localId)"
-                            >
-                              Duplikuj
-                            </button>
-                            <button class="tool-btn compact danger" @click="removeMergeRecipeRow(group.productName, row._localId)">
-                              Usuń
-                            </button>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                    <div v-if="isMergeProductEditMode(group.productName)" class="merge-group-footer">
-                      <button
-                        class="tool-btn compact"
-                        :disabled="recipeRows.length >= activeRowLimit"
-                        @click="addMergeRecipeRow(group.productName)"
-                      >
-                        Dodaj nowy wiersz
-                      </button>
+                                <option value=""></option>
+                                <option
+                                  v-for="option in getMergeDropdownOptions(group.productName, row, column)"
+                                  :key="`${column}-${row._localId}-${option.value ?? option}`"
+                                  :value="option.value ?? option"
+                                >
+                                  {{ option.label ?? option }}
+                                </option>
+                              </select>
+                              <input
+                                v-else-if="isMergeProductEditMode(group.productName)"
+                                class="edit-input"
+                                :value="row[column] ?? ''"
+                                :style="getMergeEditInputStyle(column, row[column])"
+                                @focus="mergeEditingCell = `${row._localId}:${column}`"
+                                @blur="mergeEditingCell = null"
+                                @input="updateMergeRecipeCell(group.productName, row._localId, column, $event.target.value)"
+                              />
+                              <span v-else>{{ row[column] ?? '' }}</span>
+                            </td>
+                            <td v-if="isMergeProductEditMode(group.productName)" class="row-actions-cell">
+                              <button
+                                class="tool-btn compact"
+                                :disabled="recipeRows.length >= activeRowLimit"
+                                @click="duplicateMergeRecipeRow(group.productName, row._localId)"
+                              >
+                                Duplikuj
+                              </button>
+                              <button class="tool-btn compact danger" @click="removeMergeRecipeRow(group.productName, row._localId)">
+                                Usuń
+                              </button>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      <div v-if="isMergeProductEditMode(group.productName)" class="merge-group-footer">
+                        <button
+                          class="tool-btn compact"
+                          :disabled="recipeRows.length >= activeRowLimit"
+                          @click="addMergeRecipeRow(group.productName)"
+                        >
+                          Dodaj nowy wiersz
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  </transition>
                 </section>
-              </div>
-              <div v-else class="expanded-empty recipe-empty-state">
-                Zaznacz produkty do scalenia receptury z panelu&nbsp;<strong>"Produkty do scalenia"</strong>
-              </div>
+              </TransitionGroup>
+              <transition name="merge-empty-fade">
+                <div v-if="!groupedRecipeRows.length" class="expanded-empty recipe-empty-state">
+                  Zaznacz produkty do scalenia receptury z panelu&nbsp;<strong>"Produkty do scalenia"</strong>
+                </div>
+              </transition>
               <div class="merge-preview-footer">
                 <button class="tool-btn primary merge-save-btn" :disabled="!recipeRows.length" @click="openSaveRecipeDialog">
                   Zapisz recepturę
@@ -1300,7 +1352,7 @@
                           class="tool-btn compact primary"
                           type="button"
                           :disabled="!row.rows"
-                          @click.stop.prevent="restoreSavedRow(row.idRap)"
+                          @click.stop.prevent="requestRestoreSavedRow(row.idRap)"
                         >
                           Wczytaj
                         </button>
@@ -1333,6 +1385,44 @@
               />
               <div class="confirm-modal-actions">
                 <button class="tool-btn compact" @click="closeSavedWorkPreview">Zamknij</button>
+              </div>
+            </div>
+          </div>
+
+          <div
+            v-if="restoreSavedWorkDialog.visible"
+            class="confirm-modal-overlay"
+            @click.self="cancelRestoreSavedWorkDialog"
+          >
+            <div class="confirm-modal panel" @click.stop>
+              <div class="panel-header">
+                <span>Wczytać odłożoną pracę?</span>
+              </div>
+              <div class="confirm-modal-body">
+                <p>
+                  Czy na pewno chcesz wczytać odłożoną pracę
+                  "{{ restoreSavedWorkDialog.name || 'Bez nazwy' }}"?
+                </p>
+                <p class="panel-caption">
+                  Wybierz, co zrobić z aktualnym stanem pracy przed wczytaniem.
+                </p>
+                <div class="confirm-modal-actions">
+                  <button class="tool-btn compact" @click="cancelRestoreSavedWorkDialog">Anuluj</button>
+                  <button
+                    class="tool-btn compact"
+                    :disabled="restoreSavedWorkDialog.loading"
+                    @click="confirmRestoreSavedWork('discard')"
+                  >
+                    Porzuć aktualny stan
+                  </button>
+                  <button
+                    class="tool-btn compact primary"
+                    :disabled="restoreSavedWorkDialog.loading || !workRows.length"
+                    @click="confirmRestoreSavedWork('postpone')"
+                  >
+                    {{ restoreSavedWorkDialog.loading ? 'Wczytywanie...' : 'Odłóż i wczytaj' }}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -1414,6 +1504,7 @@ const DEFAULT_ROW_LIMIT = 500;
 const PRODUCT_PREVIEW_STORAGE_KEY = 'mt-go-web:selected-product-preview';
 const TEMP_PRODUCT_KEY = '__TEMP_PRODUCT__';
 const SAVED_ROWS_STORAGE_KEY = 'mt-go-web:saved-rows';
+const UI_SETTINGS_STORAGE_KEY = 'mt-go-web:ui-settings';
 
 const tabs = [
   { id: 'products', label: '1. Twoje Produkty' },
@@ -1435,7 +1526,7 @@ const productSummaryLabels = {
   ostatniaAktualizacja: 'Źródło',
 };
 
-const productColumns = ['Nr', 'Nazwa', 'Długość', 'Grubość', 'Szerokość', 'Materiał', 'Kod', 'Grupa', 'Priorytet', 'ilość', 'Wybijak', 'Stanowisko'];
+const productColumns = ['Nr', 'Nazwa', 'Długość', 'Grubość', 'Szerokość', 'Materiał', 'Kod', 'Klasa', 'Grupa', 'Priorytet', 'ilość', 'Stanowisko', 'Wybijak'];
 const groupOptions = Array.from({ length: 26 }, (_, index) => String.fromCharCode(65 + index));
 const priorityOptions = Array.from({ length: 10 }, (_, index) => String(index));
 const productColumnLabels = {
@@ -1446,13 +1537,14 @@ const productColumnLabels = {
   'Szerokość': 'Szerokość',
   'Materiał': 'Materiał',
   Kod: 'Kod',
+  Klasa: 'Klasa',
   Grupa: 'Grupa',
   Priorytet: 'Priorytet',
   'ilość': 'ilość',
   Wybijak: 'Wybijak',
   Stanowisko: 'Stanowisko',
 };
-const editableProductColumns = ['Nazwa', 'Długość', 'Grubość', 'Szerokość', 'Materiał', 'Kod', 'Grupa', 'Priorytet', 'ilość', 'Wybijak'];
+const editableProductColumns = ['Nazwa', 'Długość', 'Grubość', 'Szerokość', 'Materiał', 'Kod', 'Klasa', 'Grupa', 'Priorytet', 'ilość', 'Wybijak', 'Stanowisko'];
 
 const recipeSummaryColumns = ['nazwaReceptury', 'liczbaPozycji', 'sumaElementow', 'materialy', 'createdAt', 'lastUsedAt'];
 const recipeCatalogColumns = ['nazwaReceptury', 'liczbaPozycji', 'sumaElementow', 'materialy', 'createdAt', 'lastUsedAt'];
@@ -1575,6 +1667,9 @@ const savedColumnLabels = {
 const activeTab = ref('products');
 const currentTime = ref('');
 const machineStatusRow = ref(null);
+const isDatabaseConnected = ref(false);
+const isSettingsPanelOpen = ref(false);
+const animationsEnabled = ref(loadAnimationsEnabledSetting());
 const isConfigPanelOpen = ref(false);
 const activeConfigTab = ref('stations');
 const configStations = ref([]);
@@ -1597,6 +1692,7 @@ const configDistanceImpactDialog = ref({
 });
 const selectedProducts = ref([]);
 const mergeProductQuantities = ref({});
+const mergeProductQuantityDrafts = ref({});
 const mergeProductSearch = ref('');
 const mergeAlert = ref({
   visible: false,
@@ -1609,6 +1705,7 @@ const isMergeSelectionCollapsed = ref(false);
 const mergeEditModes = ref({});
 const mergeEditingCell = ref(null);
 const mergeRecipeDrafts = ref({});
+const mergeQuantityPulse = ref({});
 const mergePreviewProductName = ref('');
 const isFavoriteElementsModalOpen = ref(false);
 const isFavoriteSourceModalOpen = ref(false);
@@ -1682,6 +1779,12 @@ const saveRecipeDialog = ref({
   name: '',
   error: '',
 });
+const restoreSavedWorkDialog = ref({
+  visible: false,
+  idRap: '',
+  name: '',
+  loading: false,
+});
 const configDistanceEditStart = ref({
   stationId: '',
   ruleId: '',
@@ -1692,6 +1795,7 @@ let timerId = null;
 let workRefreshTimerId = null;
 let machineStatusTimerId = null;
 let recipePreviewMessageTimerId = null;
+const mergeQuantityPulseTimers = new Map();
 let productLocalIdCounter = 1;
 let workRowClientIdCounter = 1;
 let configStationIdCounter = 1;
@@ -1711,6 +1815,9 @@ watch(
   },
   { deep: true },
 );
+watch(animationsEnabled, () => {
+  persistUiSettings();
+});
 
 const savedRecipeCatalog = ref([]);
 const workRowsSnapshot = ref('[]');
@@ -1967,6 +2074,8 @@ const machineStatusValue = computed(() => {
   const normalized = Number(String(rawValue ?? '').replace(',', '.'));
   return Number.isFinite(normalized) ? normalized : 0;
 });
+const databaseConnectionLabel = computed(() => (isDatabaseConnected.value ? 'SQL Msm' : 'SQL Msm offline'));
+const databaseConnectionBadgeClass = computed(() => (isDatabaseConnected.value ? 'online' : 'offline'));
 const isMachineWorking = computed(() => machineStatusValue.value > 0);
 const machineStatusLabel = computed(() => (isMachineWorking.value ? 'Maszyna pracuje' : 'Maszyna zatrzymana'));
 const machineStatusBadgeClass = computed(() => (isMachineWorking.value ? 'online' : 'offline'));
@@ -2363,6 +2472,28 @@ function removeSavedRow(idRap) {
   persistSavedRows();
 }
 
+function requestRestoreSavedRow(idRap) {
+  const snapshot = savedRows.value.find((row) => String(row.idRap) === String(idRap));
+  if (!snapshot || !snapshot.rows) return;
+
+  restoreSavedWorkDialog.value = {
+    visible: true,
+    idRap: String(idRap),
+    name: snapshot.NazwaRec || 'Odłożona praca',
+    loading: false,
+  };
+}
+
+function cancelRestoreSavedWorkDialog(force = false) {
+  if (restoreSavedWorkDialog.value.loading && !force) return;
+  restoreSavedWorkDialog.value = {
+    visible: false,
+    idRap: '',
+    name: '',
+    loading: false,
+  };
+}
+
 function restoreSavedRow(idRap) {
   const snapshot = savedRows.value.find((row) => String(row.idRap) === String(idRap));
   if (!snapshot || !snapshot.rows) return;
@@ -2387,6 +2518,55 @@ function restoreSavedRow(idRap) {
   }
 }
 
+function restoreSavedRowDeferred(idRap) {
+  window.requestAnimationFrame(() => {
+    window.setTimeout(() => {
+      restoreSavedRow(idRap);
+    }, 0);
+  });
+}
+
+async function confirmRestoreSavedWork(mode) {
+  if (!restoreSavedWorkDialog.value.idRap) return;
+  if (workEditingRowId.value !== null) {
+    workUploadError.value = true;
+    workUploadMessage.value = 'Najpierw zakończ edycję wszystkich wierszy, zanim wczytasz odłożoną pracę.';
+    cancelRestoreSavedWorkDialog(true);
+    return;
+  }
+
+  restoreSavedWorkDialog.value = {
+    ...restoreSavedWorkDialog.value,
+    loading: true,
+  };
+
+  try {
+    const targetId = restoreSavedWorkDialog.value.idRap;
+
+    if (mode === 'discard') {
+      cancelRestoreSavedWorkDialog(true);
+      restoreSavedRowDeferred(targetId);
+      return;
+    }
+
+    if (mode === 'postpone' && workRows.value.length) {
+      const rowsToSave = activeWorkRows.value.map((row, index) => getWorkRowPayload(row, index));
+      const payload = await persistWorkRowsToDatabase(rowsToSave);
+      const snapshot = createWorkSnapshot();
+      addWorkSnapshot(snapshot);
+      workUploadError.value = false;
+      workUploadMessage.value = `Odłożono pracę "${snapshot.NazwaRec}" i zapisano ${payload.updatedRows ?? rowsToSave.length} wierszy WorkMain.`;
+    }
+
+    cancelRestoreSavedWorkDialog(true);
+    restoreSavedRowDeferred(targetId);
+  } catch (error) {
+    workUploadError.value = true;
+    workUploadMessage.value = error.message || 'Nie udało się przygotować wczytania odłożonej pracy.';
+    cancelRestoreSavedWorkDialog(true);
+  }
+}
+
 function loadSavedRows() {
   try {
     const rawValue = window.localStorage.getItem(SAVED_ROWS_STORAGE_KEY);
@@ -2404,6 +2584,33 @@ function loadSavedRows() {
     }));
   } catch {
     return [...defaultSavedRows];
+  }
+}
+
+function loadAnimationsEnabledSetting() {
+  try {
+    const rawValue = window.localStorage.getItem(UI_SETTINGS_STORAGE_KEY);
+    if (!rawValue) return true;
+    const parsedValue = JSON.parse(rawValue);
+    if (typeof parsedValue?.animationsEnabled === 'boolean') {
+      return parsedValue.animationsEnabled;
+    }
+  } catch {
+    // Ignore storage errors.
+  }
+  return true;
+}
+
+function persistUiSettings() {
+  try {
+    window.localStorage.setItem(
+      UI_SETTINGS_STORAGE_KEY,
+      JSON.stringify({
+        animationsEnabled: animationsEnabled.value,
+      }),
+    );
+  } catch {
+    // Ignore storage errors.
   }
 }
 
@@ -2515,6 +2722,17 @@ async function loadMachineStatus() {
   machineStatusRow.value = payload.status ?? null;
 }
 
+async function loadDatabaseConnectionStatus() {
+  const response = await fetch(`/api/sql-status?t=${Date.now()}`, { cache: 'no-store' });
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(payload.error || 'Nie udało się sprawdzić połączenia z bazą.');
+  }
+
+  isDatabaseConnected.value = payload.ok === true;
+}
+
 function startWorkMainAutoRefresh() {
   if (workRefreshTimerId) return;
   workRefreshTimerId = window.setInterval(() => {
@@ -2540,6 +2758,9 @@ function startMachineStatusAutoRefresh() {
   if (machineStatusTimerId) return;
   machineStatusTimerId = window.setInterval(() => {
     loadMachineStatus().catch(() => {});
+    loadDatabaseConnectionStatus().catch(() => {
+      isDatabaseConnected.value = false;
+    });
   }, 3000);
 }
 
@@ -2601,6 +2822,18 @@ function toggleConfigPanel() {
   if (isConfigPanelOpen.value) {
     clearConfigSaveMessage();
   }
+}
+
+function toggleSettingsPanel() {
+  isSettingsPanelOpen.value = !isSettingsPanelOpen.value;
+}
+
+function closeSettingsPanel() {
+  isSettingsPanelOpen.value = false;
+}
+
+function toggleAnimationsEnabled() {
+  animationsEnabled.value = !animationsEnabled.value;
 }
 
 function createConfigStation() {
@@ -3675,13 +3908,14 @@ function buildProductFileUrl(fileName) {
   return `/api/products/file?fileName=${encodeURIComponent(fileName)}`;
 }
 
-function reloadProductsAfterFileAction(fileName = '') {
+async function reloadProductsAfterFileAction(fileName = '') {
   if (fileName) {
     rememberProductPreview(fileName);
   } else {
     clearRememberedProductPreview();
   }
-  window.location.reload();
+
+  await loadProductFiles();
 }
 function createEditableProductRow(fileName = "") {
   return {
@@ -3708,11 +3942,12 @@ function normalizeProductRows(fileName, headers, rows) {
       const sourceRow = Array.isArray(rowValues) ? buildRowFromHeaders(headers, rowValues) : rowValues;
       const quantity = getCellValue(sourceRow, ['Ilość', 'ILOŚĆ', 'ILOSC', 'Ilosc']) || rowValues[5] || '';
       const name = getCellValue(sourceRow, ['Nazwa', 'TYTUŁ', 'TYTUL', 'Nazwa mebla']) || rowValues[0] || '';
-      const length = getCellValue(sourceRow, ['Dł', 'DŁ', 'Dł. [mm]', 'DŁ. [mm]', 'DL', 'DL. [mm]', 'DŁUGOŚĆ', 'DLUGOSC', 'Dlugosc']) || rowValues[2] || '';
-      const thickness = getCellValue(sourceRow, ['GR.', 'GR. [mm]', 'Grubosc']) || rowValues[3] || '';
-      const width = getCellValue(sourceRow, ['Sz', 'SZER. [mm]', 'SZEROKOŚĆ', 'SZEROKOSC', 'Szerokosc']) || rowValues[4] || '';
+      const length = getCellValue(sourceRow, ['Długość', 'Dł', 'DŁ', 'Dł. [mm]', 'DŁ. [mm]', 'DL', 'DL. [mm]', 'DŁUGOŚĆ', 'DLUGOSC', 'Dlugosc']) || rowValues[2] || '';
+      const thickness = getCellValue(sourceRow, ['Grubość', 'GR.', 'GR. [mm]', 'Grubosc']) || rowValues[3] || '';
+      const width = getCellValue(sourceRow, ['Szerokość', 'Sz', 'SZER. [mm]', 'SZEROKOŚĆ', 'SZEROKOSC', 'Szerokosc']) || rowValues[4] || '';
       const material = getCellValue(sourceRow, ['Materiał', 'MATERIAŁ', 'MATERIAL', 'OPIS', 'gatunek drewna']) || rowValues[7] || '';
       const code = getCellValue(sourceRow, ['Kod', 'NR CZĘŚCI', 'NR CZESCI', 'Nadruk']) || rowValues[1] || rowValues[0] || '';
+      const klasa = getCellValue(sourceRow, ['Klasa', 'KLASA']) || '';
       const grupa = getCellValue(sourceRow, ['Grupa', 'GRUPA']) || '';
       const priorytet = getCellValue(sourceRow, ['Priorytet', 'PRIORYTET']) || '';
       const stanowisko = getCellValue(sourceRow, ['Stanowisko', 'STANOWISKO']) || '';
@@ -3724,6 +3959,7 @@ function normalizeProductRows(fileName, headers, rows) {
         'Szerokość': width,
         'Materiał': material,
         Kod: code,
+        Klasa: klasa,
         Grupa: normalizeGroupValue(grupa),
         Priorytet: normalizePriorityValue(priorytet),
         'ilość': quantity,
@@ -3896,12 +4132,13 @@ function triggerImportExcel() {
 }
 
 async function handleImportExcel(event) {
-  const [file] = event.target.files || [];
+  const files = Array.from(event.target.files || []);
   event.target.value = '';
-  if (!file) return;
+  if (!files.length) return;
 
-  if (!file.name.toLowerCase().endsWith('.xlsx')) {
-    setProductFileActionMessage('Możesz importować tylko pliki .xlsx.', true);
+  const invalidFile = files.find((file) => !file.name.toLowerCase().endsWith('.xlsx'));
+  if (invalidFile) {
+    setProductFileActionMessage(`Plik ${invalidFile.name} nie jest w formacie .xlsx.`, true);
     return;
   }
 
@@ -3909,12 +4146,24 @@ async function handleImportExcel(event) {
   clearProductFileActionMessage();
 
   try {
-    const contentBase64 = await readFileAsBase64(file);
-    const result = await postProductFileAction('/api/products/import', {
-      fileName: file.name,
-      contentBase64,
-    });
-    reloadProductsAfterFileAction(result.fileName || file.name);
+    const importedFileNames = [];
+
+    for (const file of files) {
+      const contentBase64 = await readFileAsBase64(file);
+      const result = await postProductFileAction('/api/products/import', {
+        fileName: file.name,
+        contentBase64,
+      });
+      importedFileNames.push(result.fileName || file.name);
+    }
+
+    const lastImportedFileName = importedFileNames[importedFileNames.length - 1] || '';
+    await reloadProductsAfterFileAction(lastImportedFileName);
+    setProductFileActionMessage(
+      importedFileNames.length === 1
+        ? `Zaimportowano plik ${importedFileNames[0]}.`
+        : `Zaimportowano ${importedFileNames.length} pliki Excela.`,
+    );
   } catch (error) {
     setProductFileActionMessage(error.message || 'Nie udało się zaimportować pliku.', true);
   } finally {
@@ -3942,7 +4191,8 @@ async function duplicateSelectedProductFile() {
     const result = await postProductFileAction('/api/products/duplicate', {
       fileName: selectedProductName.value,
     });
-    reloadProductsAfterFileAction(result.fileName || '');
+    await reloadProductsAfterFileAction(result.fileName || '');
+    setProductFileActionMessage(`Utworzono kopię pliku ${result.fileName || ''}.`);
   } catch (error) {
     setProductFileActionMessage(error.message || 'Nie udało się zduplikować pliku.', true);
   } finally {
@@ -3967,7 +4217,8 @@ async function submitRenameSelectedProductFile() {
       nextFileName: renameDraft.value.trim(),
     });
     resetRenameState();
-    reloadProductsAfterFileAction(result.fileName || '');
+    await reloadProductsAfterFileAction(result.fileName || '');
+    setProductFileActionMessage(`Zmieniono nazwę pliku na ${result.fileName || renameDraft.value.trim()}.`);
   } catch (error) {
     setProductFileActionMessage(error.message || 'Nie udało się zmienić nazwy pliku.', true);
   } finally {
@@ -3990,7 +4241,8 @@ async function executeDeleteSelectedProductFile() {
   try {
     await postProductFileAction('/api/products/delete', { fileName });
     resetProductModalState();
-    reloadProductsAfterFileAction('');
+    await reloadProductsAfterFileAction('');
+    setProductFileActionMessage(`Usunięto plik ${fileName}.`);
   } catch (error) {
     setProductFileActionMessage(error.message || 'Nie udało się usunąć pliku.', true);
   } finally {
@@ -4091,20 +4343,44 @@ function updateEditedCell(localId, column, value) {
     return;
   }
 
+  if (isStationColumn(column)) {
+    row[column] = normalizedValue;
+    row.Wybijak = getWybijakValueForStation(normalizedValue, row['Długość']);
+    return;
+  }
+
+  if (column === 'Długość') {
+    row[column] = normalizedValue;
+    if (row.Stanowisko) {
+      row.Wybijak = getWybijakValueForStation(row.Stanowisko, normalizedValue);
+    }
+    return;
+  }
+
   row[column] = normalizedValue;
 }
 
 function getEditInputStyle(value, localId, column) {
-  const length = String(value ?? '').length;
+  let contentLength = String(value ?? '').length;
+  if (isStationColumn(column)) {
+    const selectedOption = getStationDropdownOptions(value).find((option) => option.value === normalizeStationValue(value));
+    contentLength = String(selectedOption?.label || value || '').length;
+  }
   const isActive = activeEditCell.value === `${localId}:${column}`;
-  const isWideColumn = ['Nazwa', 'Kod'].includes(column);
-  const minWidth = isWideColumn ? 10 : 4;
-  const maxWidth = isWideColumn ? 24 : 10;
-  const activePadding = isWideColumn ? 2 : 1;
+  const widthConfig = {
+    Nazwa: { min: 10, max: 24 },
+    Kod: { min: 10, max: 24 },
+    Stanowisko: { min: 14, max: 18 },
+  };
+  const { min = 4, max = 10 } = widthConfig[column] ?? {};
+  const activePadding = column === 'Nazwa' || column === 'Kod' ? 2 : 1;
   const chWidth = isActive
-    ? Math.max(minWidth, Math.min(length + activePadding, maxWidth + 4))
-    : Math.max(minWidth, Math.min(length + 1, maxWidth));
-  return { width: `${chWidth}ch` };
+    ? Math.max(min, Math.min(contentLength + activePadding, max + 4))
+    : Math.max(min, Math.min(contentLength + 1, max));
+  return {
+    width: isStationColumn(column) ? `calc(${chWidth}ch + 20px)` : `${chWidth}ch`,
+    minWidth: `${min}ch`,
+  };
 }
 
 function getMergeEditInputStyle(column, value) {
@@ -4252,6 +4528,13 @@ function getMergeProductQuantity(productName) {
   return Number.isFinite(parsedValue) && parsedValue >= 0 ? parsedValue : 0;
 }
 
+function getMergeProductQuantityInputValue(productName) {
+  if (Object.prototype.hasOwnProperty.call(mergeProductQuantityDrafts.value, productName)) {
+    return mergeProductQuantityDrafts.value[productName];
+  }
+  return getMergeProductQuantity(productName);
+}
+
 function isMergeProductSelected(productName) {
   return getMergeProductQuantity(productName) > 0;
 }
@@ -4390,7 +4673,58 @@ function canSelectMergeProduct(productName) {
   return nextCount <= activeRowLimit.value;
 }
 
-function updateMergeProductQuantity(productName, value) {
+function triggerMergeQuantityPulse(productName) {
+  if (!productName) return;
+
+  if (mergeQuantityPulseTimers.has(productName)) {
+    window.clearTimeout(mergeQuantityPulseTimers.get(productName));
+  }
+
+  mergeQuantityPulse.value = {
+    ...mergeQuantityPulse.value,
+    [productName]: false,
+  };
+
+  window.requestAnimationFrame(() => {
+    mergeQuantityPulse.value = {
+      ...mergeQuantityPulse.value,
+      [productName]: true,
+    };
+
+    const timerId = window.setTimeout(() => {
+      mergeQuantityPulse.value = {
+        ...mergeQuantityPulse.value,
+        [productName]: false,
+      };
+      mergeQuantityPulseTimers.delete(productName);
+    }, 260);
+
+    mergeQuantityPulseTimers.set(productName, timerId);
+  });
+}
+
+function startMergeProductQuantityEdit(productName) {
+  mergeProductQuantityDrafts.value = {
+    ...mergeProductQuantityDrafts.value,
+    [productName]: String(getMergeProductQuantity(productName)),
+  };
+}
+
+function updateMergeProductQuantityDraft(productName, value) {
+  mergeProductQuantityDrafts.value = {
+    ...mergeProductQuantityDrafts.value,
+    [productName]: String(value ?? ''),
+  };
+}
+
+function clearMergeProductQuantityDraft(productName) {
+  if (!Object.prototype.hasOwnProperty.call(mergeProductQuantityDrafts.value, productName)) return;
+  const nextDrafts = { ...mergeProductQuantityDrafts.value };
+  delete nextDrafts[productName];
+  mergeProductQuantityDrafts.value = nextDrafts;
+}
+
+function applyMergeProductQuantity(productName, value) {
   const normalizedText = String(value ?? '')
     .replace(/[^\d]/g, '')
     .trim();
@@ -4406,6 +4740,7 @@ function updateMergeProductQuantity(productName, value) {
     ...mergeProductQuantities.value,
     [productName]: normalizedValue,
   };
+  triggerMergeQuantityPulse(productName);
 
   if (normalizedValue > 0 && !selectedProducts.value.includes(productName)) {
     ensureMergeRecipeDraft(productName);
@@ -4424,6 +4759,12 @@ function updateMergeProductQuantity(productName, value) {
     mergeEditingCell.value = null;
     clearMergeMessage();
   }
+}
+
+function commitMergeProductQuantity(productName) {
+  const draftValue = getMergeProductQuantityInputValue(productName);
+  clearMergeProductQuantityDraft(productName);
+  applyMergeProductQuantity(productName, draftValue);
 }
 
 async function loadSavedRecipes() {
@@ -4458,7 +4799,8 @@ async function loadSavedRecipes() {
 function stepMergeProductQuantity(productName, delta) {
   lastMergeInteractedProduct.value = productName;
   const nextValue = Math.min(activeRowLimit.value, Math.max(0, getMergeProductQuantity(productName) + delta));
-  updateMergeProductQuantity(productName, nextValue);
+  clearMergeProductQuantityDraft(productName);
+  applyMergeProductQuantity(productName, nextValue);
 }
 
 function removeMergeProduct(productName) {
@@ -4467,7 +4809,8 @@ function removeMergeProduct(productName) {
     return;
   }
   lastMergeInteractedProduct.value = productName;
-  updateMergeProductQuantity(productName, 0);
+  clearMergeProductQuantityDraft(productName);
+  applyMergeProductQuantity(productName, 0);
 }
 
 function handleMergeCheckboxChange(productName, isChecked) {
@@ -4771,6 +5114,11 @@ function closeMergeProductPreview() {
 
 function handleGlobalEscape(event) {
   if (event.key !== 'Escape') return;
+
+  if (isSettingsPanelOpen.value) {
+    closeSettingsPanel();
+    return;
+  }
 
   if (selectedSavedWorkPreview.value) {
     closeSavedWorkPreview();
@@ -5289,6 +5637,9 @@ onMounted(() => {
   loadWorkMainRows().catch(() => {});
   loadConfig().catch(() => {});
   loadMachineStatus().catch(() => {});
+  loadDatabaseConnectionStatus().catch(() => {
+    isDatabaseConnected.value = false;
+  });
   startMachineStatusAutoRefresh();
 });
 
@@ -5316,6 +5667,8 @@ onUnmounted(() => {
   window.clearInterval(timerId);
   stopWorkMainAutoRefresh();
   stopMachineStatusAutoRefresh();
+  mergeQuantityPulseTimers.forEach((pulseTimerId) => window.clearTimeout(pulseTimerId));
+  mergeQuantityPulseTimers.clear();
   if (recipePreviewMessageTimerId) {
     window.clearTimeout(recipePreviewMessageTimerId);
   }
