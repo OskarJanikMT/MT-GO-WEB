@@ -122,3 +122,32 @@ MTGO_SQL_DATABASE=msm
 
 - Repo:
   - uzupełniono `.gitignore` o `node_modules`, `dist`, `.env`, logi i lokalne pliki debug.
+## Dalsze zmiany 2026-05-26 11:22
+
+- Repo i porządek:
+  - wyczyszczono indeks gita z `.env`, `dist`, `node_modules` oraz lokalnych plików debug,
+  - rozszerzono `.gitignore` o `.env.*`, `*.err` oraz `.vite/`.
+
+- Zakładka `3. Aktualnie cięte`:
+  - naprawiono wczytywanie `Stanowisko` i `Klasa` z różnych formatów danych (`camel/pascal` i lowercase),
+  - wyłączono w UI pola `Stanowisko` i `Klasa`,
+  - dodano przycisk automatycznego przypisywania `Wybijak` według zakresów długości z configu,
+  - poprawiono podgląd `Wybijak` w tabeli i podglądach zapisanych prac:
+    - `56` jest pokazywane jako `5 i 6`,
+    - analogicznie dla innych par wybijaków z configu.
+
+- Zakładka `1. Twoje Produkty`:
+  - usunięto z podglądu i edycji kolumny `Grupa`, `Priorytet`, `Stanowisko`, `Klasa`,
+  - usunięto z podglądu kolumnę `Nazwa`,
+  - na pierwszą pozycję danych przeniesiono kolumnę `Tekst do druku` (`Kod`).
+
+- Konfiguracja:
+  - w UI przestano używać nazwy `Stanowiska`; zamiast tego używane są `Wybijaki` i `Zestaw`,
+  - ograniczono konfigurację do maksymalnie 2 wybijaków w jednym zestawie,
+  - ograniczono logikę wybijaków do maksymalnie 2 numerów jednocześnie.
+
+- Backend / SQL:
+  - wyłączono logi konsolowe dotyczące statusu maszyny, połączeń SQL i zapytań,
+  - zapis `Wybijak` do bazy został rozdzielony od formatu UI:
+    - UI pokazuje np. `5 i 6`,
+    - SQL zapisuje `56`, bez separatorów i bez trzeciego numeru.
