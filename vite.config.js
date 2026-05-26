@@ -276,6 +276,16 @@ function toSqlNumber(value, fallback = 0) {
   return Number.isFinite(normalized) ? normalized : fallback;
 }
 
+function toSqlDigitSequenceNumber(value, fallback = 0) {
+  const numericGroups = String(value ?? '')
+    .match(/\d+/g)
+    ?.slice(0, 2) ?? [];
+  const normalizedText = numericGroups.join('');
+  if (!normalizedText) return fallback;
+  const parsed = Number.parseInt(normalizedText, 10);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
 function buildWorkMainUploadSql(rows) {
   const valuesSql = rows
     .map((row, index) => `(
@@ -286,7 +296,7 @@ ${toSqlNumber(row.Grubosc)},
 ${toSqlNumber(row.Szerokosc)},
 ${toSqlNumber(row.Dlugosc)},
 ${toSqlNumber(row.Sztuk)},
-${toSqlNumber(row.Wybijaki)},
+${toSqlDigitSequenceNumber(row.Wybijaki)},
 ${toSqlLiteral(row.TekstDoDruku)},
 ${toSqlLiteral(row.Grupa)},
 ${toSqlLiteral(row.Priorytet)},
@@ -530,7 +540,7 @@ ${toSqlNumber(row.Szerokosc)},
 ${toSqlNumber(row.Dlugosc)},
 ${toSqlNumber(row.Sztuk)},
 ${toSqlNumber(row.WykonaneSztuki)},
-${toSqlNumber(row.Wybijak)},
+${toSqlDigitSequenceNumber(row.Wybijak)},
 ${toSqlLiteral(row.TekstDoDruku)},
 ${toSqlLiteral(row.Grupa)},
 ${toSqlLiteral(row.Priorytet)},

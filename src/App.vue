@@ -128,7 +128,7 @@
                         <span class="config-station-title">{{ getConfigStationLabel(stationIndex) }}</span>
                       </div>
                       <div class="config-station-actions">
-                        <button class="tool-btn compact" @click="addConfigStationPunch(station.id)">Dodaj wybijak</button>
+                        <button class="tool-btn compact" :disabled="station.punches.length >= 2" @click="addConfigStationPunch(station.id)">Dodaj wybijak</button>
                         <button class="tool-btn compact danger" @click="removeConfigStation(station.id)">Usuń zestaw</button>
                       </div>
                     </div>
@@ -3014,7 +3014,7 @@ function normalizeLoadedConfigStation(station) {
   return syncConfigStationDistanceRules({
     id: station?.id || `station-${configStationIdCounter++}`,
     punches: Array.isArray(station?.punches)
-      ? station.punches.map((punch) => ({
+      ? station.punches.slice(0, 2).map((punch) => ({
           id: punch?.id || `punch-${configPunchIdCounter++}`,
           number: String(punch?.number ?? '').replace(/[^\d]/g, '').trim(),
         }))
@@ -3661,7 +3661,9 @@ function syncConfigStationDistanceRules(station) {
 function addConfigStationPunch(stationId) {
   configStations.value = configStations.value.map((station) =>
     station.id === stationId
-      ? syncConfigStationDistanceRules({ ...station, punches: [...station.punches, createConfigPunch()] })
+      ? station.punches.length >= 2
+        ? station
+        : syncConfigStationDistanceRules({ ...station, punches: [...station.punches, createConfigPunch()] })
       : station,
   );
 }
@@ -4039,7 +4041,8 @@ function getWybijakValueForStation(stationValue, lengthValue = 0) {
 
   const punchNumbers = getConfigStationOrderedPunches(station)
     .map((punch) => String(punch ?? '').replace(/[^\d]/g, '').trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    .slice(0, 2);
 
   if (!punchNumbers.length) return '';
   const normalizedLength = getNormalizedLengthValue(lengthValue);
@@ -4053,7 +4056,7 @@ function getWybijakValueForStation(stationValue, lengthValue = 0) {
     return punchNumbers[0];
   }
   if (punchNumbers.length === 1) return punchNumbers[0];
-  return punchNumbers.join('0');
+  return punchNumbers.join(' i ');
 }
 
 function getRowGroupValue(row) {
