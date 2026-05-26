@@ -514,6 +514,26 @@
                             {{ option.label ?? option }}
                           </option>
                         </select>
+                        <div
+                          v-else-if="isEditMode && editableProductColumns.includes(column) && column === 'Wybijak'"
+                          class="wybijak-edit-group"
+                          @focusin="activeEditCell = `${item._localId}:${column}`"
+                          @focusout="activeEditCell = null"
+                        >
+                          <input
+                            class="edit-input wybijak-part-input"
+                            :value="getWybijakInputParts(item[column], item.Stanowisko)[0]"
+                            inputmode="numeric"
+                            @input="updateEditedWybijakPart(item._localId, 0, $event.target.value)"
+                          />
+                          <span class="wybijak-separator">i</span>
+                          <input
+                            class="edit-input wybijak-part-input"
+                            :value="getWybijakInputParts(item[column], item.Stanowisko)[1]"
+                            inputmode="numeric"
+                            @input="updateEditedWybijakPart(item._localId, 1, $event.target.value)"
+                          />
+                        </div>
                         <input
                           v-else-if="isEditMode && editableProductColumns.includes(column)"
                           class="edit-input"
@@ -1026,6 +1046,26 @@
                                   {{ option.label ?? option }}
                                 </option>
                               </select>
+                              <div
+                                v-else-if="isMergeProductEditMode(group.productName) && column === 'wybijak'"
+                                class="wybijak-edit-group"
+                                @focusin="mergeEditingCell = `${row._localId}:${column}`"
+                                @focusout="mergeEditingCell = null"
+                              >
+                                <input
+                                  class="edit-input wybijak-part-input"
+                                  :value="getWybijakInputParts(row[column], row.Stanowisko)[0]"
+                                  inputmode="numeric"
+                                  @input="updateMergeRecipeWybijakPart(group.productName, row._localId, 0, $event.target.value)"
+                                />
+                                <span class="wybijak-separator">i</span>
+                                <input
+                                  class="edit-input wybijak-part-input"
+                                  :value="getWybijakInputParts(row[column], row.Stanowisko)[1]"
+                                  inputmode="numeric"
+                                  @input="updateMergeRecipeWybijakPart(group.productName, row._localId, 1, $event.target.value)"
+                                />
+                              </div>
                               <input
                                 v-else-if="isMergeProductEditMode(group.productName)"
                                 class="edit-input"
@@ -2456,7 +2496,12 @@ function updateWorkCell(rowId, column, value) {
     return;
   }
 
-  if (['Dlugosc', 'Wybijak', 'Grubosc', 'Szerokosc', 'Sztuk'].includes(column)) {
+  if (column === 'Wybijak') {
+    row[column] = buildWybijakValueFromParts(...getWybijakInputParts(value, row.Stanowisko));
+    return;
+  }
+
+  if (['Dlugosc', 'Grubosc', 'Szerokosc', 'Sztuk'].includes(column)) {
     row[column] = normalizeWorkCorrectionValue(value);
     if (column === 'Grubosc' || column === 'Szerokosc') {
       row.Przekroj = buildPrzekrojValue(row.Grubosc, row.Szerokosc);
@@ -2471,6 +2516,14 @@ function updateWorkCell(rowId, column, value) {
   }
 
   row[column] = String(value ?? '');
+}
+
+function updateWorkWybijakPart(rowId, partIndex, value) {
+  const row = workRows.value.find((entry) => entry.__clientId === rowId);
+  if (!row) return;
+  const parts = getWybijakInputParts(row.Wybijak, row.Stanowisko);
+  parts[partIndex] = String(value ?? '').replace(/[^\d]/g, '').trim();
+  row.Wybijak = buildWybijakValueFromParts(parts[0], parts[1]);
 }
 
 function updateWorkProgressValue(rowId, field, value) {
@@ -4127,6 +4180,56 @@ function formatWorkWybijakDisplayValue(row) {
   return rawValue;
 }
 
+function getConfiguredWybijakPair(rawDigits, stationValue = '') {
+  const normalizedRawDigits = String(rawDigits ?? '').replace(/[^\d]/g, '').trim();
+  if (!normalizedRawDigits) return null;
+
+  const collectPairs = [];
+  const normalizedStationValue = normalizeStationValue(stationValue);
+  const stationIndex = Number.parseInt(normalizedStationValue, 10) - 1;
+  if (Number.isFinite(stationIndex) && stationIndex >= 0 && configStations.value[stationIndex]) {
+    collectPairs.push(configStations.value[stationIndex]);
+  }
+  collectPairs.push(...configStations.value);
+
+  for (const station of collectPairs) {
+    const punchNumbers = getConfigStationOrderedPunches(station)
+      .map((punch) => String(punch ?? '').replace(/[^\d]/g, '').trim())
+      .filter(Boolean)
+      .slice(0, 2);
+
+    if (punchNumbers.length === 2 && normalizedRawDigits === punchNumbers.join('')) {
+      return punchNumbers;
+    }
+  }
+
+  return null;
+}
+
+function getWybijakInputParts(value, stationValue = '') {
+  const rawValue = String(value ?? '').trim();
+  if (!rawValue) return ['', ''];
+
+  const explicitParts = rawValue.match(/\d+/g)?.slice(0, 2) ?? [];
+  if (rawValue.includes(' i ') || explicitParts.length > 1) {
+    return [explicitParts[0] ?? '', explicitParts[1] ?? ''];
+  }
+
+  const configuredPair = getConfiguredWybijakPair(rawValue, stationValue);
+  if (configuredPair) {
+    return [configuredPair[0] ?? '', configuredPair[1] ?? ''];
+  }
+
+  return [String(rawValue).replace(/[^\d]/g, '').trim(), ''];
+}
+
+function buildWybijakValueFromParts(firstPart, secondPart) {
+  const first = String(firstPart ?? '').replace(/[^\d]/g, '').trim();
+  const second = String(secondPart ?? '').replace(/[^\d]/g, '').trim();
+  if (first && second) return `${first} i ${second}`;
+  return first || second || '';
+}
+
 function getRowGroupValue(row) {
   return normalizeGroupValue(row?.Grupa ?? row?.grupa ?? '');
 }
@@ -4874,6 +4977,14 @@ function updateEditedCell(localId, column, value) {
   }
 
   row[column] = normalizedValue;
+}
+
+function updateEditedWybijakPart(localId, partIndex, value) {
+  const row = editingRows.value.find((item) => item._localId === localId);
+  if (!row) return;
+  const parts = getWybijakInputParts(row.Wybijak, row.Stanowisko);
+  parts[partIndex] = String(value ?? '').replace(/[^\d]/g, '').trim();
+  row.Wybijak = buildWybijakValueFromParts(parts[0], parts[1]);
 }
 
 function getEditInputStyle(value, localId, column) {
@@ -5908,6 +6019,14 @@ function updateRecipePreviewCell(localId, column, value) {
   row[column] = normalizedValue;
 }
 
+function updateRecipePreviewWybijakPart(localId, partIndex, value) {
+  const row = recipePreviewDraftRows.value.find((item) => item._localId === localId);
+  if (!row) return;
+  const parts = getWybijakInputParts(row.wybijak, row.Stanowisko);
+  parts[partIndex] = String(value ?? '').replace(/[^\d]/g, '').trim();
+  row.wybijak = buildWybijakValueFromParts(parts[0], parts[1]);
+}
+
 function addRecipePreviewRow() {
   if (recipePreviewDraftRows.value.length >= activeRowLimit.value) return;
   recipePreviewDraftRows.value = [...recipePreviewDraftRows.value, createRecipePreviewDraftRow()];
@@ -6273,6 +6392,14 @@ function updateMergeRecipeCell(productName, localId, column, value) {
   row[column] = normalizedValue;
 }
 
+function updateMergeRecipeWybijakPart(productName, localId, partIndex, value) {
+  const row = (mergeRecipeDrafts.value[productName] ?? []).find((item) => item._localId === localId);
+  if (!row) return;
+  const parts = getWybijakInputParts(row.wybijak, row.Stanowisko);
+  parts[partIndex] = String(value ?? '').replace(/[^\d]/g, '').trim();
+  row.wybijak = buildWybijakValueFromParts(parts[0], parts[1]);
+}
+
 function addMergeRecipeRow(productName) {
   const currentRows = mergeRecipeDrafts.value[productName] ?? [];
   if (selectedMergeRowCount.value >= activeRowLimit.value) {
@@ -6618,6 +6745,27 @@ const WorkTable = defineComponent({
                           ]);
                         }
 
+                        if (column === 'Wybijak') {
+                          const [firstPart, secondPart] = getWybijakInputParts(row[column], row.Stanowisko);
+                          return h('td', { key: `${row.__clientId}-${column}` }, [
+                            h('div', { class: 'wybijak-edit-group' }, [
+                              h('input', {
+                                class: 'edit-input work-cell-input wybijak-part-input',
+                                value: firstPart,
+                                inputmode: 'numeric',
+                                onInput: (event) => updateWorkWybijakPart(row.__clientId, 0, event.target.value),
+                              }),
+                              h('span', { class: 'wybijak-separator' }, 'i'),
+                              h('input', {
+                                class: 'edit-input work-cell-input wybijak-part-input',
+                                value: secondPart,
+                                inputmode: 'numeric',
+                                onInput: (event) => updateWorkWybijakPart(row.__clientId, 1, event.target.value),
+                              }),
+                            ]),
+                          ]);
+                        }
+
                         return h('td', { key: `${row.__clientId}-${column}` }, [
                           h('input', {
                             class: 'edit-input work-cell-input',
@@ -6802,6 +6950,27 @@ const RecipePreviewTable = defineComponent({
                                 ),
                               ],
                             ),
+                          ]);
+                        }
+
+                        if (column === 'wybijak') {
+                          const [firstPart, secondPart] = getWybijakInputParts(row[column], row.Stanowisko);
+                          return h('td', [
+                            h('div', { class: 'wybijak-edit-group' }, [
+                              h('input', {
+                                class: 'edit-input recipe-preview-input wybijak-part-input',
+                                value: firstPart,
+                                inputmode: 'numeric',
+                                onInput: (event) => updateRecipePreviewWybijakPart(row._localId, 0, event.target.value),
+                              }),
+                              h('span', { class: 'wybijak-separator' }, 'i'),
+                              h('input', {
+                                class: 'edit-input recipe-preview-input wybijak-part-input',
+                                value: secondPart,
+                                inputmode: 'numeric',
+                                onInput: (event) => updateRecipePreviewWybijakPart(row._localId, 1, event.target.value),
+                              }),
+                            ]),
                           ]);
                         }
 

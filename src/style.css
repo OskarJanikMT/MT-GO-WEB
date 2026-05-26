@@ -1069,6 +1069,25 @@ button {
   text-align: left;
 }
 
+.wybijak-edit-group {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.wybijak-part-input {
+  width: 4.5ch !important;
+  min-width: 4.5ch !important;
+  text-align: center;
+}
+
+.wybijak-separator {
+  color: var(--text-muted);
+  font-weight: 600;
+  line-height: 1;
+}
+
 .work-progress-bar-wrap {
   width: 120px;
   max-width: 120px;
