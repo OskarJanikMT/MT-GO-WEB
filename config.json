@@ -1,4 +1,5 @@
 {
+  "productsDirectory": "C:\\Users\\Oskar\\Desktop\\MT-GO-WEB\\Produkty",
   "stations": [
     {
       "id": "station-1778766623049-1",
@@ -8,7 +9,7 @@
           "number": "1"
         },
         {
-          "id": "punch-1778766624604-2",
+          "id": "punch-1779793126350-1",
           "number": "2"
         }
       ],
@@ -19,10 +20,10 @@
       },
       "distanceRules": [
         {
-          "id": "distance-1778766629606-1",
+          "id": "distance-1779793128626-1",
           "leftPunch": "1",
           "rightPunch": "2",
-          "distance": "150"
+          "distance": "500"
         }
       ]
     },
@@ -80,6 +81,21 @@
     }
   ],
   "activeMachineId": "machine-1",
+  "settings": {
+    "printTextMaxLength": 100,
+    "boardMaxLength": 3500,
+    "maxQuantity": 10000,
+    "machinePunchCount": 6,
+    "activeExcelColumns": [
+      "Kod",
+      "Długość",
+      "Grubość",
+      "Szerokość",
+      "Materiał",
+      "ilość",
+      "Wybijak"
+    ]
+  },
   "machines": [
     {
       "id": "machine-1",
@@ -136,7 +152,7 @@
         "Grubość": 30,
         "Szerokość": 60,
         "Materiał": "So",
-        "Kod": "BULL S 126 ",
+        "Kod": "BULL S 126",
         "Grupa": "",
         "Priorytet": "",
         "ilość": 1,
@@ -174,7 +190,7 @@
         "Grubość": 30,
         "Szerokość": 60,
         "Materiał": "So",
-        "Kod": "PALLADIO L 95,5 ",
+        "Kod": "PALLADIO L 95,5",
         "Grupa": "",
         "Priorytet": "",
         "ilość": 1,

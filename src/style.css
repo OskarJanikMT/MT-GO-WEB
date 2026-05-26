@@ -938,7 +938,7 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
+  padding: min(24px, 3vw);
   background: rgba(0, 0, 0, 0.74);
   animation: overlay-fade-in 180ms ease;
 }
@@ -981,6 +981,15 @@ button {
   z-index: 47;
 }
 
+.confirm-modal.panel.import-mapping-modal {
+  width: min(96vw, 1320px);
+  max-width: min(96vw, 1320px);
+  max-height: min(92vh, 860px);
+  display: flex;
+  flex-direction: column;
+  z-index: 47;
+}
+
 .confirm-modal-body {
   padding: 18px 20px 20px;
 }
@@ -996,6 +1005,8 @@ button {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .import-mapping-summary {
@@ -1064,10 +1075,12 @@ button {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-height: 0;
+  flex: 1 1 auto;
 }
 
 .import-mapping-preview-wrap {
-  max-height: 220px;
+  max-height: clamp(140px, 24vh, 260px);
   overflow: auto;
 }
 
@@ -1768,6 +1781,28 @@ button {
   gap: 10px;
 }
 
+.config-excel-columns-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px 12px;
+}
+
+.config-excel-column-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 30px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.config-excel-column-row input[type='checkbox'] {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--accent);
+}
+
 .config-station-lengths {
   display: flex;
   flex-direction: column;
@@ -1832,6 +1867,18 @@ button {
   flex: 0 0 56px;
 }
 
+.config-machine-row .config-punch-label {
+  min-width: 220px;
+  flex: 1 1 220px;
+}
+
+.config-machine-row .config-punch-input {
+  width: 96px;
+  min-width: 96px;
+  max-width: 96px;
+  flex: 0 0 96px;
+}
+
 .config-distance-input {
   width: 56px;
   min-width: 56px;
@@ -1848,12 +1895,16 @@ button {
   min-width: 56px;
 }
 
+.text-input.config-machine-row .config-punch-input {
+  min-width: 96px;
+}
+
 .text-input.config-products-directory-input {
-  width: min(760px, 100%);
-  min-width: 420px;
+  width: min(100%, 560px);
+  min-width: 0;
   max-width: 100%;
   text-align: left;
-  flex: 1 1 420px;
+  flex: 1 1 320px;
 }
 
 .text-input.config-distance-input {

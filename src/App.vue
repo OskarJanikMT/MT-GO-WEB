@@ -240,7 +240,6 @@
               <div v-else-if="activeConfigTab === 'parameters'" class="config-section">
                 <div class="config-section-header">
                   <span class="panel-caption">Parametry maszyn</span>
-                  <button class="tool-btn compact primary" @click="addConfigMachine">Dodaj maszynę</button>
                 </div>
 
                 <article class="config-station-card">
@@ -307,7 +306,7 @@
                       />
                     </div>
                     <div class="config-punch-row config-machine-row">
-                      <span class="config-punch-label">Ilość zestawów wybijaków</span>
+                      <span class="config-punch-label">Maks. ilość wybijaków maszyny</span>
                       <input
                         class="text-input config-punch-input"
                         :value="configSettings.machinePunchCount"
@@ -315,43 +314,36 @@
                         @input="updateConfigSetting('machinePunchCount', $event.target.value)"
                       />
                     </div>
+                    <div class="config-punch-row config-machine-row">
+                      <span class="config-punch-label">Maks. ilość pozycji / elementów</span>
+                      <input
+                        class="text-input config-punch-input"
+                        :value="activeMachine?.rowLimit ?? DEFAULT_ROW_LIMIT"
+                        inputmode="numeric"
+                        @input="updateConfigMachine(activeMachine?.id || 'machine-1', 'rowLimit', $event.target.value)"
+                      />
+                    </div>
                   </div>
                 </article>
 
-                <div v-if="configMachines.length" class="config-stations">
-                  <article v-for="(machine, machineIndex) in configMachines" :key="machine.id" class="config-station-card">
-                    <div class="config-station-header">
-                      <div class="config-station-title-wrap">
-                        <span class="config-station-title">{{ getConfigMachineLabel(machineIndex) }}</span>
-                      </div>
-                      <div class="config-station-actions">
-                        <button
-                          class="tool-btn compact"
-                          :class="{ primary: activeMachineId === machine.id }"
-                          @click="selectActiveMachine(machine.id)"
-                        >
-                          {{ activeMachineId === machine.id ? 'Aktywna' : 'Ustaw aktywną' }}
-                        </button>
-                        <button class="tool-btn compact danger" :disabled="configMachines.length === 1" @click="removeConfigMachine(machine.id)">
-                          Usuń
-                        </button>
-                      </div>
+                <article class="config-station-card">
+                  <div class="config-station-header">
+                    <div class="config-station-title-wrap">
+                      <span class="config-station-title">Aktywne kolumny Excel</span>
                     </div>
+                  </div>
 
-                    <div class="config-punch-list">
-                      <div class="config-punch-row config-machine-row">
-                        <span class="config-punch-label">Limit pozycji</span>
-                        <input
-                          class="text-input config-punch-input"
-                          :value="machine.rowLimit"
-                          inputmode="numeric"
-                          placeholder="Limit pozycji"
-                          @input="updateConfigMachine(machine.id, 'rowLimit', $event.target.value)"
-                        />
-                      </div>
-                    </div>
-                  </article>
-                </div>
+                  <div class="config-punch-list config-excel-columns-list">
+                    <label v-for="field in productImportFieldDefinitions" :key="field.key" class="config-excel-column-row">
+                      <input
+                        type="checkbox"
+                        :checked="configSettings.activeExcelColumns.includes(field.key)"
+                        @change="toggleConfigActiveExcelColumn(field.key)"
+                      />
+                      <span>{{ field.label }}</span>
+                    </label>
+                  </div>
+                </article>
               </div>
             </div>
           </section>
@@ -648,7 +640,7 @@
                 </div>
               </div>
               <div class="import-mapping-grid">
-                <label v-for="field in productImportFieldDefinitions" :key="field.key" class="import-mapping-row">
+                <label v-for="field in getActiveProductImportFieldDefinitions()" :key="field.key" class="import-mapping-row">
                   <span class="import-mapping-label">
                     {{ field.label }}
                     <strong v-if="field.required">*</strong>
@@ -2014,6 +2006,7 @@ const DEFAULT_PRINT_TEXT_MAX_LENGTH = 100;
 const DEFAULT_BOARD_MAX_LENGTH = 3500;
 const DEFAULT_MAX_QUANTITY = 10000;
 const DEFAULT_MACHINE_PUNCH_COUNT = 6;
+const DEFAULT_ACTIVE_EXCEL_COLUMNS = ['Nazwa', 'Kod', 'Długość', 'Grubość', 'Szerokość', 'Materiał', 'ilość', 'Wybijak', 'Klasa', 'Stanowisko'];
 const currentTime = ref('');
 const machineStatusRow = ref(null);
 const isDatabaseConnected = ref(false);
@@ -2029,10 +2022,11 @@ const configSettings = ref({
   boardMaxLength: DEFAULT_BOARD_MAX_LENGTH,
   maxQuantity: DEFAULT_MAX_QUANTITY,
   machinePunchCount: DEFAULT_MACHINE_PUNCH_COUNT,
+  activeExcelColumns: DEFAULT_ACTIVE_EXCEL_COLUMNS,
 });
 const favoriteElements = ref([]);
 const activeMachineId = ref('machine-1');
-const savedConfigSnapshot = ref('{"productsDirectory":"","stations":[],"settings":{"printTextMaxLength":100,"boardMaxLength":3500,"maxQuantity":10000,"machinePunchCount":6},"activeMachineId":"machine-1","machines":[{"id":"machine-1","name":"Maszyna 1","rowLimit":500}],"favoriteElements":[]}');
+const savedConfigSnapshot = ref('{"productsDirectory":"","stations":[],"settings":{"printTextMaxLength":100,"boardMaxLength":3500,"maxQuantity":10000,"machinePunchCount":6,"activeExcelColumns":["Nazwa","Kod","Długość","Grubość","Szerokość","Materiał","ilość","Wybijak","Klasa","Stanowisko"]},"activeMachineId":"machine-1","machines":[{"id":"machine-1","name":"Maszyna 1","rowLimit":500}],"favoriteElements":[]}');
 const isConfigSaving = ref(false);
 const isSelectingProductsDirectory = ref(false);
 const isConfigLoaded = ref(false);
@@ -2506,6 +2500,7 @@ const configPayload = computed(() => ({
     boardMaxLength: Math.max(1, normalizeWorkCorrectionValue(configSettings.value.boardMaxLength || DEFAULT_BOARD_MAX_LENGTH)),
     maxQuantity: Math.max(1, normalizeWorkCorrectionValue(configSettings.value.maxQuantity || DEFAULT_MAX_QUANTITY)),
     machinePunchCount: Math.max(1, normalizeWorkCorrectionValue(configSettings.value.machinePunchCount || DEFAULT_MACHINE_PUNCH_COUNT)),
+    activeExcelColumns: sanitizeActiveExcelColumns(configSettings.value.activeExcelColumns),
   },
   activeMachineId: activeMachineId.value,
   machines: configMachines.value.map((machine) => ({
@@ -3419,6 +3414,7 @@ function applyLoadedConfig(config) {
     boardMaxLength: Math.max(1, normalizeWorkCorrectionValue(loadedSettings.boardMaxLength || DEFAULT_BOARD_MAX_LENGTH)),
     maxQuantity: Math.max(1, normalizeWorkCorrectionValue(loadedSettings.maxQuantity || DEFAULT_MAX_QUANTITY)),
     machinePunchCount: Math.max(1, normalizeWorkCorrectionValue(loadedSettings.machinePunchCount || DEFAULT_MACHINE_PUNCH_COUNT)),
+    activeExcelColumns: sanitizeActiveExcelColumns(loadedSettings.activeExcelColumns),
   };
   const stations = Array.isArray(config?.stations)
     ? config.stations.slice(0, settings.machinePunchCount).map((station) => normalizeLoadedConfigStation(station))
@@ -3665,6 +3661,19 @@ function updateConfigSetting(field, value) {
   }
 }
 
+function toggleConfigActiveExcelColumn(columnKey) {
+  if (!DEFAULT_ACTIVE_EXCEL_COLUMNS.includes(columnKey)) return;
+  const current = sanitizeActiveExcelColumns(configSettings.value.activeExcelColumns);
+  if (current.includes(columnKey) && current.length === 1) return;
+  const nextColumns = current.includes(columnKey)
+    ? current.filter((column) => column !== columnKey)
+    : [...current, columnKey];
+  configSettings.value = {
+    ...configSettings.value,
+    activeExcelColumns: sanitizeActiveExcelColumns(nextColumns),
+  };
+}
+
 async function selectProductsDirectory() {
   if (isSelectingProductsDirectory.value) return;
 
@@ -3693,14 +3702,6 @@ async function selectProductsDirectory() {
   } finally {
     isSelectingProductsDirectory.value = false;
   }
-}
-
-function selectActiveMachine(machineId) {
-  activeMachineId.value = machineId;
-}
-
-function getConfigMachineLabel(machineIndex) {
-  return `Maszyna ${machineIndex + 1}`;
 }
 
 function getConfigStationLabel(stationIndex) {
@@ -4151,6 +4152,23 @@ function normalizeHeaderKey(value) {
     .toUpperCase();
 }
 
+function sanitizeActiveExcelColumns(columns = []) {
+  const allowed = new Set(DEFAULT_ACTIVE_EXCEL_COLUMNS);
+  const nextColumns = Array.isArray(columns)
+    ? [...new Set(columns.map((column) => String(column ?? '').trim()).filter((column) => allowed.has(column)))]
+    : [];
+  return nextColumns.length ? nextColumns : [...DEFAULT_ACTIVE_EXCEL_COLUMNS];
+}
+
+function getConfiguredActiveExcelColumns() {
+  return sanitizeActiveExcelColumns(configSettings.value.activeExcelColumns);
+}
+
+function getActiveProductImportFieldDefinitions() {
+  const allowed = new Set(getConfiguredActiveExcelColumns());
+  return productImportFieldDefinitions.filter((field) => allowed.has(field.key));
+}
+
 function getCellValue(row, keys) {
   for (const key of keys) {
     if (row[key] !== undefined && row[key] !== null && row[key] !== '') {
@@ -4170,12 +4188,12 @@ function getCellValue(row, keys) {
   return '';
 }
 
-function getProductImportAutoMapping(headers = []) {
+function getProductImportAutoMapping(headers = [], fieldDefinitions = getActiveProductImportFieldDefinitions()) {
   const normalizedHeaders = headers.map((header) => String(header ?? '').trim()).filter(Boolean);
   const mapping = {};
   const usedHeaders = new Set();
 
-  for (const field of productImportFieldDefinitions) {
+  for (const field of fieldDefinitions) {
     const matchedHeader = normalizedHeaders.find(
       (header) =>
         !usedHeaders.has(header) &&
@@ -4193,11 +4211,15 @@ function getProductImportAutoMapping(headers = []) {
   };
 }
 
-function getProductImportMissingTargets(mapping = {}) {
-  return productImportFieldDefinitions.filter((field) => field.required && !String(mapping[field.key] ?? '').trim());
+function getProductImportMissingTargets(mapping = {}, fieldDefinitions = getActiveProductImportFieldDefinitions()) {
+  return fieldDefinitions.filter((field) => field.required && !String(mapping[field.key] ?? '').trim());
 }
 
-function getProductImportAvailableHeaders(headers = [], mapping = {}) {
+function isProductImportMappingComplete(mapping = {}, fieldDefinitions = getActiveProductImportFieldDefinitions()) {
+  return getProductImportMissingTargets(mapping, fieldDefinitions).length === 0;
+}
+
+function getProductImportAvailableHeaders(headers = [], mapping = {}, fieldDefinitions = getActiveProductImportFieldDefinitions()) {
   const selectedHeaders = new Set(
     Object.values(mapping)
       .map((value) => String(value ?? '').trim())
@@ -4206,27 +4228,28 @@ function getProductImportAvailableHeaders(headers = [], mapping = {}) {
   return headers.map((header) => String(header ?? '').trim()).filter((header) => header && !selectedHeaders.has(header));
 }
 
-function normalizeProductImportRow(sourceRow, mapping) {
+function normalizeProductImportRow(sourceRow, mapping, fieldDefinitions = getActiveProductImportFieldDefinitions()) {
+  const activeKeys = new Set(fieldDefinitions.map((field) => field.key));
   return {
-    Nazwa: String(sourceRow?.[mapping.Nazwa] ?? '').trim(),
-    Kod: normalizePrintTextValue(sourceRow?.[mapping.Kod] ?? ''),
-    'Długość': String(sourceRow?.[mapping['Długość']] ?? '').trim(),
-    'Grubość': String(sourceRow?.[mapping['Grubość']] ?? '').trim(),
-    'Szerokość': String(sourceRow?.[mapping['Szerokość']] ?? '').trim(),
-    'Materiał': String(sourceRow?.[mapping['Materiał']] ?? '').trim(),
-    'ilość': String(sourceRow?.[mapping['ilość']] ?? '').trim(),
-    Wybijak: String(sourceRow?.[mapping.Wybijak] ?? '').trim(),
-    Klasa: normalizeDefaultClassValue(sourceRow?.[mapping.Klasa] ?? ''),
-    Stanowisko: normalizeStationValue(sourceRow?.[mapping.Stanowisko] ?? ''),
+    Nazwa: activeKeys.has('Nazwa') ? String(sourceRow?.[mapping.Nazwa] ?? '').trim() : '',
+    Kod: activeKeys.has('Kod') ? normalizePrintTextValue(sourceRow?.[mapping.Kod] ?? '') : '',
+    'Długość': activeKeys.has('Długość') ? String(sourceRow?.[mapping['Długość']] ?? '').trim() : '',
+    'Grubość': activeKeys.has('Grubość') ? String(sourceRow?.[mapping['Grubość']] ?? '').trim() : '',
+    'Szerokość': activeKeys.has('Szerokość') ? String(sourceRow?.[mapping['Szerokość']] ?? '').trim() : '',
+    'Materiał': activeKeys.has('Materiał') ? String(sourceRow?.[mapping['Materiał']] ?? '').trim() : '',
+    'ilość': activeKeys.has('ilość') ? String(sourceRow?.[mapping['ilość']] ?? '').trim() : '',
+    Wybijak: activeKeys.has('Wybijak') ? String(sourceRow?.[mapping.Wybijak] ?? '').trim() : '',
+    Klasa: activeKeys.has('Klasa') ? normalizeDefaultClassValue(sourceRow?.[mapping.Klasa] ?? '') : '',
+    Stanowisko: activeKeys.has('Stanowisko') ? normalizeStationValue(sourceRow?.[mapping.Stanowisko] ?? '') : '',
     Grupa: '',
     Priorytet: '',
   };
 }
 
-function buildProductImportWorkbook(headers, rows, mapping) {
+function buildProductImportWorkbook(headers, rows, mapping, fieldDefinitions = getActiveProductImportFieldDefinitions()) {
   const normalizedRows = rows.map((rowValues) => {
     const sourceRow = buildRowFromHeaders(headers, rowValues);
-    return normalizeProductImportRow(sourceRow, mapping);
+    return normalizeProductImportRow(sourceRow, mapping, fieldDefinitions);
   });
 
   const matrix = [
