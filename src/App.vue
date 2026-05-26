@@ -4064,6 +4064,8 @@ function formatWorkWybijakDisplayValue(row) {
   const rawValue = String(row?.Wybijak ?? '').trim();
   if (!rawValue) return '';
   if (rawValue.includes(' i ')) return rawValue;
+  const normalizedRawValue = rawValue.replace(/[^\d]/g, '');
+  if (!normalizedRawValue) return rawValue;
 
   const normalizedStationValue = normalizeStationValue(row?.Stanowisko);
   const stationIndex = Number.parseInt(normalizedStationValue, 10) - 1;
@@ -4074,7 +4076,18 @@ function formatWorkWybijakDisplayValue(row) {
       .filter(Boolean)
       .slice(0, 2);
 
-    if (punchNumbers.length === 2 && rawValue.replace(/[^\d]/g, '') === punchNumbers.join('')) {
+    if (punchNumbers.length === 2 && normalizedRawValue === punchNumbers.join('')) {
+      return `${punchNumbers[0]} i ${punchNumbers[1]}`;
+    }
+  }
+
+  for (const station of configStations.value) {
+    const punchNumbers = getConfigStationOrderedPunches(station)
+      .map((punch) => String(punch ?? '').replace(/[^\d]/g, '').trim())
+      .filter(Boolean)
+      .slice(0, 2);
+
+    if (punchNumbers.length === 2 && normalizedRawValue === punchNumbers.join('')) {
       return `${punchNumbers[0]} i ${punchNumbers[1]}`;
     }
   }
