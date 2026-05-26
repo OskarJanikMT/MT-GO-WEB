@@ -1425,7 +1425,7 @@
               <div class="work-overall-progress-card">
                 <div class="work-overall-progress-header">
                   <span>Postęp ogólny</span>
-                  <strong>{{ overallWorkProgressPercent }}%</strong>
+                  <strong>{{ formatProgressPercent(overallWorkProgressPercent) }}%</strong>
                 </div>
                 <div class="work-overall-progress-track">
                   <div class="work-overall-progress-fill" :style="{ width: `${overallWorkProgressPercent}%` }"></div>
@@ -3092,6 +3092,11 @@ function getWorkProgressPercent(doneValue, totalValue) {
   const total = normalizeWorkCorrectionValue(totalValue);
   if (total <= 0) return 0;
   return Math.min(100, Math.max(0, (done / total) * 100));
+}
+
+function formatProgressPercent(value) {
+  const normalizedValue = Number.isFinite(Number(value)) ? Number(value) : 0;
+  return normalizedValue.toFixed(1).replace('.', ',');
 }
 
 function startMachineStatusAutoRefresh() {
