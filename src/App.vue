@@ -2185,6 +2185,7 @@ const savedWorkPreviewRows = computed(() => {
       const totalValue = getWorkDisplayedTotalValue('', row?.Progress?.total ?? row?.Sztuk ?? 0);
       return {
         ...row,
+        Wybijak: formatWorkWybijakDisplayValue(row),
         ProgressLabel: `${doneValue}/${totalValue}`,
       };
     });
