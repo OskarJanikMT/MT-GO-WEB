@@ -343,6 +343,9 @@
                       <span>{{ field.label }}</span>
                     </label>
                   </div>
+                  <div class="panel-caption config-excel-columns-note">
+                    Wyłączenie kolumny może ukryć ją z importu, ale aplikacja nadal może jej potrzebować do podstawowego działania maszyny.
+                  </div>
                 </article>
               </div>
             </div>
@@ -1496,7 +1499,7 @@
               </div>
             </div>
             <div class="work-actions">
-              <div class="work-recipe-picker">
+              <div ref="workRecipePickerRef" class="work-recipe-picker">
                 <div class="work-recipe-picker-bar">
                   <button class="select-input work-recipe-trigger" @click="toggleWorkRecipeMenu">
                     <span class="work-recipe-trigger-label">{{ selectedRecipe || 'Wybierz recepturę' }}</span>
@@ -1550,6 +1553,13 @@
               </button>
               <button
                 class="tool-btn"
+                :disabled="!activeWorkRows.length || isReportExportLoading"
+                @click="exportCurrentWorkReport"
+              >
+                {{ isReportExportLoading ? 'Generowanie...' : 'Generuj raport' }}
+              </button>
+              <button
+                class="tool-btn"
                 :disabled="!hasPendingWorkChanges || isWorkCorrectionSaving"
                 @click="saveWorkTable"
               >
@@ -1594,6 +1604,12 @@
 
           <div class="work-grid">
             <div class="produkcja-container">
+              <div class="work-table-source-banner">
+                <span class="work-table-source-label">{{ workTableSourceNameLabel }}</span>
+                <span class="work-table-source-status" :class="workTableSourceMode">
+                  {{ workTableSourceStatusLabel }}
+                </span>
+              </div>
               <WorkTable
                 :columns="workColumns"
                 :rows="workDisplayRows"
@@ -2095,10 +2111,13 @@ const recipePreviewEditingCell = ref(null);
 const recipePreviewSaveMessage = ref('');
 const recipePreviewSaveError = ref(false);
 const isWorkRecipeMenuOpen = ref(false);
+const workRecipePickerRef = ref(null);
 const isWorkRecipePreviewOpen = ref(false);
 const isSavedRecipePreviewOpen = ref(false);
 const savedWorkPreviewId = ref('');
 const workRecipeSearch = ref('');
+const workTableSourceName = ref('');
+const workTableSourceMode = ref('active');
 const selectedProductName = ref('');
 const productsLoading = ref(false);
 const productFiles = ref([]);
@@ -2535,6 +2554,8 @@ const overallWorkTotal = computed(() =>
   activeWorkRows.value.reduce((sum, row) => sum + normalizeWorkCorrectionValue(row?.Sztuk), 0),
 );
 const overallWorkProgressPercent = computed(() => getWorkProgressPercent(overallWorkDone.value, overallWorkTotal.value));
+const workTableSourceNameLabel = computed(() => workTableSourceName.value || 'Aktualna praca');
+const workTableSourceStatusLabel = computed(() => (workTableSourceMode.value === 'preview' ? 'podgląd' : 'aktywna'));
 
 const workDisplayRows = computed(() =>
   workRows.value.map((row) => ({
@@ -2557,6 +2578,20 @@ const workDisplayRows = computed(() =>
     Stanowisko: row.Stanowisko ?? '',
   })),
 );
+
+function syncWorkTableSourceFromRows(rows = []) {
+  const uniqueNames = [...new Set(rows.map((row) => String(row?.NazwaRec ?? '').trim()).filter(Boolean))];
+  if (!uniqueNames.length) {
+    workTableSourceName.value = '';
+    workTableSourceMode.value = 'active';
+    return;
+  }
+
+  workTableSourceName.value = uniqueNames.length === 1 ? uniqueNames[0] : 'Aktualna praca';
+  if (workTableSourceMode.value !== 'preview') {
+    workTableSourceMode.value = 'active';
+  }
+}
 
 function normalizeWorkCorrectionValue(value) {
   const normalizedText = String(value ?? '')
@@ -3155,6 +3190,7 @@ function duplicateWorkRow(rowId) {
   if (rowIndex === -1) return;
   const duplicate = normalizeWorkRow({
     ...JSON.parse(JSON.stringify(workRows.value[rowIndex])),
+    __clientId: null,
     id: getNextWorkRowId(),
   });
   workRows.value = [...workRows.value.slice(0, rowIndex + 1), duplicate, ...workRows.value.slice(rowIndex + 1)];
@@ -3181,6 +3217,7 @@ async function loadWorkMainRows({ preserveDisabled = true } = {}) {
 
   const activeRows = Array.isArray(payload.rows) ? payload.rows.map((row, index) => normalizeWorkRow(row, index)) : [];
   workRows.value = [...activeRows, ...disabledRows];
+  syncWorkTableSourceFromRows(activeRows);
   resetWorkRowsSnapshot();
 }
 
@@ -3276,21 +3313,33 @@ function toggleWorkRecipeMenu() {
   }
 }
 
-function selectWorkRecipe(recipeName) {
-  selectedRecipe.value = recipeName;
+function closeWorkRecipeMenu() {
+  if (!isWorkRecipeMenuOpen.value) return;
   isWorkRecipeMenuOpen.value = false;
   workRecipeSearch.value = '';
+}
+
+function selectWorkRecipe(recipeName) {
+  selectedRecipe.value = recipeName;
+  closeWorkRecipeMenu();
 }
 
 function openWorkRecipePreview(recipeName) {
   openRecipePreviewEditor(recipeName);
   isWorkRecipePreviewOpen.value = true;
-  isWorkRecipeMenuOpen.value = false;
-  workRecipeSearch.value = '';
+  closeWorkRecipeMenu();
 }
 
 function closeWorkRecipePreview() {
   isWorkRecipePreviewOpen.value = false;
+}
+
+function handleWorkRecipeMenuOutsideClick(event) {
+  if (!isWorkRecipeMenuOpen.value) return;
+  const pickerEl = workRecipePickerRef.value;
+  if (pickerEl && !pickerEl.contains(event.target)) {
+    closeWorkRecipeMenu();
+  }
 }
 
 function toggleConfigPanel() {
@@ -6076,11 +6125,11 @@ function aggregateReportRows(rows = []) {
       'Kod / Tekst do druku': code,
       'Wymiar [długość x szerokość x grubość]': dimensions,
       'Ilość sztuk wyciętych': 0,
-      'Z ilu sztuk': 0,
+      'Cel sztuk': 0,
     };
 
     current['Ilość sztuk wyciętych'] += done;
-    current['Z ilu sztuk'] += total;
+    current['Cel sztuk'] += total;
     reportMap.set(key, current);
   });
 
@@ -6096,7 +6145,7 @@ function applyReportWorksheetStyles(worksheet, rows) {
     'Kod / Tekst do druku',
     'Wymiar [długość x szerokość x grubość]',
     'Ilość sztuk wyciętych',
-    'Z ilu sztuk',
+    'Cel sztuk',
   ];
 
   const headerStyle = {
@@ -6132,9 +6181,13 @@ function applyReportWorksheetStyles(worksheet, rows) {
 }
 
 async function getStyledXlsx() {
-  await import('xlsx-js-style/dist/xlsx.bundle.js');
-  if (typeof window !== 'undefined' && window.XLSX) {
-    return window.XLSX;
+  const module = await import('xlsx-js-style');
+  const styledXlsx = module?.default ?? module;
+  if (styledXlsx?.utils?.book_new && styledXlsx?.writeFile) {
+    return styledXlsx;
+  }
+  if (XLSX?.utils?.book_new && XLSX?.writeFile) {
+    return XLSX;
   }
   throw new Error('Nie udało się załadować modułu eksportu Excela.');
 }
@@ -6183,6 +6236,11 @@ async function exportReportToExcel() {
   } finally {
     isReportExportLoading.value = false;
   }
+}
+
+async function exportCurrentWorkReport() {
+  reportSourceMode.value = 'current';
+  await exportReportToExcel();
 }
 
 function cancelRecipeImportConflict() {
@@ -6944,8 +7002,9 @@ async function loadRecipeToWorkMain() {
     return;
   }
 
-  const savedRecipeRows =
-    recipeCatalogEntries.value.find((entry) => entry.nazwaReceptury === selectedRecipe.value)?.rows ?? [];
+  const sourceRecipeName =
+    isWorkRecipePreviewOpen.value && selectedRecipePreviewName.value ? selectedRecipePreviewName.value : selectedRecipe.value;
+  const savedRecipeRows = recipeCatalogEntries.value.find((entry) => entry.nazwaReceptury === sourceRecipeName)?.rows ?? [];
   if (!savedRecipeRows.length) {
     workUploadError.value = true;
     workUploadMessage.value = 'Nie znaleziono wybranej receptury do wczytania.';
@@ -6971,7 +7030,7 @@ async function loadRecipeToWorkMain() {
       ids: row.idSkladowej ?? row.ids ?? index,
       CzasUtw: new Date().toLocaleString('pl-PL'),
       Usr: 'Default',
-      NazwaRec: selectedRecipe.value,
+      NazwaRec: sourceRecipeName,
       gr: row.grubosc || row.gr,
       szer: row.szerokosc || row.szer,
       Grupa: row.grupa || row.Grupa || '',
@@ -6981,15 +7040,18 @@ async function loadRecipeToWorkMain() {
       Informacje: row.Informacje,
     }),
   );
+  workTableSourceName.value = sourceRecipeName;
+  workTableSourceMode.value = 'preview';
+  selectedRecipe.value = sourceRecipeName;
   clearWorkCorrectionState();
   workUploadError.value = false;
-  workUploadMessage.value = `Wczytano recepturę "${selectedRecipe.value}" do podglądu. Wartości wybijaków możesz teraz skorygować ręcznie, a zapis wykonać później do bazy danych.`;
+  workUploadMessage.value = `Wczytano recepturę "${sourceRecipeName}" do podglądu. Wartości wybijaków możesz teraz skorygować ręcznie, a zapis wykonać później do bazy danych.`;
 
   try {
     const response = await fetch('/api/recipes/mark-used', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ recipeName: selectedRecipe.value }),
+      body: JSON.stringify({ recipeName: sourceRecipeName }),
     });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
@@ -7079,6 +7141,7 @@ onMounted(() => {
   updateClock();
   timerId = window.setInterval(updateClock, 1000);
   window.addEventListener('keydown', handleGlobalEscape);
+  window.addEventListener('pointerdown', handleWorkRecipeMenuOutsideClick);
   loadSavedRecipes();
   loadWorkMainRows().catch(() => {});
   loadConfig().catch(() => {});
@@ -7119,6 +7182,7 @@ onUnmounted(() => {
     window.clearTimeout(recipePreviewMessageTimerId);
   }
   window.removeEventListener('keydown', handleGlobalEscape);
+  window.removeEventListener('pointerdown', handleWorkRecipeMenuOutsideClick);
 });
 
 const StatPill = defineComponent({

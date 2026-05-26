@@ -430,6 +430,41 @@ button {
   flex: 0 0 auto;
 }
 
+.work-table-source-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  padding: 10px 14px;
+  background: rgba(15, 23, 42, 0.22);
+}
+
+.work-table-source-label {
+  color: var(--text-heading);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.work-table-source-status {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.work-table-source-status.active {
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.12);
+}
+
+.work-table-source-status.preview {
+  color: #fbbf24;
+  background: rgba(251, 191, 36, 0.12);
+}
+
 .filter-btn,
 .tool-btn {
   min-height: 34px;
@@ -718,6 +753,12 @@ button {
   max-height: calc(100vh - 230px);
 }
 
+.produkcja-container > .table-wrap {
+  padding-top: 0;
+  padding-left: 4px;
+  box-sizing: border-box;
+}
+
 .data-table {
   width: max-content;
   min-width: 100%;
@@ -787,6 +828,11 @@ button {
 
 .produkcja-container .data-table tbody tr {
   cursor: pointer;
+}
+
+.produkcja-container .data-table th:first-child,
+.produkcja-container .data-table td:first-child {
+  padding-left: 14px;
 }
 
 .product-tree-table th:first-child,
@@ -982,16 +1028,26 @@ button {
 }
 
 .confirm-modal.panel.import-mapping-modal {
-  width: min(96vw, 1320px);
-  max-width: min(96vw, 1320px);
-  max-height: min(92vh, 860px);
+  width: min(94vw, 1180px);
+  max-width: min(94vw, 1180px);
+  height: calc(100dvh - 24px);
+  max-height: calc(100dvh - 24px);
   display: flex;
   flex-direction: column;
   z-index: 47;
+  overflow: hidden;
 }
 
 .confirm-modal-body {
   padding: 18px 20px 20px;
+}
+
+.confirm-modal.panel.import-mapping-modal .confirm-modal-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow: auto;
 }
 
 .confirm-modal-body p {
@@ -1006,7 +1062,9 @@ button {
   flex-direction: column;
   gap: 14px;
   min-height: 0;
-  overflow: hidden;
+  flex: 1 1 auto;
+  max-height: none;
+  overflow: visible;
 }
 
 .import-mapping-summary {
@@ -1044,7 +1102,7 @@ button {
 
 .import-mapping-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 10px 12px;
 }
 
@@ -1080,7 +1138,7 @@ button {
 }
 
 .import-mapping-preview-wrap {
-  max-height: clamp(140px, 24vh, 260px);
+  max-height: clamp(110px, 16vh, 200px);
   overflow: auto;
 }
 
@@ -1721,9 +1779,10 @@ button {
 }
 
 .confirm-modal.panel.work-recipe-preview-modal {
-  width: 90vw;
-  max-width: 90vw;
-  max-height: min(78vh, 820px);
+  width: min(94vw, 1400px);
+  max-width: min(94vw, 1400px);
+  height: min(88dvh, 860px);
+  max-height: min(88dvh, 860px);
   display: flex;
   flex-direction: column;
 }
@@ -1734,7 +1793,7 @@ button {
   max-width: calc(100% - 4px);
   margin-left: 4px;
   box-sizing: border-box;
-  max-height: calc(78vh - 140px);
+  max-height: calc(88dvh - 170px);
   overflow-x: auto;
   overflow-y: auto;
   scrollbar-gutter: stable both-edges;
@@ -1744,8 +1803,18 @@ button {
   width: calc(100% - 4px);
   max-width: calc(100% - 4px);
   margin-left: 4px;
-  max-height: calc(94vh - 140px);
+  max-height: calc(88dvh - 170px);
   scrollbar-gutter: stable;
+}
+
+.confirm-modal.panel.saved-work-preview-modal {
+  width: min(94vw, 1400px);
+  max-width: min(94vw, 1400px);
+  height: min(88dvh, 860px);
+  max-height: min(88dvh, 860px);
+  display: flex;
+  flex-direction: column;
+  z-index: 47;
 }
 
 .work-recipe-preview-modal .data-table {
@@ -1801,6 +1870,10 @@ button {
   width: 15px;
   height: 15px;
   accent-color: var(--accent);
+}
+
+.config-excel-columns-note {
+  margin-top: -2px;
 }
 
 .config-station-lengths {
