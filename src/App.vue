@@ -1407,18 +1407,34 @@
             </div>
           </div>
           <div class="work-topbar">
-            <div class="work-summary-card">
-              <div class="work-summary-row">
-                <span>Włączone</span>
-                <strong>{{ activeWorkRows.length }}</strong>
+            <div class="work-summary-group">
+              <div class="work-summary-card">
+                <div class="work-summary-row">
+                  <span>Włączone</span>
+                  <strong>{{ activeWorkRows.length }}</strong>
+                </div>
+                <div class="work-summary-row">
+                  <span>W recepturze</span>
+                  <strong>{{ workRows.length }}</strong>
+                </div>
+                <div class="work-summary-row">
+                  <span>Limit</span>
+                  <strong>{{ activeRowLimit }}</strong>
+                </div>
               </div>
-              <div class="work-summary-row">
-                <span>W recepturze</span>
-                <strong>{{ workRows.length }}</strong>
-              </div>
-              <div class="work-summary-row">
-                <span>Limit</span>
-                <strong>{{ activeRowLimit }}</strong>
+              <div class="work-overall-progress-card">
+                <div class="work-overall-progress-header">
+                  <span>Postęp ogólny</span>
+                  <strong>{{ overallWorkProgressPercent }}%</strong>
+                </div>
+                <div class="work-overall-progress-track">
+                  <div class="work-overall-progress-fill" :style="{ width: `${overallWorkProgressPercent}%` }"></div>
+                  <div class="work-overall-progress-content">
+                    <strong>{{ overallWorkDone }}</strong>
+                    <span>/</span>
+                    <strong>{{ overallWorkTotal }}</strong>
+                  </div>
+                </div>
               </div>
             </div>
             <div class="work-actions">
@@ -2377,6 +2393,13 @@ const maxConfiguredStationCount = computed(() => Math.max(1, normalizeWorkCorrec
 
 const hasPendingWorkChanges = computed(() => serializeWorkRows(workRows.value) !== workRowsSnapshot.value);
 const activeWorkRows = computed(() => workRows.value.filter((row) => !row.__disabled));
+const overallWorkDone = computed(() =>
+  activeWorkRows.value.reduce((sum, row) => sum + normalizeWorkCorrectionValue(row?.WykonaneSztuki), 0),
+);
+const overallWorkTotal = computed(() =>
+  activeWorkRows.value.reduce((sum, row) => sum + normalizeWorkCorrectionValue(row?.Sztuk), 0),
+);
+const overallWorkProgressPercent = computed(() => getWorkProgressPercent(overallWorkDone.value, overallWorkTotal.value));
 
 const workDisplayRows = computed(() =>
   workRows.value.map((row) => ({
