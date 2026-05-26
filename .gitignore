@@ -5,7 +5,7 @@ node_modules/
 dist/
 
 # local app config
-#config.json
+config.json
 
 # environment
 .env
