@@ -2835,6 +2835,38 @@ function getWorkRowsValidationMessage(rows, contextMessage) {
   return `${contextMessage} ${pluralLabel}. ${validationErrors[0]}`;
 }
 
+function getRecipeRowMissingFields(row) {
+  const missingFields = [];
+
+  if (!String(row?.TekstDoDruku ?? '').trim()) missingFields.push('Tekst do druku');
+  if (!String(row?.material ?? '').trim()) missingFields.push('Materiał');
+  if (!normalizeWorkCorrectionValue(row?.dlugosc)) missingFields.push('Długość');
+  if (!normalizeWorkCorrectionValue(row?.grubosc)) missingFields.push('Grubość');
+  if (!normalizeWorkCorrectionValue(row?.szerokosc)) missingFields.push('Szerokość');
+  if (!String(row?.wybijak ?? '').replace(/[^\d]/g, '').trim()) missingFields.push('Wybijak');
+  if (!normalizeWorkCorrectionValue(row?.ilosc)) missingFields.push('Ilość');
+
+  return missingFields;
+}
+
+function getRecipeRowsValidationMessage(rows, contextMessage) {
+  const invalidRows = rows
+    .map((row, index) => ({
+      index: index + 1,
+      missingFields: getRecipeRowMissingFields(row),
+    }))
+    .filter((entry) => entry.missingFields.length);
+
+  if (!invalidRows.length) return '';
+
+  const invalidRowsCount = invalidRows.length;
+  const pluralLabel =
+    invalidRowsCount === 1 ? '1 wiersz ma braki' : invalidRowsCount < 5 ? `${invalidRowsCount} wiersze mają braki` : `${invalidRowsCount} wierszy ma braki`;
+  const firstInvalidRow = invalidRows[0];
+
+  return `${contextMessage} ${pluralLabel}. Wiersz ${firstInvalidRow.index}: ${firstInvalidRow.missingFields.join(', ')}.`;
+}
+
 function duplicateWorkRow(rowId) {
   const rowIndex = workRows.value.findIndex((entry) => entry.__clientId === rowId);
   if (rowIndex === -1) return;
@@ -5092,6 +5124,15 @@ async function submitSaveRecipe() {
     saveRecipeDialog.value = {
       ...saveRecipeDialog.value,
       error: groupingValidationError,
+    };
+    return;
+  }
+
+  const recipeValidationMessage = getRecipeRowsValidationMessage(recipeRows.value, 'Nie można zapisać receptury.');
+  if (recipeValidationMessage) {
+    saveRecipeDialog.value = {
+      ...saveRecipeDialog.value,
+      error: recipeValidationMessage,
     };
     return;
   }
