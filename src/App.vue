@@ -1499,75 +1499,72 @@
               </div>
             </div>
             <div class="work-actions">
-              <div ref="workRecipePickerRef" class="work-recipe-picker">
-                <div class="work-recipe-picker-bar">
-                  <button class="select-input work-recipe-trigger" @click="toggleWorkRecipeMenu">
-                    <span class="work-recipe-trigger-label">{{ selectedRecipe || 'Wybierz recepturę' }}</span>
-                    <span class="work-recipe-trigger-icon" aria-hidden="true">▾</span>
+              <div class="work-actions-stack">
+                <div ref="workRecipePickerRef" class="work-recipe-picker">
+                  <div class="work-recipe-picker-bar">
+                    <button class="select-input work-recipe-trigger" @click="toggleWorkRecipeMenu">
+                      <span class="work-recipe-trigger-label">{{ selectedRecipe || 'Wybierz recepturę' }}</span>
+                      <span class="work-recipe-trigger-icon" aria-hidden="true">▾</span>
+                    </button>
+                    <button
+                      class="tool-btn primary work-recipe-upload-btn"
+                      :disabled="!selectedRecipe || workEditingRowId !== null || isWorkCorrectionSaving"
+                      @click="loadRecipeToWorkMain"
+                    >
+                      Wczytaj wybraną recepturę do podglądu
+                    </button>
+                  </div>
+                  <div v-if="isWorkRecipeMenuOpen" class="work-recipe-menu panel">
+                    <input
+                      v-model="workRecipeSearch"
+                      class="text-input work-recipe-search"
+                      placeholder="Szukaj receptury"
+                    />
+                    <div v-if="filteredWorkRecipeNames.length" class="work-recipe-options">
+                      <div
+                        v-for="name in filteredWorkRecipeNames"
+                        :key="name"
+                        class="work-recipe-option"
+                        :class="{ active: selectedRecipe === name }"
+                      >
+                        <button class="work-recipe-option-select" @click="selectWorkRecipe(name)">
+                          <span class="work-recipe-option-label">{{ name }}</span>
+                        </button>
+                        <span class="work-recipe-option-actions">
+                          <button class="tool-btn compact product-preview-btn" :title="`Podgląd ${name}`" @click.stop="openWorkRecipePreview(name)">
+                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                              <path
+                                d="M10.5 4a6.5 6.5 0 1 0 4.06 11.58l4.43 4.43 1.41-1.41-4.43-4.43A6.5 6.5 0 0 0 10.5 4Zm0 2a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Z"
+                                fill="currentColor"
+                              />
+                            </svg>
+                          </button>
+                        </span>
+                      </div>
+                    </div>
+                    <div v-else class="expanded-empty">Brak wyników</div>
+                  </div>
+                </div>
+                <div class="work-actions-row">
+                  <button
+                    class="tool-btn"
+                    :disabled="!activeWorkRows.length || !hasConfiguredStationLengthRanges || workEditingRowId !== null || isWorkCorrectionSaving"
+                    @click="applyWorkPunchAssignmentsByLength"
+                  >
+                    Przypisz wybijaki wg długości
                   </button>
                   <button
-                    class="tool-btn primary work-recipe-upload-btn"
-                    :disabled="!selectedRecipe || workEditingRowId !== null || isWorkCorrectionSaving"
-                    @click="loadRecipeToWorkMain"
+                    class="tool-btn"
+                    :disabled="!activeWorkRows.length || isReportExportLoading"
+                    @click="exportCurrentWorkReport"
                   >
-                    Wczytaj wybraną recepturę do podglądu
+                    {{ isReportExportLoading ? 'Generowanie...' : 'Generuj raport' }}
+                  </button>
+                  <button class="tool-btn" :disabled="isWorkCorrectionSaving" @click="postponeCurrentWork">
+                    Odłóż aktualną pracę
                   </button>
                 </div>
-                <div v-if="isWorkRecipeMenuOpen" class="work-recipe-menu panel">
-                  <input
-                    v-model="workRecipeSearch"
-                    class="text-input work-recipe-search"
-                    placeholder="Szukaj receptury"
-                  />
-                  <div v-if="filteredWorkRecipeNames.length" class="work-recipe-options">
-                    <div
-                      v-for="name in filteredWorkRecipeNames"
-                      :key="name"
-                      class="work-recipe-option"
-                      :class="{ active: selectedRecipe === name }"
-                    >
-                      <button class="work-recipe-option-select" @click="selectWorkRecipe(name)">
-                        <span class="work-recipe-option-label">{{ name }}</span>
-                      </button>
-                      <span class="work-recipe-option-actions">
-                        <button class="tool-btn compact product-preview-btn" :title="`Podgląd ${name}`" @click.stop="openWorkRecipePreview(name)">
-                          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                            <path
-                              d="M10.5 4a6.5 6.5 0 1 0 4.06 11.58l4.43 4.43 1.41-1.41-4.43-4.43A6.5 6.5 0 0 0 10.5 4Zm0 2a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Z"
-                              fill="currentColor"
-                            />
-                          </svg>
-                        </button>
-                      </span>
-                    </div>
-                  </div>
-                  <div v-else class="expanded-empty">Brak wyników</div>
-                </div>
               </div>
-              <button
-                class="tool-btn"
-                :disabled="!activeWorkRows.length || !hasConfiguredStationLengthRanges || workEditingRowId !== null || isWorkCorrectionSaving"
-                @click="applyWorkPunchAssignmentsByLength"
-              >
-                Przypisz wybijaki wg długości
-              </button>
-              <button
-                class="tool-btn"
-                :disabled="!activeWorkRows.length || isReportExportLoading"
-                @click="exportCurrentWorkReport"
-              >
-                {{ isReportExportLoading ? 'Generowanie...' : 'Generuj raport' }}
-              </button>
-              <button
-                class="tool-btn"
-                :disabled="!hasPendingWorkChanges || isWorkCorrectionSaving"
-                @click="saveWorkTable"
-              >
-                {{ isWorkCorrectionSaving ? 'Zapisywanie...' : 'Zapisz zmiany do bazy danych' }}
-              </button>
-              <button class="tool-btn" :disabled="isWorkCorrectionSaving" @click="postponeCurrentWork">
-                Odłóż aktualną pracę
-              </button>
             </div>
           </div>
 
@@ -1605,10 +1602,19 @@
           <div class="work-grid">
             <div class="produkcja-container">
               <div class="work-table-source-banner">
-                <span class="work-table-source-label">{{ workTableSourceNameLabel }}</span>
-                <span class="work-table-source-status" :class="workTableSourceMode">
-                  {{ workTableSourceStatusLabel }}
-                </span>
+                <div class="work-table-source-info">
+                  <span class="work-table-source-label">{{ workTableSourceNameLabel }}</span>
+                  <span class="work-table-source-status" :class="workTableSourceMode">
+                    {{ workTableSourceStatusLabel }}
+                  </span>
+                </div>
+                <button
+                  class="tool-btn compact work-table-save-btn"
+                  :disabled="!hasPendingWorkChanges || isWorkCorrectionSaving"
+                  @click="saveWorkTable"
+                >
+                  {{ isWorkCorrectionSaving ? 'Zapisywanie...' : 'Zapisz zmiany do bazy danych' }}
+                </button>
               </div>
               <WorkTable
                 :columns="workColumns"

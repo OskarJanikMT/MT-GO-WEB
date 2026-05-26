@@ -4,6 +4,9 @@ node_modules/
 # build output
 dist/
 
+# local app config
+config.json
+
 # environment
 .env
 .env.*

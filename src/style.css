@@ -314,7 +314,8 @@ button {
   display: flex;
   align-items: stretch;
   gap: 12px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  min-width: 0;
 }
 
 .work-summary-row {
@@ -337,10 +338,10 @@ button {
 
 .work-topbar {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   margin: 12px 0 14px;
   padding: 0;
   border: 0;
@@ -352,6 +353,11 @@ button {
 .work-topbar .work-summary-card {
   flex: 0 0 auto;
   box-shadow: none;
+}
+
+.work-topbar .work-summary-group {
+  flex: 0 1 520px;
+  min-width: 0;
 }
 
 .work-overall-progress-card {
@@ -419,15 +425,49 @@ button {
 
 .work-topbar .work-actions {
   display: flex;
-  align-items: center;
-  justify-content: flex-end;
+  flex-direction: column;
+  justify-content: flex-start;
   margin-left: auto;
   gap: 10px;
-  flex-wrap: wrap;
+  align-items: flex-end;
+  min-width: 0;
+  flex: 0 1 760px;
+  width: fit-content;
 }
 
 .work-topbar .work-actions > * {
-  flex: 0 0 auto;
+  min-width: 0;
+}
+
+.work-actions-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  align-items: flex-end;
+}
+
+.work-actions-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  min-width: 0;
+  width: fit-content;
+}
+
+.work-topbar .work-actions .tool-btn {
+  width: 100%;
+  font-size: 11px;
+  padding-inline: 10px;
+}
+
+.work-recipe-trigger,
+.work-recipe-upload-btn {
+  font-size: 11px;
+}
+
+.work-recipe-upload-btn {
+  padding-inline: 10px;
 }
 
 .work-table-source-banner {
@@ -440,10 +480,21 @@ button {
   background: rgba(15, 23, 42, 0.22);
 }
 
+.work-table-source-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
 .work-table-source-label {
   color: var(--text-heading);
   font-size: 13px;
   font-weight: 800;
+}
+
+.work-table-save-btn {
+  flex: 0 0 auto;
 }
 
 .work-table-source-status {
@@ -1665,8 +1716,9 @@ button {
 
 .work-recipe-picker {
   position: relative;
-  min-width: 180px;
-  flex: 1 1 434px;
+  min-width: 0;
+  flex: 1 1 0;
+  max-width: 100%;
 }
 
 .work-recipe-picker-bar {
