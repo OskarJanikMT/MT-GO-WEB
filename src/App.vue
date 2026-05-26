@@ -4262,8 +4262,8 @@ function createMergeDraftRow(productName, sourceRow = {}) {
     idReceptury: sourceRow.idReceptury ?? 26,
     idSkladowej: sourceRow.idSkladowej ?? 0,
     wybijak: sourceRow.Wybijak ?? sourceRow.wybijak ?? 0,
-    grupa: sourceRow.Grupa ?? sourceRow.grupa ?? '',
-    priorytet: sourceRow.Priorytet ?? sourceRow.priorytet ?? '',
+    grupa: '',
+    priorytet: '',
     ilosc: baseQuantity,
     iloscWykonana: sourceRow.iloscWykonana ?? 0,
     Klasa: sourceRow.Klasa ?? sourceRow.klasa ?? 2,
@@ -4284,8 +4284,8 @@ function createRecipePreviewDraftRow(sourceRow = {}) {
     idReceptury: sourceRow.idReceptury ?? 0,
     idSkladowej: sourceRow.idSkladowej ?? 0,
     wybijak: sourceRow.wybijak ?? '',
-    grupa: sourceRow.grupa ?? '',
-    priorytet: sourceRow.priorytet ?? '',
+    grupa: '',
+    priorytet: '',
     ilosc: sourceRow.ilosc ?? 0,
     iloscWykonana: sourceRow.iloscWykonana ?? 0,
     Klasa: sourceRow.Klasa ?? sourceRow.klasa ?? 0,
@@ -4463,8 +4463,6 @@ function normalizeProductRows(fileName, headers, rows) {
       const material = getCellValue(sourceRow, ['Materiał', 'MATERIAŁ', 'MATERIAL', 'OPIS', 'gatunek drewna']) || rowValues[7] || '';
       const code = getCellValue(sourceRow, ['Kod', 'NR CZĘŚCI', 'NR CZESCI', 'Nadruk']) || rowValues[1] || rowValues[0] || '';
       const klasa = normalizeDefaultClassValue(getCellValue(sourceRow, ['Klasa', 'KLASA']));
-      const grupa = getCellValue(sourceRow, ['Grupa', 'GRUPA']) || '';
-      const priorytet = getCellValue(sourceRow, ['Priorytet', 'PRIORYTET']) || '';
       const stanowisko = getCellValue(sourceRow, ['Stanowisko', 'STANOWISKO']) || '';
 
       return {
@@ -4475,8 +4473,8 @@ function normalizeProductRows(fileName, headers, rows) {
         'Materiał': material,
         Kod: code,
         Klasa: klasa,
-        Grupa: normalizeGroupValue(grupa),
-        Priorytet: normalizePriorityValue(priorytet),
+        Grupa: '',
+        Priorytet: '',
         'ilość': quantity,
         Wybijak: getCellValue(sourceRow, ['Wybijak']) || 0,
         Stanowisko: normalizeStationValue(stanowisko),
