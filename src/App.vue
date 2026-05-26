@@ -906,6 +906,13 @@
               <div class="panel-header">
                 <span>Podgląd scalonej receptury</span>
                 <div class="panel-actions">
+                  <button
+                    class="tool-btn compact primary"
+                    :disabled="!recipeRows.length || !hasConfiguredStationLengthRanges"
+                    @click="applyMergePunchAssignmentsByLength"
+                  >
+                    Przypisz wybijaki wg długości
+                  </button>
                   <div v-if="availableMergeGroups.length" class="merge-group-filter">
                     <button
                       class="tool-btn compact"
@@ -1373,6 +1380,13 @@
                   <div v-else class="expanded-empty">Brak wyników</div>
                 </div>
               </div>
+              <button
+                class="tool-btn"
+                :disabled="!activeWorkRows.length || !hasConfiguredStationLengthRanges || workEditingRowId !== null || isWorkCorrectionSaving"
+                @click="applyWorkPunchAssignmentsByLength"
+              >
+                Przypisz wybijaki wg długości
+              </button>
               <button
                 class="tool-btn"
                 :disabled="!hasPendingWorkChanges || isWorkCorrectionSaving"
@@ -3456,13 +3470,13 @@ function openStationAutoAssignDialog(target) {
     if (target === 'merge') {
       mergeAlert.value = {
         visible: true,
-        message: 'Najpierw dodaj co najmniej jedno stanowisko w konfiguracji.',
+        message: 'Najpierw dodaj co najmniej jeden zestaw wybijaków w konfiguracji.',
       };
       return;
     }
 
     workUploadError.value = true;
-    workUploadMessage.value = 'Najpierw dodaj co najmniej jedno stanowisko w konfiguracji.';
+    workUploadMessage.value = 'Najpierw dodaj co najmniej jeden zestaw wybijaków w konfiguracji.';
     return;
   }
 
@@ -3477,7 +3491,7 @@ function applyMergeStationAssignments(mode) {
   if (mode === 'length-ranges' && !hasConfiguredStationLengthRanges.value) {
     mergeAlert.value = {
       visible: true,
-      message: 'Brak zakresów długości w konfiguracji dla tego trybu przydziału.',
+      message: 'Brak zakresów długości w konfiguracji wybijaków.',
     };
     return;
   }
@@ -3522,27 +3536,27 @@ function applyMergeStationAssignments(mode) {
     visible: true,
     message:
       updatedCount > 0
-        ? `Przydzielono ${assignedCount} wierszy według trybu ${getStationAutoAssignModeLabel(mode)} i przeliczono wybijaki.`
-        : 'Nie udało się przydzielić stanowisk dla żadnego wiersza.',
+        ? `Przypisano wybijaki dla ${assignedCount} wierszy według zakresów długości.`
+        : 'Nie udało się przypisać wybijaków dla żadnego wiersza.',
   };
 }
 
 function applyWorkStationAssignments(mode) {
   if (workEditingRowId.value !== null) {
     workUploadError.value = true;
-    workUploadMessage.value = 'Najpierw zakończ edycję wszystkich wierszy, zanim przydzielisz stanowiska automatycznie.';
+    workUploadMessage.value = 'Najpierw zakończ edycję wszystkich wierszy, zanim przypiszesz wybijaki.';
     return;
   }
 
   if (!activeWorkRows.value.length) {
     workUploadError.value = true;
-    workUploadMessage.value = 'Brak wierszy do automatycznego przydziału stanowisk.';
+    workUploadMessage.value = 'Brak wierszy do przypisania wybijaków.';
     return;
   }
 
   if (mode === 'length-ranges' && !hasConfiguredStationLengthRanges.value) {
     workUploadError.value = true;
-    workUploadMessage.value = 'Brak zakresów długości w konfiguracji dla tego trybu przydziału.';
+    workUploadMessage.value = 'Brak zakresów długości w konfiguracji wybijaków.';
     return;
   }
 
@@ -3586,8 +3600,8 @@ function applyWorkStationAssignments(mode) {
   workUploadError.value = false;
   workUploadMessage.value =
     updatedCount > 0
-      ? `Przydzielono ${assignedCount} wierszy według trybu ${getStationAutoAssignModeLabel(mode)} i przeliczono wybijaki.`
-      : 'Nie udało się przydzielić stanowisk dla żadnego wiersza.';
+      ? `Przypisano wybijaki dla ${assignedCount} wierszy według zakresów długości.`
+      : 'Nie udało się przypisać wybijaków dla żadnego wiersza.';
 }
 
 function applyStationAutoAssignMode(mode) {
@@ -3602,6 +3616,14 @@ function applyStationAutoAssignMode(mode) {
   if (target === 'work') {
     applyWorkStationAssignments(mode);
   }
+}
+
+function applyMergePunchAssignmentsByLength() {
+  applyMergeStationAssignments('length-ranges');
+}
+
+function applyWorkPunchAssignmentsByLength() {
+  applyWorkStationAssignments('length-ranges');
 }
 
 function getConfigStationOrderedPunches(station) {
