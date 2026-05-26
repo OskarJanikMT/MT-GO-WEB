@@ -4059,6 +4059,28 @@ function getWybijakValueForStation(stationValue, lengthValue = 0) {
   return punchNumbers.join(' i ');
 }
 
+function formatWorkWybijakDisplayValue(row) {
+  const rawValue = String(row?.Wybijak ?? '').trim();
+  if (!rawValue) return '';
+  if (rawValue.includes(' i ')) return rawValue;
+
+  const normalizedStationValue = normalizeStationValue(row?.Stanowisko);
+  const stationIndex = Number.parseInt(normalizedStationValue, 10) - 1;
+  if (Number.isFinite(stationIndex) && stationIndex >= 0) {
+    const station = configStations.value[stationIndex];
+    const punchNumbers = getConfigStationOrderedPunches(station)
+      .map((punch) => String(punch ?? '').replace(/[^\d]/g, '').trim())
+      .filter(Boolean)
+      .slice(0, 2);
+
+    if (punchNumbers.length === 2 && rawValue.replace(/[^\d]/g, '') === punchNumbers.join('')) {
+      return `${punchNumbers[0]} i ${punchNumbers[1]}`;
+    }
+  }
+
+  return rawValue;
+}
+
 function getRowGroupValue(row) {
   return normalizeGroupValue(row?.Grupa ?? row?.grupa ?? '');
 }
@@ -6515,7 +6537,8 @@ const WorkTable = defineComponent({
                       }
 
                       if (column !== 'Progress' && !isWorkRowEditing(row.__clientId)) {
-                        return h('td', { key: `${row.__clientId}-${column}` }, row[column] ?? '');
+                        const displayValue = column === 'Wybijak' ? formatWorkWybijakDisplayValue(row) : (row[column] ?? '');
+                        return h('td', { key: `${row.__clientId}-${column}` }, displayValue);
                       }
 
                       if (column !== 'Progress') {
