@@ -1647,21 +1647,20 @@ const productSummaryLabels = {
   ostatniaAktualizacja: 'Źródło',
 };
 
-const productColumns = ['Nr', 'Nazwa', 'Długość', 'Grubość', 'Szerokość', 'Materiał', 'Kod', 'ilość', 'Wybijak'];
+const productColumns = ['Nr', 'Kod', 'Długość', 'Grubość', 'Szerokość', 'Materiał', 'ilość', 'Wybijak'];
 const groupOptions = Array.from({ length: 26 }, (_, index) => String.fromCharCode(65 + index));
 const priorityOptions = Array.from({ length: 10 }, (_, index) => String(index));
 const productColumnLabels = {
   Nr: 'Nr',
-  Nazwa: 'Nazwa',
+  Kod: 'Tekst do druku',
   'Długość': 'Długość',
   'Grubość': 'Grubość',
   'Szerokość': 'Szerokość',
   'Materiał': 'Materiał',
-  Kod: 'Kod',
   'ilość': 'ilość',
   Wybijak: 'Wybijak',
 };
-const editableProductColumns = ['Nazwa', 'Długość', 'Grubość', 'Szerokość', 'Materiał', 'Kod', 'ilość', 'Wybijak'];
+const editableProductColumns = ['Długość', 'Grubość', 'Szerokość', 'Materiał', 'Kod', 'ilość', 'Wybijak'];
 
 const recipeSummaryColumns = ['nazwaReceptury', 'liczbaPozycji', 'sumaElementow', 'materialy', 'createdAt', 'lastUsedAt'];
 const recipeCatalogColumns = ['nazwaReceptury', 'liczbaPozycji', 'sumaElementow', 'materialy', 'createdAt', 'lastUsedAt'];
