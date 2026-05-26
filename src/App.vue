@@ -628,6 +628,72 @@
           </div>
         </section>
 
+        <div v-if="productImportMappingDialog.visible" class="confirm-modal-overlay" @click.self="closeProductImportMappingDialog">
+          <div class="confirm-modal panel panel-wide import-mapping-modal" @click.stop>
+            <div class="panel-header">
+              <span>Mapowanie kolumn przy imporcie</span>
+              <span class="panel-caption">{{ productImportMappingDialog.fileName }}</span>
+            </div>
+            <div class="confirm-modal-body import-mapping-body">
+              <p>{{ productImportMappingDialog.message }}</p>
+              <div class="import-mapping-summary">
+                <span>Wolne kolumny w Excelu:</span>
+                <div class="import-mapping-chips">
+                  <span v-for="header in getProductImportAvailableHeaders(productImportMappingDialog.headers, productImportMappingDialog.mapping)" :key="header" class="import-mapping-chip">
+                    {{ header }}
+                  </span>
+                  <span v-if="!getProductImportAvailableHeaders(productImportMappingDialog.headers, productImportMappingDialog.mapping).length" class="import-mapping-chip muted">
+                    Brak wolnych kolumn
+                  </span>
+                </div>
+              </div>
+              <div class="import-mapping-grid">
+                <label v-for="field in productImportFieldDefinitions" :key="field.key" class="import-mapping-row">
+                  <span class="import-mapping-label">
+                    {{ field.label }}
+                    <strong v-if="field.required">*</strong>
+                  </span>
+                  <select
+                    class="select-input import-mapping-select"
+                    :value="productImportMappingDialog.mapping[field.key] ?? ''"
+                    @change="updateProductImportMapping(field.key, $event.target.value)"
+                  >
+                    <option value="">Nie mapuj</option>
+                    <option v-for="header in productImportMappingDialog.headers" :key="`${field.key}-${header}`" :value="header">
+                      {{ header }}
+                    </option>
+                  </select>
+                </label>
+              </div>
+              <div class="import-mapping-preview">
+                <span class="import-mapping-preview-title">Podgląd pierwszych wierszy</span>
+                <div class="table-wrap import-mapping-preview-wrap">
+                  <table class="data-table import-mapping-preview-table">
+                    <thead>
+                      <tr>
+                        <th v-for="header in productImportMappingDialog.headers" :key="`preview-head-${header}`">{{ header }}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="(row, rowIndex) in productImportMappingDialog.previewRows" :key="`preview-row-${rowIndex}`">
+                        <td v-for="(header, cellIndex) in productImportMappingDialog.headers" :key="`preview-cell-${rowIndex}-${cellIndex}`">
+                          {{ row[cellIndex] ?? '' }}
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="confirm-modal-actions">
+                <button class="tool-btn compact" type="button" @click="closeProductImportMappingDialog">Anuluj import</button>
+                <button class="tool-btn compact primary" type="button" :disabled="productImportMappingDialog.processing" @click="confirmProductImportMapping">
+                  {{ productImportMappingDialog.processing ? 'Sprawdzanie...' : 'Zatwierdź mapowanie' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div v-if="confirmDialog.visible && activeTab !== 'products'" class="confirm-modal-overlay" @click.self="cancelConfirmAction">
           <div class="confirm-modal panel" @click.stop>
             <div class="panel-header">
@@ -1765,6 +1831,69 @@ const productSummaryLabels = {
 };
 
 const productColumns = ['Nr', 'Kod', 'Długość', 'Grubość', 'Szerokość', 'Materiał', 'ilość', 'Wybijak'];
+const productImportFieldDefinitions = [
+  {
+    key: 'Nazwa',
+    label: 'Nazwa',
+    required: false,
+    aliases: ['Nazwa', 'TYTUŁ', 'TYTUL', 'Nazwa mebla'],
+  },
+  {
+    key: 'Kod',
+    label: 'Tekst do druku',
+    required: true,
+    aliases: ['Kod', 'NR CZĘŚCI', 'NR CZESCI', 'Nadruk', 'Tekst do druku'],
+  },
+  {
+    key: 'Długość',
+    label: 'Długość',
+    required: true,
+    aliases: ['Długość', 'Dł', 'DŁ', 'Dł. [mm]', 'DŁ. [mm]', 'DL', 'DL. [mm]', 'DŁUGOŚĆ', 'DLUGOSC', 'Dlugosc'],
+  },
+  {
+    key: 'Grubość',
+    label: 'Grubość',
+    required: true,
+    aliases: ['Grubość', 'GR.', 'GR. [mm]', 'Grubosc'],
+  },
+  {
+    key: 'Szerokość',
+    label: 'Szerokość',
+    required: true,
+    aliases: ['Szerokość', 'Sz', 'SZER. [mm]', 'SZEROKOŚĆ', 'SZEROKOSC', 'Szerokosc'],
+  },
+  {
+    key: 'Materiał',
+    label: 'Materiał',
+    required: true,
+    aliases: ['Materiał', 'MATERIAŁ', 'MATERIAL', 'OPIS', 'gatunek drewna'],
+  },
+  {
+    key: 'ilość',
+    label: 'ilość',
+    required: true,
+    aliases: ['Ilość', 'ILOŚĆ', 'ILOSC', 'Ilosc', 'ilość'],
+  },
+  {
+    key: 'Wybijak',
+    label: 'Wybijak',
+    required: false,
+    aliases: ['Wybijak'],
+  },
+  {
+    key: 'Klasa',
+    label: 'Klasa',
+    required: false,
+    aliases: ['Klasa', 'KLASA'],
+  },
+  {
+    key: 'Stanowisko',
+    label: 'Stanowisko',
+    required: false,
+    aliases: ['Stanowisko', 'STANOWISKO'],
+  },
+];
+const productImportExportColumns = productImportFieldDefinitions.map((field) => field.key);
 const groupOptions = Array.from({ length: 26 }, (_, index) => String.fromCharCode(65 + index));
 const priorityOptions = Array.from({ length: 10 }, (_, index) => String(index));
 const productColumnLabels = {
@@ -2038,6 +2167,17 @@ const configDistanceEditStart = ref({
   ruleId: '',
   value: '',
 });
+const productImportMappingDialog = ref({
+  visible: false,
+  fileName: '',
+  headers: [],
+  previewRows: [],
+  mapping: {},
+  missingTargets: [],
+  message: '',
+  processing: false,
+});
+let productImportMappingResolver = null;
 
 let timerId = null;
 let workRefreshTimerId = null;
@@ -4030,6 +4170,73 @@ function getCellValue(row, keys) {
   return '';
 }
 
+function getProductImportAutoMapping(headers = []) {
+  const normalizedHeaders = headers.map((header) => String(header ?? '').trim()).filter(Boolean);
+  const mapping = {};
+  const usedHeaders = new Set();
+
+  for (const field of productImportFieldDefinitions) {
+    const matchedHeader = normalizedHeaders.find(
+      (header) =>
+        !usedHeaders.has(header) &&
+        field.aliases.some((alias) => normalizeHeaderKey(alias) === normalizeHeaderKey(header)),
+    );
+    mapping[field.key] = matchedHeader || '';
+    if (matchedHeader) {
+      usedHeaders.add(matchedHeader);
+    }
+  }
+
+  return {
+    mapping,
+    usedHeaders,
+  };
+}
+
+function getProductImportMissingTargets(mapping = {}) {
+  return productImportFieldDefinitions.filter((field) => field.required && !String(mapping[field.key] ?? '').trim());
+}
+
+function getProductImportAvailableHeaders(headers = [], mapping = {}) {
+  const selectedHeaders = new Set(
+    Object.values(mapping)
+      .map((value) => String(value ?? '').trim())
+      .filter(Boolean),
+  );
+  return headers.map((header) => String(header ?? '').trim()).filter((header) => header && !selectedHeaders.has(header));
+}
+
+function normalizeProductImportRow(sourceRow, mapping) {
+  return {
+    Nazwa: String(sourceRow?.[mapping.Nazwa] ?? '').trim(),
+    Kod: normalizePrintTextValue(sourceRow?.[mapping.Kod] ?? ''),
+    'Długość': String(sourceRow?.[mapping['Długość']] ?? '').trim(),
+    'Grubość': String(sourceRow?.[mapping['Grubość']] ?? '').trim(),
+    'Szerokość': String(sourceRow?.[mapping['Szerokość']] ?? '').trim(),
+    'Materiał': String(sourceRow?.[mapping['Materiał']] ?? '').trim(),
+    'ilość': String(sourceRow?.[mapping['ilość']] ?? '').trim(),
+    Wybijak: String(sourceRow?.[mapping.Wybijak] ?? '').trim(),
+    Klasa: normalizeDefaultClassValue(sourceRow?.[mapping.Klasa] ?? ''),
+    Stanowisko: normalizeStationValue(sourceRow?.[mapping.Stanowisko] ?? ''),
+    Grupa: '',
+    Priorytet: '',
+  };
+}
+
+function buildProductImportWorkbook(headers, rows, mapping) {
+  const normalizedRows = rows.map((rowValues) => {
+    const sourceRow = buildRowFromHeaders(headers, rowValues);
+    return normalizeProductImportRow(sourceRow, mapping);
+  });
+
+  const matrix = [
+    productImportExportColumns,
+    ...normalizedRows.map((row) => productImportExportColumns.map((column) => row[column] ?? '')),
+  ];
+
+  return XLSX.utils.aoa_to_sheet(matrix);
+}
+
 function buildRowFromHeaders(headers, rowValues) {
   const entries = headers.map((header, index) => [header, rowValues[index] ?? '']);
   return Object.fromEntries(entries);
@@ -4604,6 +4811,71 @@ function setProductFileActionMessage(message, isError = false) {
   productFileActionError.value = isError;
 }
 
+function resetProductImportMappingDialogState() {
+  productImportMappingDialog.value = {
+    visible: false,
+    fileName: '',
+    headers: [],
+    previewRows: [],
+    mapping: {},
+    missingTargets: [],
+    message: '',
+    processing: false,
+  };
+}
+
+function closeProductImportMappingDialog() {
+  if (productImportMappingResolver) {
+    productImportMappingResolver.reject(new Error('Import został anulowany.'));
+    productImportMappingResolver = null;
+  }
+  resetProductImportMappingDialogState();
+}
+
+function openProductImportMappingDialog({ fileName, headers, rows, mapping, missingTargets, message }) {
+  resetProductImportMappingDialogState();
+  productImportMappingDialog.value = {
+    visible: true,
+    fileName,
+    headers,
+    previewRows: rows.slice(0, 3),
+    mapping,
+    missingTargets,
+    message,
+    processing: false,
+  };
+  return new Promise((resolve, reject) => {
+    productImportMappingResolver = { resolve, reject };
+  });
+}
+
+function updateProductImportMapping(targetKey, sourceHeader) {
+  const nextMapping = { ...productImportMappingDialog.value.mapping };
+  for (const field of productImportFieldDefinitions) {
+    if (field.key !== targetKey && nextMapping[field.key] === sourceHeader) {
+      nextMapping[field.key] = '';
+    }
+  }
+  nextMapping[targetKey] = sourceHeader;
+  productImportMappingDialog.value.mapping = nextMapping;
+}
+
+function confirmProductImportMapping() {
+  if (!productImportMappingResolver) return;
+
+  const mapping = { ...productImportMappingDialog.value.mapping };
+  if (!isProductImportMappingComplete(mapping)) {
+    productImportMappingDialog.value.message = 'Uzupełnij wszystkie wymagane pola przed kontynuacją importu.';
+    return;
+  }
+
+  productImportMappingDialog.value.processing = true;
+  const { resolve } = productImportMappingResolver;
+  productImportMappingResolver = null;
+  closeProductImportMappingDialog();
+  resolve(mapping);
+}
+
 function resetRenameState() {
   isRenameMode.value = false;
   renameDraft.value = '';
@@ -4639,6 +4911,15 @@ function readFileAsText(file) {
     reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
     reader.onerror = () => reject(reader.error || new Error('Nie udało się odczytać pliku.'));
     reader.readAsText(file, 'utf-8');
+  });
+}
+
+function readFileAsArrayBuffer(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(reader.error || new Error('Nie udało się odczytać pliku.'));
+    reader.readAsArrayBuffer(file);
   });
 }
 
@@ -4893,6 +5174,52 @@ function triggerImportExcel() {
   fileImportInput.value?.click();
 }
 
+async function importSingleProductFile(file) {
+  const arrayBuffer = await readFileAsArrayBuffer(file);
+  const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+  if (!workbook.SheetNames.length) {
+    throw new Error(`Plik ${file.name} nie zawiera arkuszy do importu.`);
+  }
+  const firstSheetName = workbook.SheetNames[0];
+  const worksheet = workbook.Sheets[firstSheetName];
+  const matrix = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+  const headers = matrix[0] || [];
+  const rows = matrix.slice(1);
+  const autoMapping = getProductImportAutoMapping(headers);
+  const missingTargets = getProductImportMissingTargets(autoMapping.mapping);
+  const availableHeaders = getProductImportAvailableHeaders(headers, autoMapping.mapping);
+
+  let mapping = autoMapping.mapping;
+  if (missingTargets.length && availableHeaders.length) {
+    const message =
+      'Nie udało się automatycznie rozpoznać wszystkich kolumn. Wybierz, która kolumna z Excela ma trafić do odpowiednich pól.';
+    mapping = await openProductImportMappingDialog({
+      fileName: file.name,
+      headers,
+      rows,
+      mapping: autoMapping.mapping,
+      missingTargets,
+      message,
+    });
+  } else if (missingTargets.length) {
+    throw new Error('Nie udało się automatycznie rozpoznać kolumn, a w arkuszu nie ma wolnych kolumn do mapowania.');
+  }
+
+  if (!isProductImportMappingComplete(mapping)) {
+    throw new Error('Nie wszystkie wymagane kolumny zostały zmapowane.');
+  }
+
+  const mappedSheet = buildProductImportWorkbook(headers, rows, mapping);
+  workbook.Sheets[firstSheetName || 'Arkusz1'] = mappedSheet;
+  const contentBase64 = XLSX.write(workbook, { bookType: 'xlsx', type: 'base64' });
+
+  const result = await postProductFileAction('/api/products/import', {
+    fileName: file.name,
+    contentBase64,
+  });
+  return result.fileName || file.name;
+}
+
 async function handleImportExcel(event) {
   const files = Array.from(event.target.files || []);
   event.target.value = '';
@@ -4911,12 +5238,8 @@ async function handleImportExcel(event) {
     const importedFileNames = [];
 
     for (const file of files) {
-      const contentBase64 = await readFileAsBase64(file);
-      const result = await postProductFileAction('/api/products/import', {
-        fileName: file.name,
-        contentBase64,
-      });
-      importedFileNames.push(result.fileName || file.name);
+      const nextFileName = await importSingleProductFile(file);
+      importedFileNames.push(nextFileName);
     }
 
     const lastImportedFileName = importedFileNames[importedFileNames.length - 1] || '';
@@ -4927,7 +5250,9 @@ async function handleImportExcel(event) {
         : `Zaimportowano ${importedFileNames.length} pliki Excela.`,
     );
   } catch (error) {
-    setProductFileActionMessage(error.message || 'Nie udało się zaimportować pliku.', true);
+    if (error?.message !== 'Import został anulowany.') {
+      setProductFileActionMessage(error.message || 'Nie udało się zaimportować pliku.', true);
+    }
   } finally {
     isFileActionLoading.value = false;
   }
