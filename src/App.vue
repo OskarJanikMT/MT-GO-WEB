@@ -118,7 +118,7 @@
               <div v-if="activeConfigTab === 'stations'" class="config-section">
                 <div class="config-section-header">
                   <span class="panel-caption">Konfiguracja zestawów wybijaków</span>
-                  <button class="tool-btn compact primary" @click="addConfigStation">Dodaj zestaw</button>
+                  <button class="tool-btn compact primary" :disabled="configStations.length >= maxConfiguredStationCount" @click="addConfigStation">Dodaj zestaw</button>
                 </div>
 
                 <div v-if="configStations.length" class="config-stations">
@@ -267,6 +267,53 @@
                     </div>
                     <div class="panel-caption">
                       Z tego folderu aplikacja odczytuje, importuje i zapisuje pliki `.xlsx`.
+                    </div>
+                  </div>
+                </article>
+
+                <article class="config-station-card">
+                  <div class="config-station-header">
+                    <div class="config-station-title-wrap">
+                      <span class="config-station-title">Ustawienia ograniczeń</span>
+                    </div>
+                  </div>
+
+                  <div class="config-punch-list">
+                    <div class="config-punch-row config-machine-row">
+                      <span class="config-punch-label">Znaki tekstu do druku</span>
+                      <input
+                        class="text-input config-punch-input"
+                        :value="configSettings.printTextMaxLength"
+                        inputmode="numeric"
+                        @input="updateConfigSetting('printTextMaxLength', $event.target.value)"
+                      />
+                    </div>
+                    <div class="config-punch-row config-machine-row">
+                      <span class="config-punch-label">Maks. długość deski [mm]</span>
+                      <input
+                        class="text-input config-punch-input"
+                        :value="configSettings.boardMaxLength"
+                        inputmode="numeric"
+                        @input="updateConfigSetting('boardMaxLength', $event.target.value)"
+                      />
+                    </div>
+                    <div class="config-punch-row config-machine-row">
+                      <span class="config-punch-label">Maks. ilość sztuk</span>
+                      <input
+                        class="text-input config-punch-input"
+                        :value="configSettings.maxQuantity"
+                        inputmode="numeric"
+                        @input="updateConfigSetting('maxQuantity', $event.target.value)"
+                      />
+                    </div>
+                    <div class="config-punch-row config-machine-row">
+                      <span class="config-punch-label">Ilość zestawów wybijaków</span>
+                      <input
+                        class="text-input config-punch-input"
+                        :value="configSettings.machinePunchCount"
+                        inputmode="numeric"
+                        @input="updateConfigSetting('machinePunchCount', $event.target.value)"
+                      />
                     </div>
                   </div>
                 </article>
@@ -1818,6 +1865,10 @@ const savedColumnLabels = {
 };
 
 const activeTab = ref('products');
+const DEFAULT_PRINT_TEXT_MAX_LENGTH = 100;
+const DEFAULT_BOARD_MAX_LENGTH = 3500;
+const DEFAULT_MAX_QUANTITY = 10000;
+const DEFAULT_MACHINE_PUNCH_COUNT = 6;
 const currentTime = ref('');
 const machineStatusRow = ref(null);
 const isDatabaseConnected = ref(false);
@@ -1828,9 +1879,15 @@ const activeConfigTab = ref('stations');
 const configStations = ref([]);
 const configMachines = ref([]);
 const configProductsDirectory = ref('');
+const configSettings = ref({
+  printTextMaxLength: DEFAULT_PRINT_TEXT_MAX_LENGTH,
+  boardMaxLength: DEFAULT_BOARD_MAX_LENGTH,
+  maxQuantity: DEFAULT_MAX_QUANTITY,
+  machinePunchCount: DEFAULT_MACHINE_PUNCH_COUNT,
+});
 const favoriteElements = ref([]);
 const activeMachineId = ref('machine-1');
-const savedConfigSnapshot = ref('{"productsDirectory":"","stations":[],"activeMachineId":"machine-1","machines":[{"id":"machine-1","name":"Maszyna 1","rowLimit":500}],"favoriteElements":[]}');
+const savedConfigSnapshot = ref('{"productsDirectory":"","stations":[],"settings":{"printTextMaxLength":100,"boardMaxLength":3500,"maxQuantity":10000,"machinePunchCount":6},"activeMachineId":"machine-1","machines":[{"id":"machine-1","name":"Maszyna 1","rowLimit":500}],"favoriteElements":[]}');
 const isConfigSaving = ref(false);
 const isSelectingProductsDirectory = ref(false);
 const isConfigLoaded = ref(false);
@@ -2288,6 +2345,12 @@ const configPayload = computed(() => ({
       distance: String(rule.distance ?? ''),
     })),
   })),
+  settings: {
+    printTextMaxLength: Math.max(1, normalizeWorkCorrectionValue(configSettings.value.printTextMaxLength || DEFAULT_PRINT_TEXT_MAX_LENGTH)),
+    boardMaxLength: Math.max(1, normalizeWorkCorrectionValue(configSettings.value.boardMaxLength || DEFAULT_BOARD_MAX_LENGTH)),
+    maxQuantity: Math.max(1, normalizeWorkCorrectionValue(configSettings.value.maxQuantity || DEFAULT_MAX_QUANTITY)),
+    machinePunchCount: Math.max(1, normalizeWorkCorrectionValue(configSettings.value.machinePunchCount || DEFAULT_MACHINE_PUNCH_COUNT)),
+  },
   activeMachineId: activeMachineId.value,
   machines: configMachines.value.map((machine) => ({
     id: machine.id,
@@ -2310,6 +2373,7 @@ const hasConfiguredStationLengthRanges = computed(() =>
   }),
 );
 const hasConfiguredStations = computed(() => configStations.value.length > 0);
+const maxConfiguredStationCount = computed(() => Math.max(1, normalizeWorkCorrectionValue(configSettings.value.machinePunchCount || DEFAULT_MACHINE_PUNCH_COUNT)));
 
 const hasPendingWorkChanges = computed(() => serializeWorkRows(workRows.value) !== workRowsSnapshot.value);
 const activeWorkRows = computed(() => workRows.value.filter((row) => !row.__disabled));
@@ -2405,7 +2469,7 @@ function getWorkRowPayload(row, index = 0) {
     Sztuk: sztuk,
     WykonaneSztuki: normalizeWorkCorrectionValue(row?.WykonaneSztuki),
     Wybijak: wybijak,
-    TekstDoDruku: String(row?.TekstDoDruku ?? '').trim(),
+    TekstDoDruku: normalizePrintTextValue(row?.TekstDoDruku ?? ''),
     Grupa: normalizeGroupValue(row?.Grupa ?? row?.grupa ?? ''),
     Priorytet: normalizePriorityValue(row?.Priorytet ?? row?.priorytet ?? ''),
     Klasa: normalizeWorkCorrectionValue(row?.Klasa ?? row?.klasa),
@@ -2622,7 +2686,7 @@ function createWorkRowFromProductRow(sourceRow = {}) {
     Sztuk: quantity,
     WykonaneSztuki: 0,
     Wybijak: station ? getWybijakValueForStation(station, length) : normalizeWorkCorrectionValue(sourceRow.Wybijak ?? sourceRow.wybijak ?? 0),
-    TekstDoDruku: sourceRow.Kod ?? sourceRow.TekstDoDruku ?? '',
+    TekstDoDruku: normalizePrintTextValue(sourceRow.Kod ?? sourceRow.TekstDoDruku ?? ''),
     Klasa: normalizeDefaultClassValue(sourceRow.Klasa ?? sourceRow.klasa),
     zliczonaIloscIn: quantity,
     Stanowisko: station,
@@ -2854,15 +2918,19 @@ function addWorkSnapshot(snapshot) {
 function getWorkRowMissingFields(row) {
   const payload = getWorkRowPayload(row);
   const missingFields = [];
+  const boardMaxLength = Math.max(1, normalizeWorkCorrectionValue(configSettings.value.boardMaxLength || DEFAULT_BOARD_MAX_LENGTH));
+  const maxQuantity = Math.max(1, normalizeWorkCorrectionValue(configSettings.value.maxQuantity || DEFAULT_MAX_QUANTITY));
 
   if (!payload.Nazwa) missingFields.push('Nazwa');
   if (!payload.Material) missingFields.push('Materiał');
   if (!payload.Przekroj) missingFields.push('Przekrój');
   if (!payload.Dlugosc) missingFields.push('Długość');
+  if (payload.Dlugosc > boardMaxLength) missingFields.push(`Długość > ${boardMaxLength} mm`);
   if (!payload.Grubosc) missingFields.push('Grubość');
   if (!payload.Szerokosc) missingFields.push('Szerokość');
   if (!payload.Wybijak) missingFields.push('Wybijak');
   if (!payload.Sztuk) missingFields.push('Ilość');
+  if (payload.Sztuk > maxQuantity) missingFields.push(`Ilość > ${maxQuantity}`);
 
   return missingFields;
 }
@@ -2890,14 +2958,18 @@ function getWorkRowsValidationMessage(rows, contextMessage) {
 
 function getRecipeRowMissingFields(row) {
   const missingFields = [];
+  const boardMaxLength = Math.max(1, normalizeWorkCorrectionValue(configSettings.value.boardMaxLength || DEFAULT_BOARD_MAX_LENGTH));
+  const maxQuantity = Math.max(1, normalizeWorkCorrectionValue(configSettings.value.maxQuantity || DEFAULT_MAX_QUANTITY));
 
   if (!String(row?.TekstDoDruku ?? '').trim()) missingFields.push('Tekst do druku');
   if (!String(row?.material ?? '').trim()) missingFields.push('Materiał');
   if (!normalizeWorkCorrectionValue(row?.dlugosc)) missingFields.push('Długość');
+  if (normalizeWorkCorrectionValue(row?.dlugosc) > boardMaxLength) missingFields.push(`Długość > ${boardMaxLength} mm`);
   if (!normalizeWorkCorrectionValue(row?.grubosc)) missingFields.push('Grubość');
   if (!normalizeWorkCorrectionValue(row?.szerokosc)) missingFields.push('Szerokość');
   if (!String(row?.wybijak ?? '').replace(/[^\d]/g, '').trim()) missingFields.push('Wybijak');
   if (!normalizeWorkCorrectionValue(row?.ilosc)) missingFields.push('Ilość');
+  if (normalizeWorkCorrectionValue(row?.ilosc) > maxQuantity) missingFields.push(`Ilość > ${maxQuantity}`);
 
   return missingFields;
 }
@@ -3135,7 +3207,7 @@ function normalizeFavoriteElementRow(row) {
     'Grubość': row?.['Grubość'] ?? row?.grubosc ?? '',
     'Szerokość': row?.['Szerokość'] ?? row?.szerokosc ?? '',
     'Materiał': row?.['Materiał'] ?? row?.material ?? '',
-    Kod: row?.Kod ?? row?.TekstDoDruku ?? '',
+    Kod: normalizePrintTextValue(row?.Kod ?? row?.TekstDoDruku ?? ''),
     Grupa: normalizeGroupValue(row?.Grupa ?? row?.grupa ?? ''),
     Priorytet: normalizePriorityValue(row?.Priorytet ?? row?.priorytet ?? ''),
     'ilość': row?.['ilość'] ?? row?.ilosc ?? 0,
@@ -3173,7 +3245,16 @@ function normalizeLoadedConfigMachine(machine, index = 0) {
 
 function applyLoadedConfig(config) {
   const productsDirectory = String(config?.productsDirectory || '').trim();
-  const stations = Array.isArray(config?.stations) ? config.stations.map((station) => normalizeLoadedConfigStation(station)) : [];
+  const loadedSettings = config?.settings && typeof config.settings === 'object' ? config.settings : {};
+  const settings = {
+    printTextMaxLength: Math.max(1, normalizeWorkCorrectionValue(loadedSettings.printTextMaxLength || DEFAULT_PRINT_TEXT_MAX_LENGTH)),
+    boardMaxLength: Math.max(1, normalizeWorkCorrectionValue(loadedSettings.boardMaxLength || DEFAULT_BOARD_MAX_LENGTH)),
+    maxQuantity: Math.max(1, normalizeWorkCorrectionValue(loadedSettings.maxQuantity || DEFAULT_MAX_QUANTITY)),
+    machinePunchCount: Math.max(1, normalizeWorkCorrectionValue(loadedSettings.machinePunchCount || DEFAULT_MACHINE_PUNCH_COUNT)),
+  };
+  const stations = Array.isArray(config?.stations)
+    ? config.stations.slice(0, settings.machinePunchCount).map((station) => normalizeLoadedConfigStation(station))
+    : [];
   const machines = Array.isArray(config?.machines) && config.machines.length
     ? config.machines.map((machine, index) => normalizeLoadedConfigMachine(machine, index))
     : [normalizeLoadedConfigMachine({ id: 'machine-1', rowLimit: DEFAULT_ROW_LIMIT }, 0)];
@@ -3181,6 +3262,7 @@ function applyLoadedConfig(config) {
     ? config.favoriteElements.map((entry) => normalizeLoadedFavoriteElement(entry))
     : [];
   configProductsDirectory.value = productsDirectory;
+  configSettings.value = settings;
   configStations.value = stations;
   configMachines.value = machines;
   favoriteElements.value = favorites;
@@ -3206,6 +3288,7 @@ function applyLoadedConfig(config) {
         distance: String(rule.distance ?? ''),
       })),
     })),
+    settings,
     activeMachineId: activeMachineId.value,
     machines: machines.map((machine) => ({
       id: machine.id,
@@ -3358,6 +3441,7 @@ function createConfigLengthRange() {
 }
 
 function addConfigStation() {
+  if (configStations.value.length >= maxConfiguredStationCount.value) return;
   configStations.value = [...configStations.value, createConfigStation()];
 }
 
@@ -3394,6 +3478,23 @@ function updateConfigMachine(machineId, field, value) {
 
 function updateConfigProductsDirectory(value) {
   configProductsDirectory.value = String(value ?? '');
+}
+
+function updateConfigSetting(field, value) {
+  const defaults = {
+    printTextMaxLength: DEFAULT_PRINT_TEXT_MAX_LENGTH,
+    boardMaxLength: DEFAULT_BOARD_MAX_LENGTH,
+    maxQuantity: DEFAULT_MAX_QUANTITY,
+    machinePunchCount: DEFAULT_MACHINE_PUNCH_COUNT,
+  };
+  const normalizedValue = Math.max(1, normalizeWorkCorrectionValue(value || defaults[field] || 1));
+  configSettings.value = {
+    ...configSettings.value,
+    [field]: normalizedValue,
+  };
+  if (field === 'machinePunchCount' && configStations.value.length > normalizedValue) {
+    configStations.value = configStations.value.slice(0, normalizedValue);
+  }
 }
 
 async function selectProductsDirectory() {
@@ -4053,6 +4154,17 @@ function normalizePriorityValue(value) {
   return /^[0-9]$/.test(normalized) ? normalized : normalized.replace(/\D/g, '').slice(0, 1);
 }
 
+function normalizePrintTextValue(value) {
+  const maxLength = Math.max(1, normalizeWorkCorrectionValue(configSettings.value?.printTextMaxLength || DEFAULT_PRINT_TEXT_MAX_LENGTH));
+  return String(value ?? '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/ł/g, 'l')
+    .replace(/Ł/g, 'L')
+    .slice(0, maxLength)
+    .trim();
+}
+
 function normalizeStationValue(value) {
   const normalized = String(value ?? '')
     .replace(/[^\d]/g, '')
@@ -4061,6 +4173,9 @@ function normalizeStationValue(value) {
 }
 
 function normalizeEditableCellValue(column, value) {
+  if (column === 'Kod' || column === 'TekstDoDruku') {
+    return normalizePrintTextValue(value);
+  }
   if (column === 'Grupa' || column === 'grupa') {
     return normalizeGroupValue(value);
   }
@@ -4372,7 +4487,7 @@ function createMergeDraftRow(productName, sourceRow = {}) {
     Klasa: sourceRow.Klasa ?? sourceRow.klasa ?? 2,
     Stanowisko: normalizeStationValue(sourceRow.Stanowisko ?? sourceRow.stanowisko),
     Informacje: sourceRow.Informacje ?? 'Kopia tymczasowa',
-    TekstDoDruku: sourceRow.Kod || sourceRow.TekstDoDruku || sourceRow.nazwaSkladowej || sourceRow.Nazwa || '',
+    TekstDoDruku: normalizePrintTextValue(sourceRow.Kod || sourceRow.TekstDoDruku || sourceRow.nazwaSkladowej || sourceRow.Nazwa || ''),
   };
 }
 
@@ -4394,7 +4509,7 @@ function createRecipePreviewDraftRow(sourceRow = {}) {
     Klasa: sourceRow.Klasa ?? sourceRow.klasa ?? 0,
     Stanowisko: normalizeStationValue(sourceRow.Stanowisko ?? sourceRow.stanowisko),
     Informacje: sourceRow.Informacje ?? '',
-    TekstDoDruku: sourceRow.TekstDoDruku ?? '',
+    TekstDoDruku: normalizePrintTextValue(sourceRow.TekstDoDruku ?? ''),
   };
 }
 
@@ -4564,7 +4679,7 @@ function normalizeProductRows(fileName, headers, rows) {
       const thickness = getCellValue(sourceRow, ['Grubość', 'GR.', 'GR. [mm]', 'Grubosc']) || rowValues[3] || '';
       const width = getCellValue(sourceRow, ['Szerokość', 'Sz', 'SZER. [mm]', 'SZEROKOŚĆ', 'SZEROKOSC', 'Szerokosc']) || rowValues[4] || '';
       const material = getCellValue(sourceRow, ['Materiał', 'MATERIAŁ', 'MATERIAL', 'OPIS', 'gatunek drewna']) || rowValues[7] || '';
-      const code = getCellValue(sourceRow, ['Kod', 'NR CZĘŚCI', 'NR CZESCI', 'Nadruk']) || rowValues[1] || rowValues[0] || '';
+      const code = normalizePrintTextValue(getCellValue(sourceRow, ['Kod', 'NR CZĘŚCI', 'NR CZESCI', 'Nadruk']) || rowValues[1] || rowValues[0] || '');
       const klasa = normalizeDefaultClassValue(getCellValue(sourceRow, ['Klasa', 'KLASA']));
       const stanowisko = getCellValue(sourceRow, ['Stanowisko', 'STANOWISKO']) || '';
 

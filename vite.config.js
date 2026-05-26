@@ -15,10 +15,20 @@ const recipesFilePath = path.join(__dirname, 'receptury.json');
 const configFilePath = path.join(__dirname, 'config.json');
 const execFileAsync = promisify(execFile);
 const DEFAULT_ROW_LIMIT = 500;
+const DEFAULT_PRINT_TEXT_MAX_LENGTH = 100;
+const DEFAULT_BOARD_MAX_LENGTH = 3500;
+const DEFAULT_MAX_QUANTITY = 10000;
+const DEFAULT_MACHINE_PUNCH_COUNT = 6;
 const defaultAppConfig = {
   productsDirectory: DEFAULT_PRODUCTS_DIR,
   stations: [],
   activeMachineId: 'machine-1',
+  settings: {
+    printTextMaxLength: DEFAULT_PRINT_TEXT_MAX_LENGTH,
+    boardMaxLength: DEFAULT_BOARD_MAX_LENGTH,
+    maxQuantity: DEFAULT_MAX_QUANTITY,
+    machinePunchCount: DEFAULT_MACHINE_PUNCH_COUNT,
+  },
   machines: [
     {
       id: 'machine-1',
@@ -108,10 +118,18 @@ function normalizeProductsDirectory(value) {
 
 function normalizeAppConfig(config) {
   const baseConfig = config && typeof config === 'object' ? config : defaultAppConfig;
+  const rawSettings = baseConfig?.settings && typeof baseConfig.settings === 'object' ? baseConfig.settings : {};
+  const normalizedSettings = {
+    printTextMaxLength: Math.max(1, Number.parseInt(String(rawSettings.printTextMaxLength ?? DEFAULT_PRINT_TEXT_MAX_LENGTH), 10) || DEFAULT_PRINT_TEXT_MAX_LENGTH),
+    boardMaxLength: Math.max(1, Number.parseInt(String(rawSettings.boardMaxLength ?? DEFAULT_BOARD_MAX_LENGTH), 10) || DEFAULT_BOARD_MAX_LENGTH),
+    maxQuantity: Math.max(1, Number.parseInt(String(rawSettings.maxQuantity ?? DEFAULT_MAX_QUANTITY), 10) || DEFAULT_MAX_QUANTITY),
+    machinePunchCount: Math.max(1, Number.parseInt(String(rawSettings.machinePunchCount ?? DEFAULT_MACHINE_PUNCH_COUNT), 10) || DEFAULT_MACHINE_PUNCH_COUNT),
+  };
   return {
     ...defaultAppConfig,
     ...baseConfig,
     productsDirectory: normalizeProductsDirectory(baseConfig?.productsDirectory),
+    settings: normalizedSettings,
   };
 }
 
