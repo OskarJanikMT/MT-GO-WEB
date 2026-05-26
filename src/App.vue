@@ -7051,7 +7051,7 @@ async function loadRecipeToWorkMain() {
   selectedRecipe.value = sourceRecipeName;
   clearWorkCorrectionState();
   workUploadError.value = false;
-  workUploadMessage.value = `Wczytano recepturę "${sourceRecipeName}" do podglądu. Wartości wybijaków możesz teraz skorygować ręcznie, a zapis wykonać później do bazy danych.`;
+  workUploadMessage.value = `Wczytano recepturę "${sourceRecipeName}" do podglądu. Wartości możesz teraz skorygować ręcznie, a zapis wykonać później do bazy danych.`;
 
   try {
     const response = await fetch('/api/recipes/mark-used', {
