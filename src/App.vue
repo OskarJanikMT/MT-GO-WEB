@@ -2383,7 +2383,7 @@ function getWorkRowPayload(row, index = 0) {
   const szerokosc = normalizeWorkCorrectionValue(row?.Szerokosc ?? parsedPrzekroj.Szerokosc);
   const sztuk = normalizeWorkCorrectionValue(row?.Sztuk);
   const dlugosc = normalizeWorkCorrectionValue(row?.Dlugosc);
-  const stanowisko = normalizeStationValue(row?.Stanowisko);
+  const stanowisko = normalizeStationValue(row?.Stanowisko ?? row?.stanowisko);
   const wybijak = resolveWorkWybijakValue(stanowisko, dlugosc, row?.Wybijak);
   return {
     id: normalizeWorkCorrectionValue(row?.id || index + 1),
@@ -2401,7 +2401,7 @@ function getWorkRowPayload(row, index = 0) {
     TekstDoDruku: String(row?.TekstDoDruku ?? '').trim(),
     Grupa: normalizeGroupValue(row?.Grupa ?? row?.grupa ?? ''),
     Priorytet: normalizePriorityValue(row?.Priorytet ?? row?.priorytet ?? ''),
-    Klasa: normalizeWorkCorrectionValue(row?.Klasa),
+    Klasa: normalizeWorkCorrectionValue(row?.Klasa ?? row?.klasa),
     Usr: String(row?.Usr ?? 'Default').trim() || 'Default',
     zliczonaIloscIn: sztuk,
     Stanowisko: stanowisko,
@@ -2588,7 +2588,7 @@ function createWorkRowFromProductRow(sourceRow = {}) {
   const thickness = normalizeWorkCorrectionValue(sourceRow['Grubość'] ?? sourceRow.grubosc);
   const width = normalizeWorkCorrectionValue(sourceRow['Szerokość'] ?? sourceRow.szerokosc);
   const quantity = normalizeWorkCorrectionValue(sourceRow['ilość'] ?? sourceRow.ilosc ?? 0);
-  const station = normalizeStationValue(sourceRow.Stanowisko);
+  const station = normalizeStationValue(sourceRow.Stanowisko ?? sourceRow.stanowisko);
 
   return normalizeWorkRow({
     id: getNextWorkRowId(),
@@ -2603,7 +2603,7 @@ function createWorkRowFromProductRow(sourceRow = {}) {
     WykonaneSztuki: 0,
     Wybijak: station ? getWybijakValueForStation(station, length) : normalizeWorkCorrectionValue(sourceRow.Wybijak ?? sourceRow.wybijak ?? 0),
     TekstDoDruku: sourceRow.Kod ?? sourceRow.TekstDoDruku ?? '',
-    Klasa: normalizeDefaultClassValue(sourceRow.Klasa),
+    Klasa: normalizeDefaultClassValue(sourceRow.Klasa ?? sourceRow.klasa),
     zliczonaIloscIn: quantity,
     Stanowisko: station,
   });
@@ -4222,8 +4222,8 @@ function createMergeDraftRow(productName, sourceRow = {}) {
     priorytet: sourceRow.Priorytet ?? sourceRow.priorytet ?? '',
     ilosc: baseQuantity,
     iloscWykonana: sourceRow.iloscWykonana ?? 0,
-    Klasa: sourceRow.Klasa ?? 2,
-    Stanowisko: normalizeStationValue(sourceRow.Stanowisko),
+    Klasa: sourceRow.Klasa ?? sourceRow.klasa ?? 2,
+    Stanowisko: normalizeStationValue(sourceRow.Stanowisko ?? sourceRow.stanowisko),
     Informacje: sourceRow.Informacje ?? 'Kopia tymczasowa',
     TekstDoDruku: sourceRow.Kod || sourceRow.TekstDoDruku || sourceRow.nazwaSkladowej || sourceRow.Nazwa || '',
   };
@@ -4244,8 +4244,8 @@ function createRecipePreviewDraftRow(sourceRow = {}) {
     priorytet: sourceRow.priorytet ?? '',
     ilosc: sourceRow.ilosc ?? 0,
     iloscWykonana: sourceRow.iloscWykonana ?? 0,
-    Klasa: sourceRow.Klasa ?? 0,
-    Stanowisko: normalizeStationValue(sourceRow.Stanowisko),
+    Klasa: sourceRow.Klasa ?? sourceRow.klasa ?? 0,
+    Stanowisko: normalizeStationValue(sourceRow.Stanowisko ?? sourceRow.stanowisko),
     Informacje: sourceRow.Informacje ?? '',
     TekstDoDruku: sourceRow.TekstDoDruku ?? '',
   };
@@ -6307,8 +6307,8 @@ async function loadRecipeToWorkMain() {
       szer: row.szerokosc || row.szer,
       Grupa: row.grupa || row.Grupa || '',
       Priorytet: row.priorytet || row.Priorytet || '',
-      Klasa: row.Klasa,
-      Stanowisko: row.Stanowisko,
+      Klasa: row.Klasa ?? row.klasa,
+      Stanowisko: row.Stanowisko ?? row.stanowisko,
       Informacje: row.Informacje,
     }),
   );
