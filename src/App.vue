@@ -117,8 +117,8 @@
 
               <div v-if="activeConfigTab === 'stations'" class="config-section">
                 <div class="config-section-header">
-                  <span class="panel-caption">Przypisywanie wybijaków do stanowisk</span>
-                  <button class="tool-btn compact primary" @click="addConfigStation">Dodaj stanowisko</button>
+                  <span class="panel-caption">Konfiguracja zestawów wybijaków</span>
+                  <button class="tool-btn compact primary" @click="addConfigStation">Dodaj zestaw</button>
                 </div>
 
                 <div v-if="configStations.length" class="config-stations">
@@ -129,7 +129,7 @@
                       </div>
                       <div class="config-station-actions">
                         <button class="tool-btn compact" @click="addConfigStationPunch(station.id)">Dodaj wybijak</button>
-                        <button class="tool-btn compact danger" @click="removeConfigStation(station.id)">Usuń stanowisko</button>
+                        <button class="tool-btn compact danger" @click="removeConfigStation(station.id)">Usuń zestaw</button>
                       </div>
                     </div>
 
@@ -148,7 +148,7 @@
                     </div>
 
                     <div v-else class="expanded-empty config-empty-state">
-                      Brak wybijaków dla tego stanowiska.
+                      Brak wybijaków w tym zestawie.
                     </div>
 
                     <div class="config-station-lengths">
@@ -181,13 +181,13 @@
                 </div>
 
                 <div v-else class="expanded-empty config-empty-state">
-                  Brak stanowisk. Dodaj pierwsze stanowisko.
+                  Brak zestawów wybijaków. Dodaj pierwszy zestaw.
                 </div>
               </div>
 
               <div v-else-if="activeConfigTab === 'distances'" class="config-section">
                 <div class="config-section-header">
-                  <span class="panel-caption">Odległości między wybijakami dla stanowisk</span>
+                  <span class="panel-caption">Odległości między wybijakami</span>
                 </div>
 
                 <div v-if="configStations.length" class="config-stations">
@@ -227,13 +227,13 @@
                     </div>
 
                     <div v-else class="expanded-empty config-empty-state">
-                      Dodaj co najmniej dwa wybijaki w zakładce `Stanowiska`, aby ustawić odległości.
+                      Dodaj co najmniej dwa wybijaki w zakładce `Wybijaki`, aby ustawić odległości.
                     </div>
                   </article>
                 </div>
 
                 <div v-else class="expanded-empty config-empty-state">
-                  Najpierw dodaj stanowiska w zakładce `Stanowiska`.
+                  Najpierw dodaj zestaw w zakładce `Wybijaki`.
                 </div>
               </div>
 
@@ -906,13 +906,6 @@
               <div class="panel-header">
                 <span>Podgląd scalonej receptury</span>
                 <div class="panel-actions">
-                  <button
-                    class="tool-btn compact primary"
-                    :disabled="!recipeRows.length || !hasConfiguredStations"
-                    @click="openStationAutoAssignDialog('merge')"
-                  >
-                    Automatycznie przydziel stanowiska
-                  </button>
                   <div v-if="availableMergeGroups.length" class="merge-group-filter">
                     <button
                       class="tool-btn compact"
@@ -1268,24 +1261,6 @@
           </div>
         </div>
 
-        <div v-if="stationAutoAssignDialog.visible" class="confirm-modal-overlay" @click.self="closeStationAutoAssignDialog">
-          <div class="confirm-modal panel" @click.stop>
-            <div class="panel-header">
-              <span>Automatyczny przydział stanowisk</span>
-            </div>
-            <div class="confirm-modal-body">
-              <p>Wybierz sposób przydzielania stanowisk.</p>
-              <div class="confirm-modal-actions">
-                <button class="tool-btn compact" @click="applyStationAutoAssignMode('similar-together')">1. Bliskie wymiary razem</button>
-                <button class="tool-btn compact" @click="applyStationAutoAssignMode('similar-separate')">2. Bliskie wymiary osobno</button>
-                <button class="tool-btn compact primary" @click="applyStationAutoAssignMode('length-ranges')">3. Według ustawień długości</button>
-                <button class="tool-btn compact" @click="applyStationAutoAssignMode('by-products')">4. Produktami</button>
-                <button class="tool-btn compact" @click="closeStationAutoAssignDialog">Anuluj</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <div v-if="isSavedRecipePreviewOpen" class="confirm-modal-overlay saved-recipe-preview-overlay" @click.self="closeSavedRecipePreview">
           <div class="confirm-modal panel panel-wide work-recipe-preview-modal saved-recipe-preview-modal" @click.stop>
             <div class="panel-header">
@@ -1400,13 +1375,6 @@
               </div>
               <button
                 class="tool-btn"
-                :disabled="!activeWorkRows.length || !hasConfiguredStations || workEditingRowId !== null || isWorkCorrectionSaving"
-                @click="openStationAutoAssignDialog('work')"
-              >
-                Automatycznie przydziel stanowiska
-              </button>
-              <button
-                class="tool-btn primary"
                 :disabled="!hasPendingWorkChanges || isWorkCorrectionSaving"
                 @click="saveWorkTable"
               >
@@ -1665,7 +1633,7 @@ const tabs = [
   { id: 'work', label: '3. Aktualnie cięte' },
 ];
 const configTabs = [
-  { id: 'stations', label: 'Stanowiska' },
+  { id: 'stations', label: 'Wybijaki' },
   { id: 'distances', label: 'Odległości' },
   { id: 'parameters', label: 'Parametry' },
 ];
@@ -1679,7 +1647,7 @@ const productSummaryLabels = {
   ostatniaAktualizacja: 'Źródło',
 };
 
-const productColumns = ['Nr', 'Nazwa', 'Długość', 'Grubość', 'Szerokość', 'Materiał', 'Kod', 'Klasa', 'Grupa', 'Priorytet', 'ilość', 'Stanowisko', 'Wybijak'];
+const productColumns = ['Nr', 'Nazwa', 'Długość', 'Grubość', 'Szerokość', 'Materiał', 'Kod', 'Grupa', 'Priorytet', 'ilość', 'Wybijak'];
 const groupOptions = Array.from({ length: 26 }, (_, index) => String.fromCharCode(65 + index));
 const priorityOptions = Array.from({ length: 10 }, (_, index) => String(index));
 const productColumnLabels = {
@@ -1690,14 +1658,12 @@ const productColumnLabels = {
   'Szerokość': 'Szerokość',
   'Materiał': 'Materiał',
   Kod: 'Kod',
-  Klasa: 'Klasa',
   Grupa: 'Grupa',
   Priorytet: 'Priorytet',
   'ilość': 'ilość',
   Wybijak: 'Wybijak',
-  Stanowisko: 'Stanowisko',
 };
-const editableProductColumns = ['Nazwa', 'Długość', 'Grubość', 'Szerokość', 'Materiał', 'Kod', 'Klasa', 'Grupa', 'Priorytet', 'ilość', 'Wybijak', 'Stanowisko'];
+const editableProductColumns = ['Nazwa', 'Długość', 'Grubość', 'Szerokość', 'Materiał', 'Kod', 'Grupa', 'Priorytet', 'ilość', 'Wybijak'];
 
 const recipeSummaryColumns = ['nazwaReceptury', 'liczbaPozycji', 'sumaElementow', 'materialy', 'createdAt', 'lastUsedAt'];
 const recipeCatalogColumns = ['nazwaReceptury', 'liczbaPozycji', 'sumaElementow', 'materialy', 'createdAt', 'lastUsedAt'];
@@ -1723,8 +1689,6 @@ const recipeColumns = [
   'priorytet',
   'ilosc',
   'iloscWykonana',
-  'Klasa',
-  'Stanowisko',
   'Informacje',
   'TekstDoDruku',
 ];
@@ -1738,9 +1702,7 @@ const mergeRecipeColumns = [
   'szerokosc',
   'material',
   'ilosc',
-  'Klasa',
   'wybijak',
-  'Stanowisko',
 ];
 const recipeColumnLabels = {
   nazwaSkladowej: 'Nazwa',
@@ -1755,8 +1717,6 @@ const recipeColumnLabels = {
   priorytet: 'Priorytet',
   ilosc: 'Ilość',
   iloscWykonana: 'Wykonano',
-  Klasa: 'Klasa',
-  Stanowisko: 'Stanowisko',
   Informacje: 'Informacje',
   TekstDoDruku: 'Tekst do druku',
 };
@@ -1768,8 +1728,7 @@ const workColumns = [
   'Grubosc',
   'Szerokosc',
   'Material',
-  'Stanowisko',
-  'Klasa',
+  'Wybijak',
   'Progress',
 ];
 const savedWorkPreviewColumns = [
@@ -1781,8 +1740,6 @@ const savedWorkPreviewColumns = [
   'Material',
   'TekstDoDruku',
   'Wybijak',
-  'Stanowisko',
-  'Klasa',
   'Sztuk',
   'ProgressLabel',
 ];
@@ -1796,9 +1753,7 @@ const workColumnLabels = {
   Progress: 'Progress',
   Wybijak: 'Wybijak',
   TekstDoDruku: 'Tekst do druku',
-  Klasa: 'Klasa',
   Sztuk: 'Ilość',
-  Stanowisko: 'Stanowisko',
   ProgressLabel: 'Progress',
 };
 
@@ -2489,7 +2444,7 @@ function updateWorkCell(rowId, column, value) {
     return;
   }
 
-  if (['Dlugosc', 'Wybijak', 'Klasa', 'Grubosc', 'Szerokosc', 'Sztuk'].includes(column)) {
+  if (['Dlugosc', 'Wybijak', 'Grubosc', 'Szerokosc', 'Sztuk'].includes(column)) {
     row[column] = normalizeWorkCorrectionValue(value);
     if (column === 'Grubosc' || column === 'Szerokosc') {
       row.Przekroj = buildPrzekrojValue(row.Grubosc, row.Szerokosc);
@@ -2627,7 +2582,7 @@ function addSelectedWorkRows() {
     missingFields: getWorkRowMissingFields(row),
   }));
   const blockingRows = validationInfo.filter(({ missingFields }) =>
-    missingFields.some((field) => !['Wybijak', 'Klasa'].includes(field)),
+    missingFields.some((field) => field !== 'Wybijak'),
   );
 
   if (blockingRows.length) {
@@ -2641,7 +2596,7 @@ function addSelectedWorkRows() {
   }
 
   workRows.value = [...workRows.value, ...rowsToAdd];
-  const rowToEdit = validationInfo.find(({ missingFields }) => missingFields.some((field) => ['Wybijak', 'Klasa'].includes(field)))?.row;
+  const rowToEdit = validationInfo.find(({ missingFields }) => missingFields.includes('Wybijak'))?.row;
   if (rowToEdit) {
     workEditingRowId.value = rowToEdit.__clientId;
   }
@@ -2842,7 +2797,6 @@ function getWorkRowMissingFields(row) {
   if (!payload.Grubosc) missingFields.push('Grubość');
   if (!payload.Szerokosc) missingFields.push('Szerokość');
   if (!payload.Wybijak) missingFields.push('Wybijak');
-  if (!payload.Klasa) missingFields.push('Klasa');
   if (!payload.Sztuk) missingFields.push('Ilość');
 
   return missingFields;
@@ -3384,7 +3338,7 @@ function getConfigMachineLabel(machineIndex) {
 }
 
 function getConfigStationLabel(stationIndex) {
-  return `Stanowisko ${stationIndex + 1}`;
+  return `Zestaw ${stationIndex + 1}`;
 }
 
 function getConfigStationValueById(stationId) {
@@ -6314,7 +6268,7 @@ async function loadRecipeToWorkMain() {
   );
   clearWorkCorrectionState();
   workUploadError.value = false;
-  workUploadMessage.value = `Wczytano recepturę "${selectedRecipe.value}" do podglądu. Stanowiska możesz przydzielić automatycznie, a zapis wykonasz później do bazy danych.`;
+  workUploadMessage.value = `Wczytano recepturę "${selectedRecipe.value}" do podglądu. Wartości wybijaków możesz teraz skorygować ręcznie, a zapis wykonać później do bazy danych.`;
 
   try {
     const response = await fetch('/api/recipes/mark-used', {
@@ -6571,7 +6525,7 @@ const WorkTable = defineComponent({
                             class: 'edit-input work-cell-input',
                             value: row[column] ?? '',
                             style: getWorkEditInputStyle(column, row[column]),
-                            inputmode: ['Dlugosc', 'Wybijak', 'Klasa', 'Grubosc', 'Szerokosc', 'Sztuk', 'Stanowisko'].includes(column) ? 'numeric' : undefined,
+                            inputmode: ['Dlugosc', 'Wybijak', 'Grubosc', 'Szerokosc', 'Sztuk', 'Stanowisko'].includes(column) ? 'numeric' : undefined,
                             onInput: (event) => updateWorkCell(row.__clientId, column, event.target.value),
                           }),
                         ]);
