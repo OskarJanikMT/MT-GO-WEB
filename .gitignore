@@ -6,11 +6,14 @@ dist/
 
 # environment
 .env
+.env.*
+!.env.example
 .env.local
 .env.*.local
 
 # logs
 *.log
+*.err
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -20,6 +23,9 @@ pnpm-debug.log*
 vite-dev.err
 vite-dev.log
 workmain-debug.txt
+
+# vite cache
+.vite/
 
 # OS / editor
 .DS_Store
