@@ -1676,6 +1676,14 @@ button {
   min-width: 56px;
 }
 
+.text-input.config-products-directory-input {
+  width: min(760px, 100%);
+  min-width: 420px;
+  max-width: 100%;
+  text-align: left;
+  flex: 1 1 420px;
+}
+
 .text-input.config-distance-input {
   min-width: 56px;
 }

@@ -81,6 +81,9 @@
             <button class="tool-btn" :class="{ primary: activeTab === 'recipes' }" @click="activeTab = 'recipes'">
               Receptury
             </button>
+            <button class="tool-btn" :class="{ primary: activeTab === 'reports' }" @click="activeTab = 'reports'">
+              Raporty
+            </button>
             <button class="tool-btn" :class="{ primary: isConfigPanelOpen }" @click="toggleConfigPanel">
               Config
             </button>
@@ -92,7 +95,7 @@
             <div class="panel-header">
               <span>Config</span>
               <div class="panel-actions">
-                <button class="tool-btn compact primary" :disabled="!isConfigDirty || isConfigSaving" @click="saveConfig">
+                <button class="tool-btn compact primary" :disabled="!isConfigLoaded || !isConfigDirty || isConfigSaving" @click="saveConfig">
                   {{ isConfigSaving ? 'Zapisywanie...' : 'Zapisz' }}
                 </button>
                 <button class="tool-btn compact" @click="toggleConfigPanel">Zamknij</button>
@@ -239,6 +242,34 @@
                   <span class="panel-caption">Parametry maszyn</span>
                   <button class="tool-btn compact primary" @click="addConfigMachine">Dodaj maszynę</button>
                 </div>
+
+                <article class="config-station-card">
+                  <div class="config-station-header">
+                    <div class="config-station-title-wrap">
+                      <span class="config-station-title">Folder źródłowy Excel</span>
+                    </div>
+                    <div class="config-station-actions">
+                      <button class="tool-btn compact" :disabled="isSelectingProductsDirectory" @click="selectProductsDirectory">
+                        {{ isSelectingProductsDirectory ? 'Otwieranie...' : 'Wybierz folder' }}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="config-punch-list">
+                    <div class="config-punch-row config-machine-row">
+                      <span class="config-punch-label">Ścieżka</span>
+                      <input
+                        class="text-input config-punch-input config-products-directory-input"
+                        :value="configProductsDirectory"
+                        placeholder="C:\\Folder\\Z\\Plikami"
+                        @input="updateConfigProductsDirectory($event.target.value)"
+                      />
+                    </div>
+                    <div class="panel-caption">
+                      Z tego folderu aplikacja odczytuje, importuje i zapisuje pliki `.xlsx`.
+                    </div>
+                  </div>
+                </article>
 
                 <div v-if="configMachines.length" class="config-stations">
                   <article v-for="(machine, machineIndex) in configMachines" :key="machine.id" class="config-station-card">
@@ -877,10 +908,10 @@
                 <div class="panel-actions">
                   <button
                     class="tool-btn compact primary"
-                    :disabled="!recipeRows.length || !hasConfiguredStationLengthRanges"
-                    @click="autoAssignMergeRecipeStations"
+                    :disabled="!recipeRows.length || !hasConfiguredStations"
+                    @click="openStationAutoAssignDialog('merge')"
                   >
-                    Automatycznie przydziel wybijaki
+                    Automatycznie przydziel stanowiska
                   </button>
                   <div v-if="availableMergeGroups.length" class="merge-group-filter">
                     <button
@@ -1086,8 +1117,31 @@
           <div class="panel recipe-library-panel">
             <div class="panel-header">
               <span>Zapisane receptury</span>
-              <span class="panel-caption">{{ filteredRecipeCatalog.length }} / {{ recipeCatalog.length }}</span>
+              <div class="panel-actions">
+                <span class="panel-caption">{{ filteredRecipeCatalog.length }} / {{ recipeCatalog.length }}</span>
+                <input
+                  ref="recipeImportInput"
+                  type="file"
+                  accept=".json,application/json"
+                  class="visually-hidden"
+                  @change="handleRecipeImport"
+                />
+                <button class="tool-btn compact" :disabled="isRecipeCatalogActionLoading" @click="exportRecipeCatalog">
+                  Eksport receptur
+                </button>
+                <button
+                  class="tool-btn compact"
+                  :disabled="isRecipeCatalogActionLoading || !selectedRecipeCatalogCount"
+                  @click="exportSelectedRecipes"
+                >
+                  Eksport zaznaczonych ({{ selectedRecipeCatalogCount }})
+                </button>
+                <button class="tool-btn compact" :disabled="isRecipeCatalogActionLoading" @click="triggerRecipeImport">
+                  {{ isRecipeCatalogActionLoading ? 'Import...' : 'Import receptur' }}
+                </button>
+              </div>
             </div>
+            <div v-if="recipeCatalogActionMessage" class="save-status" :class="{ error: recipeCatalogActionError }">{{ recipeCatalogActionMessage }}</div>
             <div class="recipe-library-filters">
               <div class="merge-search recipe-catalog-search recipe-library-search">
                 <div class="search-input-wrap">
@@ -1128,10 +1182,109 @@
               :rows="filteredRecipeCatalog"
               :labels="recipeSummaryLabels"
               empty-text="Brak receptur"
+              :selectable="true"
+              selection-key="nazwaReceptury"
+              :selected-keys="selectedRecipeNames"
               @row-click="selectRecipePreview"
+              @toggle-row="toggleRecipeCatalogSelection"
+              @toggle-all="toggleAllRecipeCatalogSelection"
             />
           </div>
         </section>
+
+        <section v-if="activeTab === 'reports'" class="section">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">Raporty</h2>
+              <p class="section-subtitle">Eksport raportu Excel z aktualnej bazy danych albo z wybranych odłożonych prac.</p>
+            </div>
+          </div>
+
+          <div class="panel recipe-library-panel">
+            <div class="panel-header">
+              <span>Generator raportu</span>
+              <div class="panel-actions">
+                <button class="tool-btn compact primary" :disabled="!canExportReport || isReportExportLoading" @click="exportReportToExcel">
+                  {{ isReportExportLoading ? 'Eksport...' : 'Eksport do Excela' }}
+                </button>
+              </div>
+            </div>
+            <div v-if="reportMessage" class="save-status" :class="{ error: reportError }">{{ reportMessage }}</div>
+
+            <div class="recipe-library-filters">
+              <label class="rename-field">
+                <span>Źródło raportu</span>
+                <select v-model="reportSourceMode" class="select-input recipe-filter-select">
+                  <option value="current">Aktualna baza danych</option>
+                  <option value="saved">Wybrane odłożone prace</option>
+                </select>
+              </label>
+            </div>
+
+            <div v-if="reportSourceMode === 'current'" class="expanded-empty">
+              Raport zostanie wygenerowany z aktualnie wczytanych wierszy `WorkMain` z bazy danych.
+              Znaleziono: <strong>{{ activeWorkRows.length }}</strong> aktywnych pozycji.
+            </div>
+
+            <div v-else>
+              <div class="single-element-summary">
+                <span>Dostępne odłożone prace: {{ savedRows.length }}</span>
+                <span>Zaznaczone: {{ selectedReportSavedWorkCount }}</span>
+              </div>
+              <div v-if="savedRows.length" class="single-element-list report-saved-list">
+                <div v-for="row in savedRows" :key="`report-${row.idRap}`" class="single-element-row">
+                  <label class="single-element-check">
+                    <input
+                      type="checkbox"
+                      :checked="isReportSavedWorkSelected(row.idRap)"
+                      @change="toggleReportSavedWork(row.idRap, $event.target.checked)"
+                    />
+                    <span class="single-element-row-text">
+                      {{ row.NazwaRec || 'Odłożona praca' }} | {{ row.Wiersze || 0 }} pozycji | {{ row.CzasOdloz || 'Brak daty' }}
+                    </span>
+                  </label>
+                </div>
+              </div>
+              <div v-else class="expanded-empty">Brak odłożonych prac do raportu.</div>
+            </div>
+          </div>
+        </section>
+
+        <div v-if="recipeImportConflictDialog.visible" class="confirm-modal-overlay" @click.self="cancelRecipeImportConflict">
+          <div class="confirm-modal panel" @click.stop>
+            <div class="panel-header">
+              <span>Import receptur</span>
+            </div>
+            <div class="confirm-modal-body">
+              <p>W pliku są receptury o nazwach, które już istnieją. Czy chcesz je podmienić?</p>
+              <p class="panel-caption">{{ recipeImportConflictDialog.duplicateNames.join(', ') }}</p>
+              <div class="confirm-modal-actions">
+                <button class="tool-btn compact" :disabled="isRecipeCatalogActionLoading" @click="cancelRecipeImportConflict">Anuluj</button>
+                <button class="tool-btn compact primary" :disabled="isRecipeCatalogActionLoading" @click="confirmRecipeImportConflict">
+                  {{ isRecipeCatalogActionLoading ? 'Import...' : 'Podmień i importuj' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="stationAutoAssignDialog.visible" class="confirm-modal-overlay" @click.self="closeStationAutoAssignDialog">
+          <div class="confirm-modal panel" @click.stop>
+            <div class="panel-header">
+              <span>Automatyczny przydział stanowisk</span>
+            </div>
+            <div class="confirm-modal-body">
+              <p>Wybierz sposób przydzielania stanowisk.</p>
+              <div class="confirm-modal-actions">
+                <button class="tool-btn compact" @click="applyStationAutoAssignMode('similar-together')">1. Bliskie wymiary razem</button>
+                <button class="tool-btn compact" @click="applyStationAutoAssignMode('similar-separate')">2. Bliskie wymiary osobno</button>
+                <button class="tool-btn compact primary" @click="applyStationAutoAssignMode('length-ranges')">3. Według ustawień długości</button>
+                <button class="tool-btn compact" @click="applyStationAutoAssignMode('by-products')">4. Produktami</button>
+                <button class="tool-btn compact" @click="closeStationAutoAssignDialog">Anuluj</button>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <div v-if="isSavedRecipePreviewOpen" class="confirm-modal-overlay saved-recipe-preview-overlay" @click.self="closeSavedRecipePreview">
           <div class="confirm-modal panel panel-wide work-recipe-preview-modal saved-recipe-preview-modal" @click.stop>
@@ -1247,8 +1400,8 @@
               </div>
               <button
                 class="tool-btn"
-                :disabled="!activeWorkRows.length || !hasConfiguredStationLengthRanges || workEditingRowId !== null || isWorkCorrectionSaving"
-                @click="autoAssignWorkStations"
+                :disabled="!activeWorkRows.length || !hasConfiguredStations || workEditingRowId !== null || isWorkCorrectionSaving"
+                @click="openStationAutoAssignDialog('work')"
               >
                 Automatycznie przydziel stanowiska
               </button>
@@ -1576,17 +1729,14 @@ const recipeColumns = [
   'TekstDoDruku',
 ];
 const workRecipePreviewColumns = recipeColumns.filter(
-  (column) => !['idReceptury', 'idSkladowej', 'iloscWykonana', 'Informacje'].includes(column),
+  (column) => !['idReceptury', 'idSkladowej', 'iloscWykonana', 'Informacje', 'grupa', 'priorytet'].includes(column),
 );
 const mergeRecipeColumns = [
-  'nazwaSkladowej',
   'TekstDoDruku',
   'dlugosc',
   'grubosc',
   'szerokosc',
   'material',
-  'grupa',
-  'priorytet',
   'ilosc',
   'Klasa',
   'wybijak',
@@ -1613,16 +1763,13 @@ const recipeColumnLabels = {
 
 const workColumns = [
   'id',
-  'Nazwa',
+  'TekstDoDruku',
   'Dlugosc',
   'Grubosc',
   'Szerokosc',
   'Material',
-  'TekstDoDruku',
-  'Wybijak',
   'Stanowisko',
   'Klasa',
-  'Sztuk',
   'Progress',
 ];
 const savedWorkPreviewColumns = [
@@ -1674,10 +1821,13 @@ const isConfigPanelOpen = ref(false);
 const activeConfigTab = ref('stations');
 const configStations = ref([]);
 const configMachines = ref([]);
+const configProductsDirectory = ref('');
 const favoriteElements = ref([]);
 const activeMachineId = ref('machine-1');
-const savedConfigSnapshot = ref('{"stations":[],"activeMachineId":"machine-1","machines":[{"id":"machine-1","name":"Maszyna 1","rowLimit":500}],"favoriteElements":[]}');
+const savedConfigSnapshot = ref('{"productsDirectory":"","stations":[],"activeMachineId":"machine-1","machines":[{"id":"machine-1","name":"Maszyna 1","rowLimit":500}],"favoriteElements":[]}');
 const isConfigSaving = ref(false);
+const isSelectingProductsDirectory = ref(false);
+const isConfigLoaded = ref(false);
 const configSaveMessage = ref('');
 const configSaveError = ref(false);
 const configUnsavedDialog = ref({
@@ -1697,6 +1847,10 @@ const mergeProductSearch = ref('');
 const mergeAlert = ref({
   visible: false,
   message: '',
+});
+const stationAutoAssignDialog = ref({
+  visible: false,
+  target: '',
 });
 const lastMergeInteractedProduct = ref('');
 const mergeCheckboxResetProduct = ref('');
@@ -1724,6 +1878,15 @@ const selectedRecipePreviewName = ref('');
 const recipeCatalogSearch = ref('');
 const recipeCatalogMaterialFilter = ref('');
 const recipeCatalogUsageFilter = ref('all');
+const reportSourceMode = ref('current');
+const selectedReportSavedWorkIds = ref([]);
+const reportMessage = ref('');
+const reportError = ref(false);
+const isReportExportLoading = ref(false);
+const selectedRecipeNames = ref([]);
+const recipeCatalogActionMessage = ref('');
+const recipeCatalogActionError = ref(false);
+const isRecipeCatalogActionLoading = ref(false);
 const isRecipePreviewEditMode = ref(false);
 const recipePreviewDraftRows = ref([]);
 const recipePreviewEditingCell = ref(null);
@@ -1769,6 +1932,7 @@ const editingRows = ref([]);
 const activeEditCell = ref(null);
 const collapsedRecipeGroups = ref({});
 const fileImportInput = ref(null);
+const recipeImportInput = ref(null);
 const confirmDialog = ref({
   visible: false,
   action: '',
@@ -1778,6 +1942,11 @@ const saveRecipeDialog = ref({
   visible: false,
   name: '',
   error: '',
+});
+const recipeImportConflictDialog = ref({
+  visible: false,
+  contentText: '',
+  duplicateNames: [],
 });
 const restoreSavedWorkDialog = ref({
   visible: false,
@@ -2013,6 +2182,10 @@ const filteredRecipeCatalog = computed(() => {
     return matchesQuery && matchesMaterial && matchesUsage;
   });
 });
+const selectedRecipeCatalogEntries = computed(() =>
+  savedRecipeCatalog.value.filter((entry) => selectedRecipeNames.value.includes(entry.nazwaReceptury)),
+);
+const selectedRecipeCatalogCount = computed(() => selectedRecipeCatalogEntries.value.length);
 
 const selectedRecipePreviewRows = computed(() => {
   const recipe = recipeCatalogEntries.value.find((entry) => entry.nazwaReceptury === selectedRecipePreviewName.value);
@@ -2028,6 +2201,13 @@ const filteredWorkRecipeNames = computed(() => {
 });
 const selectedSavedWorkPreview = computed(
   () => savedRows.value.find((row) => String(row.idRap) === String(savedWorkPreviewId.value)) || null,
+);
+const selectedReportSavedWorkRows = computed(() =>
+  savedRows.value.filter((row) => selectedReportSavedWorkIds.value.includes(String(row.idRap))),
+);
+const selectedReportSavedWorkCount = computed(() => selectedReportSavedWorkRows.value.length);
+const canExportReport = computed(() =>
+  reportSourceMode.value === 'current' ? activeWorkRows.value.length > 0 : selectedReportSavedWorkCount.value > 0,
 );
 const savedWorkPreviewRows = computed(() => {
   if (!selectedSavedWorkPreview.value?.rows) return [];
@@ -2080,6 +2260,7 @@ const isMachineWorking = computed(() => machineStatusValue.value > 0);
 const machineStatusLabel = computed(() => (isMachineWorking.value ? 'Maszyna pracuje' : 'Maszyna zatrzymana'));
 const machineStatusBadgeClass = computed(() => (isMachineWorking.value ? 'online' : 'offline'));
 const configPayload = computed(() => ({
+  productsDirectory: String(configProductsDirectory.value ?? '').trim(),
   stations: configStations.value.map((station) => ({
     id: station.id,
     punches: station.punches.map((punch) => ({
@@ -2121,6 +2302,7 @@ const hasConfiguredStationLengthRanges = computed(() =>
     return minLength > 0 || maxLength > 0;
   }),
 );
+const hasConfiguredStations = computed(() => configStations.value.length > 0);
 
 const hasPendingWorkChanges = computed(() => serializeWorkRows(workRows.value) !== workRowsSnapshot.value);
 const activeWorkRows = computed(() => workRows.value.filter((row) => !row.__disabled));
@@ -2205,6 +2387,7 @@ function getWorkRowPayload(row, index = 0) {
   const wybijak = resolveWorkWybijakValue(stanowisko, dlugosc, row?.Wybijak);
   return {
     id: normalizeWorkCorrectionValue(row?.id || index + 1),
+    SourceProductName: String(row?.SourceProductName ?? '').trim(),
     Nazwa: String(row?.Nazwa ?? '').trim(),
     NazwaRec: String(row?.NazwaRec ?? '').trim(),
     Material: String(row?.Material ?? '').trim(),
@@ -2223,6 +2406,13 @@ function getWorkRowPayload(row, index = 0) {
     zliczonaIloscIn: sztuk,
     Stanowisko: stanowisko,
   };
+}
+
+function normalizeDefaultClassValue(value, fallback = 2) {
+  if (value === null || value === undefined) return fallback;
+  if (typeof value === 'string' && !value.trim()) return fallback;
+  const normalizedValue = normalizeWorkCorrectionValue(value);
+  return normalizedValue > 0 ? normalizedValue : fallback;
 }
 
 function serializeWorkRows(rows) {
@@ -2250,6 +2440,7 @@ function getNextWorkRowId() {
 function createEmptyWorkRow() {
   return normalizeWorkRow({
     id: getNextWorkRowId(),
+    SourceProductName: '',
     Nazwa: '',
     Material: '',
     Przekroj: '',
@@ -2260,7 +2451,7 @@ function createEmptyWorkRow() {
     WykonaneSztuki: 0,
     Wybijak: 0,
     TekstDoDruku: '',
-    Klasa: 0,
+    Klasa: 2,
     zliczonaIloscIn: 0,
     Stanowisko: '',
   });
@@ -2401,6 +2592,7 @@ function createWorkRowFromProductRow(sourceRow = {}) {
 
   return normalizeWorkRow({
     id: getNextWorkRowId(),
+    SourceProductName: sourceRow._sourceFile ?? sourceRow.SourceProductName ?? '',
     Nazwa: sourceRow.Nazwa ?? sourceRow.nazwaSkladowej ?? '',
     Material: sourceRow['Materiał'] ?? sourceRow.material ?? '',
     Przekroj: buildPrzekrojValue(thickness, width),
@@ -2411,7 +2603,7 @@ function createWorkRowFromProductRow(sourceRow = {}) {
     WykonaneSztuki: 0,
     Wybijak: station ? getWybijakValueForStation(station, length) : normalizeWorkCorrectionValue(sourceRow.Wybijak ?? sourceRow.wybijak ?? 0),
     TekstDoDruku: sourceRow.Kod ?? sourceRow.TekstDoDruku ?? '',
-    Klasa: normalizeWorkCorrectionValue(sourceRow.Klasa ?? 0),
+    Klasa: normalizeDefaultClassValue(sourceRow.Klasa),
     zliczonaIloscIn: quantity,
     Stanowisko: station,
   });
@@ -2719,7 +2911,9 @@ async function loadMachineStatus() {
     throw new Error(payload.error || 'Nie udało się pobrać statusu maszyny.');
   }
 
-  machineStatusRow.value = payload.status ?? null;
+  if (payload.status && typeof payload.status === 'object') {
+    machineStatusRow.value = payload.status;
+  }
 }
 
 async function loadDatabaseConnectionStatus() {
@@ -2927,6 +3121,7 @@ function normalizeLoadedConfigMachine(machine, index = 0) {
 }
 
 function applyLoadedConfig(config) {
+  const productsDirectory = String(config?.productsDirectory || '').trim();
   const stations = Array.isArray(config?.stations) ? config.stations.map((station) => normalizeLoadedConfigStation(station)) : [];
   const machines = Array.isArray(config?.machines) && config.machines.length
     ? config.machines.map((machine, index) => normalizeLoadedConfigMachine(machine, index))
@@ -2934,6 +3129,7 @@ function applyLoadedConfig(config) {
   const favorites = Array.isArray(config?.favoriteElements)
     ? config.favoriteElements.map((entry) => normalizeLoadedFavoriteElement(entry))
     : [];
+  configProductsDirectory.value = productsDirectory;
   configStations.value = stations;
   configMachines.value = machines;
   favoriteElements.value = favorites;
@@ -2941,6 +3137,7 @@ function applyLoadedConfig(config) {
     ? config.activeMachineId
     : machines[0].id;
   savedConfigSnapshot.value = JSON.stringify({
+    productsDirectory,
     stations: stations.map((station) => ({
       id: station.id,
       punches: station.punches.map((punch) => ({ id: punch.id, number: String(punch.number ?? '') })),
@@ -2974,6 +3171,7 @@ function applyLoadedConfig(config) {
 }
 
 async function loadConfig() {
+  isConfigLoaded.value = false;
   const response = await fetch(`/api/config?t=${Date.now()}`, { cache: 'no-store' });
   const payload = await response.json().catch(() => ({}));
 
@@ -2982,13 +3180,22 @@ async function loadConfig() {
   }
 
   applyLoadedConfig(payload.config ?? { stations: [] });
+  isConfigLoaded.value = true;
+  await loadProductFiles();
 }
 
 async function saveConfig() {
+  if (!isConfigLoaded.value) {
+    configSaveError.value = true;
+    configSaveMessage.value = 'Konfiguracja nie została jeszcze w pełni wczytana. Spróbuj ponownie za chwilę.';
+    return;
+  }
+
   isConfigSaving.value = true;
   clearConfigSaveMessage();
 
   try {
+    const previousProductsDirectory = savedConfigSnapshot.value ? JSON.parse(savedConfigSnapshot.value).productsDirectory || '' : '';
     const response = await fetch('/api/config', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -3001,6 +3208,19 @@ async function saveConfig() {
     }
 
     applyLoadedConfig(payload.config ?? configPayload.value);
+    if (previousProductsDirectory !== configProductsDirectory.value) {
+      try {
+        await loadProductFiles();
+        if (selectedProductName.value && !productRowsMap.value[selectedProductName.value]) {
+          resetProductModalState();
+        }
+      } catch (reloadError) {
+        configSaveError.value = false;
+        configSaveMessage.value =
+          `Konfiguracja została zapisana, ale nie udało się odświeżyć plików z nowego folderu: ${reloadError.message || reloadError}`;
+        return;
+      }
+    }
     configSaveMessage.value = 'Konfiguracja została zapisana.';
   } catch (error) {
     configSaveError.value = true;
@@ -3121,6 +3341,40 @@ function updateConfigMachine(machineId, field, value) {
   );
 }
 
+function updateConfigProductsDirectory(value) {
+  configProductsDirectory.value = String(value ?? '');
+}
+
+async function selectProductsDirectory() {
+  if (isSelectingProductsDirectory.value) return;
+
+  isSelectingProductsDirectory.value = true;
+  clearConfigSaveMessage();
+
+  try {
+    const response = await fetch('/api/config/select-products-directory', {
+      method: 'POST',
+      cache: 'no-store',
+    });
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(payload.error || 'Nie udało się wybrać folderu.');
+    }
+
+    if (payload.cancelled) return;
+
+    configProductsDirectory.value = String(payload.productsDirectory || '');
+    configSaveError.value = false;
+    configSaveMessage.value = 'Wybrano folder. Kliknij "Zapisz" u góry panelu, aby zapisać zmianę.';
+  } catch (error) {
+    configSaveError.value = true;
+    configSaveMessage.value = error.message || 'Nie udało się wybrać folderu.';
+  } finally {
+    isSelectingProductsDirectory.value = false;
+  }
+}
+
 function selectActiveMachine(machineId) {
   activeMachineId.value = machineId;
 }
@@ -3160,9 +3414,128 @@ function getConfigStationValueByLength(lengthValue) {
   return '';
 }
 
-function autoAssignMergeRecipeStations() {
-  if (!recipeRows.value.length || !hasConfiguredStationLengthRanges.value) return;
+function getConfiguredStationValues() {
+  return configStations.value.map((_, index) => String(index + 1));
+}
 
+function getStationAutoAssignModeLabel(mode) {
+  if (mode === 'similar-together') return 'bliskich wymiarów razem';
+  if (mode === 'similar-separate') return 'bliskich wymiarów osobno';
+  if (mode === 'by-products') return 'produktów';
+  return 'ustawień długości';
+}
+
+function buildStationAssignments(rows, mode, getLength, getRowKey) {
+  const assignments = new Map();
+
+  if (mode === 'length-ranges') {
+    rows.forEach((row) => {
+      const station = getConfigStationValueByLength(getLength(row));
+      if (station) {
+        assignments.set(getRowKey(row), station);
+      }
+    });
+    return assignments;
+  }
+
+  const stationValues = getConfiguredStationValues();
+  if (!stationValues.length) return assignments;
+
+  const sortableRows = rows
+    .map((row, index) => ({
+      row,
+      key: getRowKey(row),
+      length: getNormalizedLengthValue(getLength(row)),
+      index,
+    }))
+    .filter((entry) => entry.length > 0)
+    .sort((left, right) => left.length - right.length || left.index - right.index);
+
+  if (!sortableRows.length) return assignments;
+
+  sortableRows.forEach((entry, index) => {
+    let stationIndex = 0;
+
+    if (mode === 'similar-separate') {
+      stationIndex = index % stationValues.length;
+    } else {
+      stationIndex = Math.min(Math.floor((index * stationValues.length) / sortableRows.length), stationValues.length - 1);
+    }
+
+    assignments.set(entry.key, stationValues[stationIndex]);
+  });
+
+  return assignments;
+}
+
+function buildStationAssignmentsByGroup(rows, getRowKey, getGroupKey) {
+  const assignments = new Map();
+  const stationValues = getConfiguredStationValues();
+  if (!stationValues.length) return assignments;
+
+  const normalizedGroups = [];
+  rows.forEach((row) => {
+    const groupKey = String(getGroupKey(row) ?? '').trim();
+    if (groupKey && !normalizedGroups.includes(groupKey)) {
+      normalizedGroups.push(groupKey);
+    }
+  });
+
+  normalizedGroups.forEach((groupKey, groupIndex) => {
+    const stationValue = stationValues[groupIndex % stationValues.length];
+    rows.forEach((row) => {
+      if (String(getGroupKey(row) ?? '').trim() === groupKey) {
+        assignments.set(getRowKey(row), stationValue);
+      }
+    });
+  });
+
+  return assignments;
+}
+
+function closeStationAutoAssignDialog() {
+  stationAutoAssignDialog.value = {
+    visible: false,
+    target: '',
+  };
+}
+
+function openStationAutoAssignDialog(target) {
+  if (!hasConfiguredStations.value) {
+    if (target === 'merge') {
+      mergeAlert.value = {
+        visible: true,
+        message: 'Najpierw dodaj co najmniej jedno stanowisko w konfiguracji.',
+      };
+      return;
+    }
+
+    workUploadError.value = true;
+    workUploadMessage.value = 'Najpierw dodaj co najmniej jedno stanowisko w konfiguracji.';
+    return;
+  }
+
+  stationAutoAssignDialog.value = {
+    visible: true,
+    target,
+  };
+}
+
+function applyMergeStationAssignments(mode) {
+  if (!recipeRows.value.length) return;
+  if (mode === 'length-ranges' && !hasConfiguredStationLengthRanges.value) {
+    mergeAlert.value = {
+      visible: true,
+      message: 'Brak zakresów długości w konfiguracji dla tego trybu przydziału.',
+    };
+    return;
+  }
+
+  const allRows = Object.values(mergeRecipeDrafts.value).flat();
+  const assignments =
+    mode === 'by-products'
+      ? buildStationAssignmentsByGroup(allRows, (row) => row._localId, (row) => row._sourceProductName ?? row.nazwaProduktu)
+      : buildStationAssignments(allRows, mode, (row) => row.dlugosc, (row) => row._localId);
   let updatedCount = 0;
   let assignedCount = 0;
 
@@ -3170,10 +3543,12 @@ function autoAssignMergeRecipeStations() {
     Object.entries(mergeRecipeDrafts.value).map(([productName, rows]) => [
       productName,
       rows.map((row) => {
-        const autoStation = getConfigStationValueByLength(row.dlugosc);
+        const autoStation = assignments.get(row._localId) || '';
         const nextStation = autoStation || normalizeStationValue(row.Stanowisko);
         const nextWybijak = nextStation ? getWybijakValueForStation(nextStation, row.dlugosc) : '';
-        const hasChanged = String(nextStation ?? '') !== String(normalizeStationValue(row.Stanowisko) ?? '') || String(nextWybijak ?? '') !== String(row.wybijak ?? '');
+        const hasChanged =
+          String(nextStation ?? '') !== String(normalizeStationValue(row.Stanowisko) ?? '') ||
+          String(nextWybijak ?? '') !== String(row.wybijak ?? '');
 
         if (autoStation) {
           assignedCount += 1;
@@ -3196,9 +3571,86 @@ function autoAssignMergeRecipeStations() {
     visible: true,
     message:
       updatedCount > 0
-        ? `Automatycznie przydzielono ${assignedCount} wierszy po długości i przeliczono wybijaki.`
-        : 'Nie znaleziono pasujących zakresów długości dla żadnego wiersza.',
+        ? `Przydzielono ${assignedCount} wierszy według trybu ${getStationAutoAssignModeLabel(mode)} i przeliczono wybijaki.`
+        : 'Nie udało się przydzielić stanowisk dla żadnego wiersza.',
   };
+}
+
+function applyWorkStationAssignments(mode) {
+  if (workEditingRowId.value !== null) {
+    workUploadError.value = true;
+    workUploadMessage.value = 'Najpierw zakończ edycję wszystkich wierszy, zanim przydzielisz stanowiska automatycznie.';
+    return;
+  }
+
+  if (!activeWorkRows.value.length) {
+    workUploadError.value = true;
+    workUploadMessage.value = 'Brak wierszy do automatycznego przydziału stanowisk.';
+    return;
+  }
+
+  if (mode === 'length-ranges' && !hasConfiguredStationLengthRanges.value) {
+    workUploadError.value = true;
+    workUploadMessage.value = 'Brak zakresów długości w konfiguracji dla tego trybu przydziału.';
+    return;
+  }
+
+  if (mode === 'by-products' && !activeWorkRows.value.some((row) => String(row.SourceProductName ?? '').trim())) {
+    workUploadError.value = true;
+    workUploadMessage.value = 'Brak informacji o produktach źródłowych dla aktualnych wierszy.';
+    return;
+  }
+
+  const assignments =
+    mode === 'by-products'
+      ? buildStationAssignmentsByGroup(activeWorkRows.value, (row) => row.__clientId, (row) => row.SourceProductName)
+      : buildStationAssignments(activeWorkRows.value, mode, (row) => row.Dlugosc, (row) => row.__clientId);
+  let updatedCount = 0;
+  let assignedCount = 0;
+
+  workRows.value = workRows.value.map((row) => {
+    if (row.__disabled) return row;
+
+    const autoStation = assignments.get(row.__clientId) || '';
+    const nextStation = autoStation || normalizeStationValue(row.Stanowisko);
+    const nextWybijak = nextStation ? getWybijakValueForStation(nextStation, row.Dlugosc) : '';
+    const hasChanged =
+      String(nextStation ?? '') !== String(normalizeStationValue(row.Stanowisko) ?? '') ||
+      String(nextWybijak ?? '') !== String(row.Wybijak ?? '');
+
+    if (autoStation) {
+      assignedCount += 1;
+    }
+    if (hasChanged) {
+      updatedCount += 1;
+    }
+
+    return {
+      ...row,
+      Stanowisko: nextStation,
+      Wybijak: nextWybijak,
+    };
+  });
+
+  workUploadError.value = false;
+  workUploadMessage.value =
+    updatedCount > 0
+      ? `Przydzielono ${assignedCount} wierszy według trybu ${getStationAutoAssignModeLabel(mode)} i przeliczono wybijaki.`
+      : 'Nie udało się przydzielić stanowisk dla żadnego wiersza.';
+}
+
+function applyStationAutoAssignMode(mode) {
+  const target = stationAutoAssignDialog.value.target;
+  closeStationAutoAssignDialog();
+
+  if (target === 'merge') {
+    applyMergeStationAssignments(mode);
+    return;
+  }
+
+  if (target === 'work') {
+    applyWorkStationAssignments(mode);
+  }
 }
 
 function getConfigStationOrderedPunches(station) {
@@ -3891,6 +4343,25 @@ function readFileAsBase64(file) {
   });
 }
 
+function readFileAsText(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
+    reader.onerror = () => reject(reader.error || new Error('Nie udało się odczytać pliku.'));
+    reader.readAsText(file, 'utf-8');
+  });
+}
+
+function parseSavedWorkRows(serializedRows) {
+  try {
+    const parsedRows = JSON.parse(serializedRows);
+    if (!Array.isArray(parsedRows)) return [];
+    return parsedRows.map((row, index) => normalizeWorkRow(row, index));
+  } catch {
+    return [];
+  }
+}
+
 async function postProductFileAction(url, payload) {
   const response = await fetch(url, {
     method: 'POST',
@@ -3947,7 +4418,7 @@ function normalizeProductRows(fileName, headers, rows) {
       const width = getCellValue(sourceRow, ['Szerokość', 'Sz', 'SZER. [mm]', 'SZEROKOŚĆ', 'SZEROKOSC', 'Szerokosc']) || rowValues[4] || '';
       const material = getCellValue(sourceRow, ['Materiał', 'MATERIAŁ', 'MATERIAL', 'OPIS', 'gatunek drewna']) || rowValues[7] || '';
       const code = getCellValue(sourceRow, ['Kod', 'NR CZĘŚCI', 'NR CZESCI', 'Nadruk']) || rowValues[1] || rowValues[0] || '';
-      const klasa = getCellValue(sourceRow, ['Klasa', 'KLASA']) || '';
+      const klasa = normalizeDefaultClassValue(getCellValue(sourceRow, ['Klasa', 'KLASA']));
       const grupa = getCellValue(sourceRow, ['Grupa', 'GRUPA']) || '';
       const priorytet = getCellValue(sourceRow, ['Priorytet', 'PRIORYTET']) || '';
       const stanowisko = getCellValue(sourceRow, ['Stanowisko', 'STANOWISKO']) || '';
@@ -4003,6 +4474,9 @@ async function loadProductFiles() {
       nextMap[file.name] = normalizeProductRows(file.name, headers, rows);
     }
     productRowsMap.value = nextMap;
+    if (selectedProductName.value && !nextMap[selectedProductName.value]) {
+      resetProductModalState();
+    }
     reopenRememberedProductPreview();
   } finally {
     productsLoading.value = false;
@@ -4777,6 +5251,7 @@ async function loadSavedRecipes() {
 
   const recipes = Array.isArray(payload.recipes) ? payload.recipes : [];
   savedRecipeCatalog.value = recipes;
+  selectedRecipeNames.value = selectedRecipeNames.value.filter((name) => recipes.some((entry) => entry.nazwaReceptury === name));
 
   if (recipes.length) {
     const hasSelectedRecipe = recipes.some((entry) => entry.nazwaReceptury === selectedRecipe.value);
@@ -4795,6 +5270,16 @@ async function loadSavedRecipes() {
   selectedRecipe.value = '';
   selectedRecipePreviewName.value = '';
 }
+
+watch(
+  savedRows,
+  () => {
+    selectedReportSavedWorkIds.value = selectedReportSavedWorkIds.value.filter((idRap) =>
+      savedRows.value.some((row) => String(row.idRap) === String(idRap)),
+    );
+  },
+  { deep: true },
+);
 
 function stepMergeProductQuantity(productName, delta) {
   lastMergeInteractedProduct.value = productName;
@@ -4897,6 +5382,331 @@ function resetRecipeCatalogFilters() {
   recipeCatalogUsageFilter.value = 'all';
 }
 
+function clearRecipeCatalogActionMessage() {
+  recipeCatalogActionMessage.value = '';
+  recipeCatalogActionError.value = false;
+}
+
+function clearReportMessage() {
+  reportMessage.value = '';
+  reportError.value = false;
+}
+
+function isReportSavedWorkSelected(idRap) {
+  return selectedReportSavedWorkIds.value.includes(String(idRap));
+}
+
+function toggleReportSavedWork(idRap, isChecked) {
+  const normalizedId = String(idRap);
+  selectedReportSavedWorkIds.value = isChecked
+    ? [...new Set([...selectedReportSavedWorkIds.value, normalizedId])]
+    : selectedReportSavedWorkIds.value.filter((entry) => entry !== normalizedId);
+}
+
+function buildReportDimensionLabel(row = {}) {
+  const dlugosc = normalizeWorkCorrectionValue(row.Dlugosc ?? row.dlugosc);
+  const szerokosc = normalizeWorkCorrectionValue(row.Szerokosc ?? row.szerokosc);
+  const grubosc = normalizeWorkCorrectionValue(row.Grubosc ?? row.grubosc ?? row.gr);
+  return `[${dlugosc} x ${szerokosc} x ${grubosc}]`;
+}
+
+function aggregateReportRows(rows = []) {
+  const reportMap = new Map();
+
+  rows.forEach((row) => {
+    const code = String(row?.TekstDoDruku ?? row?.Kod ?? '').trim() || '—';
+    const dimensions = buildReportDimensionLabel(row);
+    const total = normalizeWorkCorrectionValue(row?.Sztuk ?? row?.ilosc ?? row?.Progress?.total ?? 0);
+    const done = normalizeWorkCorrectionValue(row?.WykonaneSztuki ?? row?.iloscWykonana ?? row?.Progress?.done ?? 0);
+    const key = `${code}__${dimensions}`;
+    const current = reportMap.get(key) || {
+      'Kod / Tekst do druku': code,
+      'Wymiar [długość x szerokość x grubość]': dimensions,
+      'Ilość sztuk wyciętych': 0,
+      'Z ilu sztuk': 0,
+    };
+
+    current['Ilość sztuk wyciętych'] += done;
+    current['Z ilu sztuk'] += total;
+    reportMap.set(key, current);
+  });
+
+  return [...reportMap.values()].sort((left, right) => {
+    const codeCompare = String(left['Kod / Tekst do druku']).localeCompare(String(right['Kod / Tekst do druku']), 'pl', { sensitivity: 'base' });
+    if (codeCompare !== 0) return codeCompare;
+    return String(left['Wymiar [długość x szerokość x grubość]']).localeCompare(String(right['Wymiar [długość x szerokość x grubość]']), 'pl', { sensitivity: 'base' });
+  });
+}
+
+function applyReportWorksheetStyles(worksheet, rows) {
+  const columns = [
+    'Kod / Tekst do druku',
+    'Wymiar [długość x szerokość x grubość]',
+    'Ilość sztuk wyciętych',
+    'Z ilu sztuk',
+  ];
+
+  const headerStyle = {
+    font: { bold: true, color: { rgb: 'FFFFFF' } },
+    fill: { fgColor: { rgb: '163A63' } },
+    alignment: { horizontal: 'center', vertical: 'center' },
+  };
+  const oddRowStyle = {
+    fill: { fgColor: { rgb: 'F2F4F7' } },
+    alignment: { horizontal: 'center', vertical: 'center' },
+  };
+  const evenRowStyle = {
+    fill: { fgColor: { rgb: 'E3E7ED' } },
+    alignment: { horizontal: 'center', vertical: 'center' },
+  };
+
+  columns.forEach((_, columnIndex) => {
+    const headerRef = XLSX.utils.encode_cell({ r: 0, c: columnIndex });
+    if (worksheet[headerRef]) {
+      worksheet[headerRef].s = headerStyle;
+    }
+  });
+
+  rows.forEach((_, rowIndex) => {
+    const rowStyle = rowIndex % 2 === 0 ? oddRowStyle : evenRowStyle;
+    columns.forEach((_, columnIndex) => {
+      const cellRef = XLSX.utils.encode_cell({ r: rowIndex + 1, c: columnIndex });
+      if (worksheet[cellRef]) {
+        worksheet[cellRef].s = rowStyle;
+      }
+    });
+  });
+}
+
+async function getStyledXlsx() {
+  await import('xlsx-js-style/dist/xlsx.bundle.js');
+  if (typeof window !== 'undefined' && window.XLSX) {
+    return window.XLSX;
+  }
+  throw new Error('Nie udało się załadować modułu eksportu Excela.');
+}
+
+function getReportSourceRows() {
+  if (reportSourceMode.value === 'saved') {
+    return selectedReportSavedWorkRows.value.flatMap((snapshot) => parseSavedWorkRows(snapshot.rows).filter((row) => !row.__disabled));
+  }
+  return activeWorkRows.value.map((row) => normalizeWorkRow(row));
+}
+
+async function exportReportToExcel() {
+  if (!canExportReport.value || isReportExportLoading.value) return;
+
+  isReportExportLoading.value = true;
+  clearReportMessage();
+
+  try {
+    const sourceRows = getReportSourceRows();
+    const aggregatedRows = aggregateReportRows(sourceRows);
+
+    if (!aggregatedRows.length) {
+      throw new Error('Brak danych do wygenerowania raportu.');
+    }
+
+    const XLSXStyle = await getStyledXlsx();
+    const workbook = XLSXStyle.utils.book_new();
+    const worksheet = XLSXStyle.utils.json_to_sheet(aggregatedRows);
+    applyReportWorksheetStyles(worksheet, aggregatedRows);
+    worksheet['!cols'] = [
+      { wch: 28 },
+      { wch: 28 },
+      { wch: 18 },
+      { wch: 14 },
+    ];
+    XLSXStyle.utils.book_append_sheet(workbook, worksheet, 'Raport');
+    const fileName =
+      reportSourceMode.value === 'saved'
+        ? `raport-odlozone-prace-${new Date().toISOString().slice(0, 10)}.xlsx`
+        : `raport-workmain-${new Date().toISOString().slice(0, 10)}.xlsx`;
+    XLSXStyle.writeFile(workbook, fileName);
+    reportMessage.value = `Wyeksportowano raport do pliku ${fileName}.`;
+  } catch (error) {
+    reportError.value = true;
+    reportMessage.value = error.message || 'Nie udało się wygenerować raportu.';
+  } finally {
+    isReportExportLoading.value = false;
+  }
+}
+
+function cancelRecipeImportConflict() {
+  recipeImportConflictDialog.value = {
+    visible: false,
+    contentText: '',
+    duplicateNames: [],
+  };
+}
+
+function triggerRecipeImport() {
+  if (isRecipeCatalogActionLoading.value) return;
+  recipeImportInput.value?.click();
+}
+
+function exportRecipeCatalog() {
+  if (isRecipeCatalogActionLoading.value) return;
+  clearRecipeCatalogActionMessage();
+  const link = document.createElement('a');
+  link.href = `/api/recipes/export?t=${Date.now()}`;
+  link.download = `receptury-export-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  recipeCatalogActionMessage.value = 'Rozpoczęto eksport receptur.';
+}
+
+function downloadRecipesExport(recipes, fileName) {
+  const blob = new Blob([JSON.stringify({ recipes }, null, 2)], { type: 'application/json;charset=utf-8' });
+  const objectUrl = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = objectUrl;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(objectUrl);
+}
+
+function exportSelectedRecipes() {
+  if (isRecipeCatalogActionLoading.value || !selectedRecipeCatalogCount.value) return;
+  clearRecipeCatalogActionMessage();
+  downloadRecipesExport(
+    selectedRecipeCatalogEntries.value,
+    `receptury-zaznaczone-${new Date().toISOString().slice(0, 10)}.json`,
+  );
+  recipeCatalogActionMessage.value = `Wyeksportowano ${selectedRecipeCatalogCount.value} zaznaczonych receptur.`;
+}
+
+async function importRecipesFromContent(contentText) {
+  const response = await fetch('/api/recipes/import', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ contentText }),
+  });
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(payload.error || 'Nie udało się zaimportować receptur.');
+  }
+
+  savedRecipeCatalog.value = Array.isArray(payload.recipes) ? payload.recipes : [];
+  selectedRecipeNames.value = [];
+  if (savedRecipeCatalog.value.length) {
+    const fallbackName = savedRecipeCatalog.value[0]?.nazwaReceptury || '';
+    if (!savedRecipeCatalog.value.some((entry) => entry.nazwaReceptury === selectedRecipe.value)) {
+      selectedRecipe.value = fallbackName;
+    }
+    if (!savedRecipeCatalog.value.some((entry) => entry.nazwaReceptury === selectedRecipePreviewName.value)) {
+      selectedRecipePreviewName.value = fallbackName;
+    }
+  }
+
+  recipeCatalogActionError.value = false;
+  const updatedRecipeNames = Array.isArray(payload.updatedRecipeNames) ? payload.updatedRecipeNames.filter(Boolean) : [];
+  const duplicateMessage = updatedRecipeNames.length
+    ? ` Istniały już receptury o tych nazwach i zostały podmienione: ${updatedRecipeNames.join(', ')}.`
+    : '';
+  recipeCatalogActionMessage.value =
+    `Zaimportowano receptury: dodano ${payload.addedCount ?? 0}, zaktualizowano ${payload.updatedCount ?? 0}.${duplicateMessage}`;
+}
+
+async function confirmRecipeImportConflict() {
+  if (!recipeImportConflictDialog.value.contentText) return;
+
+  isRecipeCatalogActionLoading.value = true;
+  clearRecipeCatalogActionMessage();
+
+  try {
+    const contentText = recipeImportConflictDialog.value.contentText;
+    await importRecipesFromContent(contentText);
+    cancelRecipeImportConflict();
+  } catch (error) {
+    recipeCatalogActionError.value = true;
+    recipeCatalogActionMessage.value = error.message || 'Nie udało się zaimportować receptur.';
+  } finally {
+    isRecipeCatalogActionLoading.value = false;
+  }
+}
+
+function toggleRecipeCatalogSelection(row) {
+  const recipeName = String(row?.nazwaReceptury || '').trim();
+  if (!recipeName) return;
+  selectedRecipeNames.value = selectedRecipeNames.value.includes(recipeName)
+    ? selectedRecipeNames.value.filter((name) => name !== recipeName)
+    : [...selectedRecipeNames.value, recipeName];
+}
+
+function toggleAllRecipeCatalogSelection(rows) {
+  const visibleNames = rows.map((row) => String(row?.nazwaReceptury || '').trim()).filter(Boolean);
+  if (!visibleNames.length) {
+    selectedRecipeNames.value = [];
+    return;
+  }
+
+  const allVisibleSelected = visibleNames.every((name) => selectedRecipeNames.value.includes(name));
+  if (allVisibleSelected) {
+    selectedRecipeNames.value = selectedRecipeNames.value.filter((name) => !visibleNames.includes(name));
+    return;
+  }
+
+  selectedRecipeNames.value = [...new Set([...selectedRecipeNames.value, ...visibleNames])];
+}
+
+async function handleRecipeImport(event) {
+  const [file] = event.target.files || [];
+  event.target.value = '';
+  if (!file) return;
+
+  if (!file.name.toLowerCase().endsWith('.json')) {
+    recipeCatalogActionError.value = true;
+    recipeCatalogActionMessage.value = 'Możesz importować tylko pliki .json.';
+    return;
+  }
+
+  isRecipeCatalogActionLoading.value = true;
+  clearRecipeCatalogActionMessage();
+
+  try {
+    const contentText = await readFileAsText(file);
+    const parsedPayload = JSON.parse(contentText);
+    const importedRecipes = Array.isArray(parsedPayload)
+      ? parsedPayload
+      : Array.isArray(parsedPayload?.recipes)
+        ? parsedPayload.recipes
+        : [];
+
+    if (!importedRecipes.length) {
+      throw new Error('Plik importu nie zawiera żadnych receptur.');
+    }
+
+    const existingRecipeNames = new Set(savedRecipeCatalog.value.map((entry) => String(entry?.nazwaReceptury || '').trim()).filter(Boolean));
+    const duplicateNames = [...new Set(
+      importedRecipes
+        .map((entry) => String(entry?.nazwaReceptury || '').trim())
+        .filter((name) => name && existingRecipeNames.has(name)),
+    )];
+
+    if (duplicateNames.length) {
+      isRecipeCatalogActionLoading.value = false;
+      recipeImportConflictDialog.value = {
+        visible: true,
+        contentText,
+        duplicateNames,
+      };
+      return;
+    }
+
+    await importRecipesFromContent(contentText);
+  } catch (error) {
+    recipeCatalogActionError.value = true;
+    recipeCatalogActionMessage.value = error.message || 'Nie udało się zaimportować receptur.';
+  } finally {
+    isRecipeCatalogActionLoading.value = false;
+  }
+}
+
 function requestDeleteRecipePreview() {
   if (!selectedRecipePreviewName.value) return;
   openConfirmDialog('delete-recipe', `Na pewno chcesz usunąć recepturę "${selectedRecipePreviewName.value}"?`);
@@ -4950,6 +5760,7 @@ async function executeDeleteRecipePreview() {
     }
 
     await loadSavedRecipes();
+    selectedRecipeNames.value = selectedRecipeNames.value.filter((name) => name !== deletedRecipeName);
     isRecipePreviewEditMode.value = false;
     recipePreviewDraftRows.value = [];
     recipePreviewEditingCell.value = null;
@@ -5143,6 +5954,20 @@ function handleGlobalEscape(event) {
   if (configUnsavedDialog.value.visible) {
     cancelConfigUnsavedDialog();
     return;
+  }
+
+  if (recipeImportConflictDialog.value.visible) {
+    cancelRecipeImportConflict();
+    return;
+  }
+
+  if (stationAutoAssignDialog.value.visible) {
+    closeStationAutoAssignDialog();
+    return;
+  }
+
+  if (reportMessage.value) {
+    clearReportMessage();
   }
 
   if (isConfigPanelOpen.value) {
@@ -5511,53 +6336,6 @@ async function loadRecipeToWorkMain() {
   }
 }
 
-function autoAssignWorkStations() {
-  if (workEditingRowId.value !== null) {
-    workUploadError.value = true;
-    workUploadMessage.value = 'Najpierw zakończ edycję wszystkich wierszy, zanim przydzielisz stanowiska automatycznie.';
-    return;
-  }
-
-  if (!activeWorkRows.value.length || !hasConfiguredStationLengthRanges.value) {
-    workUploadError.value = true;
-    workUploadMessage.value = 'Brak wierszy do automatycznego przydziału stanowisk albo nie ustawiono jeszcze zakresów długości w konfiguracji.';
-    return;
-  }
-
-  let updatedCount = 0;
-  let assignedCount = 0;
-
-  workRows.value = workRows.value.map((row) => {
-    if (row.__disabled) return row;
-
-    const autoStation = getConfigStationValueByLength(row.Dlugosc);
-    const nextStation = autoStation || normalizeStationValue(row.Stanowisko);
-    const nextWybijak = nextStation ? getWybijakValueForStation(nextStation, row.Dlugosc) : '';
-    const hasChanged =
-      String(nextStation ?? '') !== String(normalizeStationValue(row.Stanowisko) ?? '') ||
-      String(nextWybijak ?? '') !== String(row.Wybijak ?? '');
-
-    if (autoStation) {
-      assignedCount += 1;
-    }
-    if (hasChanged) {
-      updatedCount += 1;
-    }
-
-    return {
-      ...row,
-      Stanowisko: nextStation,
-      Wybijak: nextWybijak,
-    };
-  });
-
-  workUploadError.value = false;
-  workUploadMessage.value =
-    assignedCount > 0 || updatedCount > 0
-      ? `Automatycznie przydzielono ${assignedCount} wierszy po długości i przeliczono wybijaki.`
-      : 'Nie znaleziono pasujących zakresów długości dla żadnego wiersza.';
-}
-
 async function persistWorkRowsToDatabase(rowsToSave) {
   isWorkCorrectionSaving.value = true;
   workUploadMessage.value = '';
@@ -5632,7 +6410,6 @@ onMounted(() => {
   updateClock();
   timerId = window.setInterval(updateClock, 1000);
   window.addEventListener('keydown', handleGlobalEscape);
-  loadProductFiles();
   loadSavedRecipes();
   loadWorkMainRows().catch(() => {});
   loadConfig().catch(() => {});
@@ -6026,8 +6803,11 @@ const DataTable = defineComponent({
     emptyText: { type: String, default: 'Brak danych' },
     externalSortKey: { type: String, default: '' },
     externalSortDirection: { type: Number, default: 1 },
+    selectable: { type: Boolean, default: false },
+    selectionKey: { type: String, default: 'id' },
+    selectedKeys: { type: Array, default: () => [] },
   },
-  emits: ['row-click', 'header-click'],
+  emits: ['row-click', 'header-click', 'toggle-row', 'toggle-all'],
   setup(props, { emit }) {
     const sortKey = ref('');
     const sortDirection = ref(1);
@@ -6067,6 +6847,18 @@ const DataTable = defineComponent({
       return props.externalSortKey ? props.externalSortDirection : sortDirection.value;
     }
 
+    function getRowSelectionKey(row) {
+      return row?.[props.selectionKey];
+    }
+
+    function isRowSelected(row) {
+      return props.selectedKeys.includes(getRowSelectionKey(row));
+    }
+
+    function areAllVisibleRowsSelected() {
+      return sortedRows.value.length > 0 && sortedRows.value.every((row) => isRowSelected(row));
+    }
+
     return () =>
       h('div', { class: 'table-wrap' }, [
         h('table', { class: 'data-table' }, [
@@ -6074,20 +6866,34 @@ const DataTable = defineComponent({
             'thead',
             h(
               'tr',
-              props.columns.map((column) =>
-                h(
-                  'th',
-                  {
-                    onClick: () => sortBy(column),
-                    class: { sorted: isSorted(column) },
-                  },
-                  [
-                    h('span', getColumnLabelText(column, props.labels)),
-                    isDimensionColumn(column) ? h('span', { class: 'dimension-unit' }, '₍ₘₘ₎') : null,
-                    isSorted(column) ? h('span', { class: 'sort-mark' }, currentDirection() > 0 ? '▲' : '▼') : null,
-                  ],
+              [
+                ...(props.selectable
+                  ? [
+                      h('th', { class: 'selection-column' }, [
+                        h('input', {
+                          type: 'checkbox',
+                          checked: areAllVisibleRowsSelected(),
+                          onClick: (event) => event.stopPropagation(),
+                          onChange: () => emit('toggle-all', sortedRows.value),
+                        }),
+                      ]),
+                    ]
+                  : []),
+                ...props.columns.map((column) =>
+                  h(
+                    'th',
+                    {
+                      onClick: () => sortBy(column),
+                      class: { sorted: isSorted(column) },
+                    },
+                    [
+                      h('span', getColumnLabelText(column, props.labels)),
+                      isDimensionColumn(column) ? h('span', { class: 'dimension-unit' }, '₍ₘₘ₎') : null,
+                      isSorted(column) ? h('span', { class: 'sort-mark' }, currentDirection() > 0 ? '▲' : '▼') : null,
+                    ],
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
           h(
@@ -6097,10 +6903,24 @@ const DataTable = defineComponent({
                   h(
                     'tr',
                     { onClick: () => emit('row-click', row) },
-                    props.columns.map((column) => h('td', row[column] ?? '')),
+                    [
+                      ...(props.selectable
+                        ? [
+                            h('td', { class: 'selection-column' }, [
+                              h('input', {
+                                type: 'checkbox',
+                                checked: isRowSelected(row),
+                                onClick: (event) => event.stopPropagation(),
+                                onChange: () => emit('toggle-row', row),
+                              }),
+                            ]),
+                          ]
+                        : []),
+                      ...props.columns.map((column) => h('td', row[column] ?? '')),
+                    ],
                   ),
                 )
-              : h('tr', [h('td', { colspan: props.columns.length, class: 'empty-cell' }, props.emptyText)]),
+              : h('tr', [h('td', { colspan: props.columns.length + (props.selectable ? 1 : 0), class: 'empty-cell' }, props.emptyText)]),
           ),
         ]),
       ]);

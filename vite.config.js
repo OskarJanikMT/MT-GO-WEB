@@ -10,12 +10,13 @@ import * as XLSX from 'xlsx';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const productsDir = path.join(__dirname, 'Produkty');
+const DEFAULT_PRODUCTS_DIR = path.join(__dirname, 'Produkty');
 const recipesFilePath = path.join(__dirname, 'receptury.json');
 const configFilePath = path.join(__dirname, 'config.json');
 const execFileAsync = promisify(execFile);
 const DEFAULT_ROW_LIMIT = 500;
 const defaultAppConfig = {
+  productsDirectory: DEFAULT_PRODUCTS_DIR,
   stations: [],
   activeMachineId: 'machine-1',
   machines: [
@@ -100,7 +101,28 @@ function buildSheetMatrix(headers, rows) {
   ];
 }
 
-async function resolveUniqueProductFilePath(fileName) {
+function normalizeProductsDirectory(value) {
+  const rawValue = String(value ?? '').trim();
+  return path.resolve(rawValue || DEFAULT_PRODUCTS_DIR);
+}
+
+function normalizeAppConfig(config) {
+  const baseConfig = config && typeof config === 'object' ? config : defaultAppConfig;
+  return {
+    ...defaultAppConfig,
+    ...baseConfig,
+    productsDirectory: normalizeProductsDirectory(baseConfig?.productsDirectory),
+  };
+}
+
+async function getProductsDirectory(configOverride = null) {
+  const config = configOverride ? normalizeAppConfig(configOverride) : await readAppConfig();
+  const productsDirectory = normalizeProductsDirectory(config.productsDirectory);
+  await fs.mkdir(productsDirectory, { recursive: true });
+  return productsDirectory;
+}
+
+async function resolveUniqueProductFilePath(fileName, productsDirectory) {
   const parsed = path.parse(fileName);
   const extension = parsed.ext || '.xlsx';
   const baseName = parsed.name || 'Produkt';
@@ -108,7 +130,7 @@ async function resolveUniqueProductFilePath(fileName) {
   let counter = 1;
 
   while (true) {
-    const filePath = path.join(productsDir, candidate);
+    const filePath = path.join(productsDirectory, candidate);
     try {
       await fs.access(filePath);
       candidate = `${baseName} (${counter})${extension}`;
@@ -190,25 +212,58 @@ async function writeRecipeCatalog(recipes) {
   );
 }
 
+function mergeImportedRecipes(existingRecipes, importedRecipes) {
+  const mergedRecipes = Array.isArray(existingRecipes) ? [...existingRecipes] : [];
+  let addedCount = 0;
+  let updatedCount = 0;
+  const updatedRecipeNames = [];
+
+  for (const importedRecipe of importedRecipes) {
+    const normalizedRecipe = normalizeRecipeEntry(importedRecipe);
+    const recipeName = String(normalizedRecipe?.nazwaReceptury || '').trim();
+    if (!recipeName) continue;
+
+    const existingIndex = mergedRecipes.findIndex((entry) => entry?.nazwaReceptury === recipeName);
+    if (existingIndex >= 0) {
+      mergedRecipes[existingIndex] = normalizedRecipe;
+      updatedCount += 1;
+      updatedRecipeNames.push(recipeName);
+      continue;
+    }
+
+    mergedRecipes.push(normalizedRecipe);
+    addedCount += 1;
+  }
+
+  return {
+    recipes: mergedRecipes,
+    addedCount,
+    updatedCount,
+    updatedRecipeNames,
+  };
+}
+
 async function readAppConfig() {
   try {
     const content = await fs.readFile(configFilePath, 'utf8');
     const payload = JSON.parse(content);
-    return payload && typeof payload === 'object' ? payload : defaultAppConfig;
+    return normalizeAppConfig(payload);
   } catch (error) {
     if (error?.code === 'ENOENT') {
-      return defaultAppConfig;
+      return normalizeAppConfig(defaultAppConfig);
     }
     throw error;
   }
 }
 
 async function writeAppConfig(config) {
+  const normalizedConfig = normalizeAppConfig(config);
   await fs.writeFile(
     configFilePath,
-    JSON.stringify(config && typeof config === 'object' ? config : defaultAppConfig, null, 2),
+    JSON.stringify(normalizedConfig, null, 2),
     'utf8',
   );
+  return normalizedConfig;
 }
 
 function toSqlLiteral(value) {
@@ -767,12 +822,13 @@ function productSavePlugin() {
         }
 
         try {
-          const entries = await fs.readdir(productsDir, { withFileTypes: true });
+          const productsDirectory = await getProductsDirectory();
+          const entries = await fs.readdir(productsDirectory, { withFileTypes: true });
           const files = entries
             .filter((entry) => entry.isFile() && entry.name.toLowerCase().endsWith('.xlsx'))
             .map((entry) => entry.name)
             .sort((left, right) => left.localeCompare(right, 'pl'));
-          sendJson(res, 200, { files });
+          sendJson(res, 200, { files, productsDirectory });
         } catch (error) {
           sendJson(res, 500, { error: error.message || 'Błąd odczytu listy plików.' });
         }
@@ -785,6 +841,7 @@ function productSavePlugin() {
         }
 
         try {
+          const productsDirectory = await getProductsDirectory();
           const requestUrl = new URL(req.url || '', 'http://127.0.0.1');
           const fileName = path.basename(requestUrl.searchParams.get('fileName') || '');
 
@@ -793,7 +850,7 @@ function productSavePlugin() {
             return;
           }
 
-          const filePath = path.join(productsDir, fileName);
+          const filePath = path.join(productsDirectory, fileName);
           const content = await fs.readFile(filePath);
           res.statusCode = 200;
           res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -811,6 +868,7 @@ function productSavePlugin() {
         }
 
         try {
+          const productsDirectory = await getProductsDirectory();
           const body = await readJsonBody(req);
           const fileName = path.basename(body.fileName || '');
           const rows = Array.isArray(body.rows) ? body.rows : [];
@@ -825,7 +883,7 @@ function productSavePlugin() {
             return;
           }
 
-          const filePath = path.join(productsDir, fileName);
+          const filePath = path.join(productsDirectory, fileName);
           const workbook = XLSX.read(await fs.readFile(filePath));
           const firstSheetName = workbook.SheetNames[0];
           const currentSheet = workbook.Sheets[firstSheetName];
@@ -871,6 +929,7 @@ function productSavePlugin() {
         }
 
         try {
+          const productsDirectory = await getProductsDirectory();
           const body = await readJsonBody(req);
           const fileName = path.basename(body.fileName || '');
           const contentBase64 = String(body.contentBase64 || '');
@@ -885,7 +944,7 @@ function productSavePlugin() {
             return;
           }
 
-          const targetPath = await resolveUniqueProductFilePath(fileName);
+          const targetPath = await resolveUniqueProductFilePath(fileName, productsDirectory);
           await fs.writeFile(targetPath, Buffer.from(contentBase64, 'base64'));
           sendJson(res, 200, { ok: true, fileName: path.basename(targetPath) });
         } catch (error) {
@@ -900,6 +959,7 @@ function productSavePlugin() {
         }
 
         try {
+          const productsDirectory = await getProductsDirectory();
           const body = await readJsonBody(req);
           const fileName = path.basename(body.fileName || '');
 
@@ -908,8 +968,8 @@ function productSavePlugin() {
             return;
           }
 
-          const sourcePath = path.join(productsDir, fileName);
-          const targetPath = await resolveUniqueProductFilePath(path.join(path.parse(fileName).name + ' kopia.xlsx'));
+          const sourcePath = path.join(productsDirectory, fileName);
+          const targetPath = await resolveUniqueProductFilePath(path.join(path.parse(fileName).name + ' kopia.xlsx'), productsDirectory);
           await fs.copyFile(sourcePath, targetPath);
           sendJson(res, 200, { ok: true, fileName: path.basename(targetPath) });
         } catch (error) {
@@ -924,6 +984,7 @@ function productSavePlugin() {
         }
 
         try {
+          const productsDirectory = await getProductsDirectory();
           const body = await readJsonBody(req);
           const fileName = path.basename(body.fileName || '');
           const nextFileName = path.basename(body.nextFileName || '');
@@ -938,8 +999,8 @@ function productSavePlugin() {
             return;
           }
 
-          const sourcePath = path.join(productsDir, fileName);
-          const targetPath = path.join(productsDir, nextFileName);
+          const sourcePath = path.join(productsDirectory, fileName);
+          const targetPath = path.join(productsDirectory, nextFileName);
 
           try {
             await fs.access(targetPath);
@@ -963,6 +1024,7 @@ function productSavePlugin() {
         }
 
         try {
+          const productsDirectory = await getProductsDirectory();
           const body = await readJsonBody(req);
           const fileName = path.basename(body.fileName || '');
 
@@ -971,7 +1033,7 @@ function productSavePlugin() {
             return;
           }
 
-          await fs.unlink(path.join(productsDir, fileName));
+          await fs.unlink(path.join(productsDirectory, fileName));
           sendJson(res, 200, { ok: true });
         } catch (error) {
           sendJson(res, 500, { error: error.message || 'Błąd usuwania pliku.' });
@@ -1138,6 +1200,61 @@ function productSavePlugin() {
         }
       });
 
+      server.middlewares.use('/api/recipes/export', async (req, res) => {
+        if (req.method !== 'GET') {
+          sendJson(res, 405, { error: 'Method not allowed' });
+          return;
+        }
+
+        try {
+          const recipes = await readRecipeCatalog();
+          const fileName = `receptury-export-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-').replace(/Z$/, '')}.json`;
+          res.statusCode = 200;
+          res.setHeader('Content-Type', 'application/json; charset=utf-8');
+          res.setHeader('Cache-Control', 'no-store');
+          res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+          res.end(JSON.stringify({ recipes }, null, 2));
+        } catch (error) {
+          sendJson(res, 500, { error: error.message || 'Błąd eksportu receptur.' });
+        }
+      });
+
+      server.middlewares.use('/api/recipes/import', async (req, res) => {
+        if (req.method !== 'POST') {
+          sendJson(res, 405, { error: 'Method not allowed' });
+          return;
+        }
+
+        try {
+          const body = await readJsonBody(req);
+          const contentText = String(body?.contentText || '');
+
+          if (!contentText.trim()) {
+            sendJson(res, 400, { error: 'Brak zawartości pliku do importu.' });
+            return;
+          }
+
+          const parsedPayload = JSON.parse(contentText);
+          const importedRecipes = Array.isArray(parsedPayload)
+            ? parsedPayload
+            : Array.isArray(parsedPayload?.recipes)
+              ? parsedPayload.recipes
+              : [];
+
+          if (!importedRecipes.length) {
+            sendJson(res, 400, { error: 'Plik importu nie zawiera żadnych receptur.' });
+            return;
+          }
+
+          const existingRecipes = await readRecipeCatalog();
+          const { recipes, addedCount, updatedCount, updatedRecipeNames } = mergeImportedRecipes(existingRecipes, importedRecipes);
+          await writeRecipeCatalog(recipes);
+          sendJson(res, 200, { ok: true, recipes, addedCount, updatedCount, updatedRecipeNames, totalCount: recipes.length });
+        } catch (error) {
+          sendJson(res, 500, { error: error.message || 'Błąd importu receptur.' });
+        }
+      });
+
       server.middlewares.use('/api/recipes', async (req, res) => {
         if (req.method !== 'GET') {
           sendJson(res, 405, { error: 'Method not allowed' });
@@ -1149,6 +1266,52 @@ function productSavePlugin() {
           sendJson(res, 200, { recipes });
         } catch (error) {
           sendJson(res, 500, { error: error.message || 'Błąd odczytu receptur.' });
+        }
+      });
+
+      server.middlewares.use('/api/config/select-products-directory', async (req, res) => {
+        if (req.method !== 'POST') {
+          sendJson(res, 405, { error: 'Method not allowed' });
+          return;
+        }
+
+        if (process.platform !== 'win32') {
+          sendJson(res, 501, { error: 'Wybór folderu jest dostępny tylko w środowisku Windows.' });
+          return;
+        }
+
+        try {
+          const args = [
+            '-NoProfile',
+            '-STA',
+            '-Command',
+            [
+              '[Console]::OutputEncoding = [System.Text.Encoding]::UTF8',
+              'Add-Type -AssemblyName System.Windows.Forms',
+              '$dialog = New-Object System.Windows.Forms.FolderBrowserDialog',
+              "$dialog.Description = 'Wybierz folder źródłowy dla plików Excel'",
+              '$dialog.ShowNewFolderButton = $true',
+              'if ($dialog.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) {',
+              '  Write-Output $dialog.SelectedPath',
+              '}',
+            ].join('; '),
+          ];
+          const { stdout } = await execFileAsync('powershell.exe', args, { windowsHide: false, maxBuffer: 1024 * 1024 });
+          const selectedPath = String(stdout || '').trim();
+
+          if (!selectedPath) {
+            sendJson(res, 200, { cancelled: true });
+            return;
+          }
+
+          sendJson(res, 200, {
+            cancelled: false,
+            productsDirectory: normalizeProductsDirectory(selectedPath),
+          });
+        } catch (error) {
+          const stderr = String(error?.stderr || '').trim();
+          const stdout = String(error?.stdout || '').trim();
+          sendJson(res, 500, { error: stderr || stdout || error.message || 'Nie udało się wybrać folderu.' });
         }
       });
 
@@ -1173,8 +1336,8 @@ function productSavePlugin() {
               return;
             }
 
-            await writeAppConfig(config);
-            sendJson(res, 200, { ok: true, config });
+            const savedConfig = await writeAppConfig(config);
+            sendJson(res, 200, { ok: true, config: savedConfig });
           } catch (error) {
             sendJson(res, 500, { error: error.message || 'Błąd zapisu konfiguracji.' });
           }
@@ -1415,12 +1578,24 @@ IF @valueColumn IS NULL
   THROW 50000, 'Brak kolumny Wartosc/Wartość/Waartość w dbo.StatusMain.', 1;
 
 DECLARE @sql NVARCHAR(MAX) = N'
+  WITH status_candidates AS (
+    SELECT
+      id,
+      Komenda,
+      ' + QUOTENAME(@valueColumn) + N' AS Wartosc,
+      REPLACE(REPLACE(REPLACE(LTRIM(RTRIM(COALESCE(Komenda, ''''))), CHAR(9), ''''), CHAR(10), ''''), CHAR(13), '''') AS NormalizedKomenda
+    FROM dbo.StatusMain
+  )
   SELECT TOP (1)
     id,
     Komenda,
-    ' + QUOTENAME(@valueColumn) + N' AS Wartosc
-  FROM dbo.StatusMain
-  WHERE LTRIM(RTRIM(COALESCE(Komenda, ''''))) = N''statusPracy''
+    Wartosc
+  FROM status_candidates
+  WHERE NormalizedKomenda = N''statusPracy''
+     OR NormalizedKomenda LIKE N''%statusPracy%''
+  ORDER BY
+    CASE WHEN NormalizedKomenda = N''statusPracy'' THEN 0 ELSE 1 END,
+    id DESC
   FOR JSON PATH, INCLUDE_NULL_VALUES;
 ';
 
