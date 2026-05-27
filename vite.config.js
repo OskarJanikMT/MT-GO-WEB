@@ -949,10 +949,37 @@ function productSavePlugin() {
           if (currentSheet['!autofilter']) nextSheet['!autofilter'] = currentSheet['!autofilter'];
 
           workbook.Sheets[firstSheetName] = nextSheet;
-          XLSX.writeFile(workbook, filePath);
+
+          const tempFilePath = path.join(
+            productsDirectory,
+            `.${path.parse(fileName).name}.${Date.now()}.tmp.xlsx`,
+          );
+          try {
+            const workbookBuffer = XLSX.write(workbook, {
+              bookType: 'xlsx',
+              type: 'buffer',
+              compression: true,
+            });
+
+            await fs.writeFile(tempFilePath, workbookBuffer);
+            await fs.rename(tempFilePath, filePath);
+          } finally {
+            await fs.unlink(tempFilePath).catch(() => {});
+          }
           sendJson(res, 200, { ok: true });
         } catch (error) {
-          sendJson(res, 500, { error: error.message || 'Błąd zapisu pliku.' });
+          const message = String(error?.message || '');
+          const isSaveConflict =
+            /cannot save file|EPERM|EBUSY|EACCES|access is denied|denied/i.test(message);
+          sendJson(
+            res,
+            500,
+            {
+              error: isSaveConflict
+                ? 'Nie można zapisać pliku. Zamknij go w Excelu i spróbuj ponownie.'
+                : message || 'Błąd zapisu pliku.',
+            },
+          );
         }
       });
 
@@ -1612,6 +1639,7 @@ DECLARE @sql NVARCHAR(MAX) = N'
       ' + QUOTENAME(@valueColumn) + N' AS Wartosc,
       REPLACE(REPLACE(REPLACE(LTRIM(RTRIM(COALESCE(Komenda, ''''))), CHAR(9), ''''), CHAR(10), ''''), CHAR(13), '''') AS NormalizedKomenda
     FROM dbo.StatusMain
+    WHERE NULLIF(LTRIM(RTRIM(CONVERT(NVARCHAR(4000), ' + QUOTENAME(@valueColumn) + N'))), '''') IS NOT NULL
   )
   SELECT TOP (1)
     id,
