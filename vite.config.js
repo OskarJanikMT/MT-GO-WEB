@@ -846,6 +846,8 @@ async function executeSqlQuery(sqlText) {
 }
 
 function productSavePlugin() {
+  let lastMachineStatusRow = null;
+
   return {
     name: 'product-save-api',
     configureServer(server) {
@@ -1632,7 +1634,11 @@ IF @valueColumn IS NULL
   THROW 50000, 'Brak kolumny Wartosc/Wartość/Waartość w dbo.StatusMain.', 1;
 
 DECLARE @sql NVARCHAR(MAX) = N'
-  WITH status_candidates AS (
+  SELECT TOP (1)
+    id,
+    Komenda,
+    Wartosc
+  FROM (
     SELECT
       id,
       Komenda,
@@ -1640,16 +1646,13 @@ DECLARE @sql NVARCHAR(MAX) = N'
       REPLACE(REPLACE(REPLACE(LTRIM(RTRIM(COALESCE(Komenda, ''''))), CHAR(9), ''''), CHAR(10), ''''), CHAR(13), '''') AS NormalizedKomenda
     FROM dbo.StatusMain
     WHERE NULLIF(LTRIM(RTRIM(CONVERT(NVARCHAR(4000), ' + QUOTENAME(@valueColumn) + N'))), '''') IS NOT NULL
-  )
-  SELECT TOP (1)
-    id,
-    Komenda,
-    Wartosc
-  FROM status_candidates
-  WHERE NormalizedKomenda = N''statusPracy''
-     OR NormalizedKomenda LIKE N''%statusPracy%''
+  ) AS status_candidates
   ORDER BY
-    CASE WHEN NormalizedKomenda = N''statusPracy'' THEN 0 ELSE 1 END,
+    CASE
+      WHEN NormalizedKomenda = N''statusPracy'' THEN 0
+      WHEN NormalizedKomenda LIKE N''%statusPracy%'' THEN 1
+      ELSE 2
+    END,
     id DESC
   FOR JSON PATH, INCLUDE_NULL_VALUES;
 ';
@@ -1663,8 +1666,13 @@ EXEC sp_executesql @sql;`;
             startIndex >= 0 && endIndex >= startIndex ? output.slice(startIndex, endIndex + 1).replace(/\r?\n/g, '').trim() : '';
           const rows = normalizedOutput ? JSON.parse(normalizedOutput) : [];
           const statusRow = Array.isArray(rows) ? rows[0] ?? null : null;
+          if (statusRow && typeof statusRow === 'object') {
+            lastMachineStatusRow = statusRow;
+            sendJson(res, 200, { status: statusRow });
+            return;
+          }
 
-          sendJson(res, 200, { status: statusRow });
+          sendJson(res, 200, { status: lastMachineStatusRow ?? null });
         } catch (error) {
           sendJson(res, 500, { error: error.message || 'Błąd odczytu statusu maszyny.' });
         }
