@@ -2617,6 +2617,36 @@ function normalizeWybijakPartInputValue(value) {
     .slice(0, 1);
 }
 
+function getRecipePreviewWybijakValidationError(rows = []) {
+  const maxPunchCount = Math.max(1, normalizeWorkCorrectionValue(configSettings.value.machinePunchCount || DEFAULT_MACHINE_PUNCH_COUNT));
+
+  for (let rowIndex = 0; rowIndex < rows.length; rowIndex += 1) {
+    const row = rows[rowIndex] || {};
+    const rawDigits = String(row.wybijak ?? row.Wybijak ?? '').replace(/[^\d]/g, '').trim();
+
+    if (!rawDigits) {
+      return `Wiersz ${rowIndex + 1}: wybijak jest wymagany.`;
+    }
+
+    if (rawDigits.length > 2) {
+      return `Wiersz ${rowIndex + 1}: wybijak może mieć maksymalnie 2 cyfry.`;
+    }
+
+    const firstPart = normalizeWorkCorrectionValue(rawDigits[0] ?? '');
+    const secondPart = normalizeWorkCorrectionValue(rawDigits[1] ?? '');
+
+    if (firstPart < 1 || firstPart > maxPunchCount) {
+      return `Wiersz ${rowIndex + 1}: pierwszy wybijak musi być w zakresie 1-${maxPunchCount}.`;
+    }
+
+    if (rawDigits.length === 2 && (secondPart < 1 || secondPart > maxPunchCount)) {
+      return `Wiersz ${rowIndex + 1}: drugi wybijak musi być w zakresie 1-${maxPunchCount}.`;
+    }
+  }
+
+  return '';
+}
+
 function nextWorkRowClientId() {
   const nextId = workRowClientIdCounter;
   workRowClientIdCounter += 1;
@@ -6618,6 +6648,12 @@ async function saveRecipePreviewChanges() {
 
   const rows = recipePreviewDraftRows.value.map(({ _localId, ...row }) => row);
   clearRecipePreviewStatusMessage();
+
+  const wybijakValidationError = getRecipePreviewWybijakValidationError(rows);
+  if (wybijakValidationError) {
+    setRecipePreviewStatusMessage(wybijakValidationError, true);
+    return;
+  }
 
   try {
     const response = await fetch('/api/recipes/update', {
