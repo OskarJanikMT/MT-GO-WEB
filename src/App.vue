@@ -1621,7 +1621,7 @@
                   >
                     {{ isReportExportLoading ? 'Generowanie...' : 'Generuj raport' }}
                   </button>
-                  <button class="tool-btn" :disabled="isWorkCorrectionSaving || isWorkEditPreparing" @click="postponeCurrentWork">
+                  <button class="tool-btn" :disabled="isWorkCorrectionSaving || isWorkEditPreparing" @click="openPostponeWorkDialog">
                     Odłóż aktualną pracę
                   </button>
                 </div>
@@ -1735,7 +1735,7 @@
                         >
                           Wczytaj
                         </button>
-                        <button class="tool-btn compact danger" type="button" @click.stop.prevent="removeSavedRow(row.idRap)">Usuń</button>
+                        <button class="tool-btn compact danger" type="button" @click.stop.prevent="requestRemoveSavedRow(row.idRap)">Usuń</button>
                       </td>
                     </tr>
                   </template>
@@ -1800,6 +1800,39 @@
                     @click="confirmRestoreSavedWork('postpone')"
                   >
                     {{ restoreSavedWorkDialog.loading ? 'Wczytywanie...' : 'Odłóż i wczytaj' }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            v-if="postponeWorkDialog.visible"
+            class="confirm-modal-overlay"
+            @click.self="cancelPostponeWorkDialog"
+          >
+            <div class="confirm-modal panel" @click.stop>
+              <div class="panel-header">
+                <span>Odłożyć aktualną pracę?</span>
+              </div>
+              <div class="confirm-modal-body">
+                <label class="rename-field">
+                  <span>Notatka</span>
+                  <input
+                    v-model="postponeWorkDialog.note"
+                    class="text-input"
+                    maxlength="250"
+                    placeholder="Opcjonalna notatka do odłożonej pracy"
+                  />
+                </label>
+                <div class="confirm-modal-actions">
+                  <button class="tool-btn compact" @click="cancelPostponeWorkDialog">Anuluj</button>
+                  <button
+                    class="tool-btn compact primary"
+                    :disabled="postponeWorkDialog.loading"
+                    @click="confirmPostponeCurrentWork"
+                  >
+                    {{ postponeWorkDialog.loading ? 'Odkładanie...' : 'Odłóż pracę' }}
                   </button>
                 </div>
               </div>
@@ -2075,13 +2108,12 @@ const workColumnLabels = {
   ProgressLabel: 'Progress',
 };
 
-const savedColumns = ['idRap', 'NazwaRec', 'Wiersze', 'CzasOdloz', 'Usr'];
+const savedColumns = ['NazwaRec', 'Wiersze', 'CzasOdloz', 'Notatka'];
 const savedColumnLabels = {
-  idRap: 'ID',
   NazwaRec: 'Receptura',
   Wiersze: 'Wiersze',
   CzasOdloz: 'Czas odłożenia',
-  Usr: 'Użytkownik',
+  Notatka: 'Notatka',
 };
 
 const activeTab = ref('products');
@@ -2241,6 +2273,11 @@ const restoreSavedWorkDialog = ref({
   visible: false,
   idRap: '',
   name: '',
+  loading: false,
+});
+const postponeWorkDialog = ref({
+  visible: false,
+  note: '',
   loading: false,
 });
 const configDistanceEditStart = ref({
@@ -3279,6 +3316,13 @@ function removeSavedRow(idRap) {
   persistSavedRows();
 }
 
+function requestRemoveSavedRow(idRap) {
+  const snapshot = savedRows.value.find((row) => String(row.idRap) === String(idRap));
+  if (!snapshot) return;
+  const label = snapshot.NazwaRec || 'odłożoną pracę';
+  openConfirmDialog('delete-saved-row:' + String(idRap), `Na pewno chcesz usunąć odłożoną pracę "${label}"?`);
+}
+
 function requestRestoreSavedRow(idRap) {
   const snapshot = savedRows.value.find((row) => String(row.idRap) === String(idRap));
   if (!snapshot || !snapshot.rows) return;
@@ -3386,6 +3430,7 @@ function loadSavedRows() {
       Wiersze: normalizeWorkCorrectionValue(row.Wiersze ?? 0),
       CzasOdloz: row.CzasOdloz ?? '',
       Usr: row.Usr ?? 'Default',
+      Notatka: String(row.Notatka ?? '').trim(),
       rows: row.rows ?? '',
       selectedRecipe: row.selectedRecipe ?? '',
     }));
@@ -3429,13 +3474,31 @@ function persistSavedRows() {
   }
 }
 
-function createWorkSnapshot() {
+function openPostponeWorkDialog() {
+  postponeWorkDialog.value = {
+    visible: true,
+    note: '',
+    loading: false,
+  };
+}
+
+function cancelPostponeWorkDialog() {
+  if (postponeWorkDialog.value.loading) return;
+  postponeWorkDialog.value = {
+    visible: false,
+    note: '',
+    loading: false,
+  };
+}
+
+function createWorkSnapshot(note = '') {
   return {
     idRap: Date.now(),
     NazwaRec: selectedRecipe.value || 'Aktualna praca',
     Wiersze: activeWorkRows.value.length,
     CzasOdloz: new Date().toLocaleString('pl-PL'),
     Usr: 'Default',
+    Notatka: String(note ?? '').trim(),
     rows: serializeWorkRows(workRows.value),
     selectedRecipe: selectedRecipe.value,
   };
@@ -6122,6 +6185,10 @@ function confirmAction() {
     executeDeleteRecipePreview();
     return;
   }
+  if (action.startsWith('delete-saved-row:')) {
+    removeSavedRow(action.slice('delete-saved-row:'.length));
+    return;
+  }
 }
 
 function getMergeProductQuantity(productName) {
@@ -7601,7 +7668,7 @@ async function saveWorkTable() {
   }
 }
 
-async function postponeCurrentWork() {
+async function postponeCurrentWork(note = '') {
   if (workEditingRowId.value !== null) {
     workUploadError.value = true;
     workUploadMessage.value = 'Najpierw zakończ edycję wszystkich wierszy, zanim odłożysz pracę.';
@@ -7612,12 +7679,31 @@ async function postponeCurrentWork() {
 
   try {
     const payload = await persistWorkRowsToDatabase(rowsToSave);
-    const snapshot = createWorkSnapshot();
+    const snapshot = createWorkSnapshot(note);
     addWorkSnapshot(snapshot);
     workUploadMessage.value = `Odłożono pracę "${snapshot.NazwaRec}" i zapisano ${payload.updatedRows ?? rowsToSave.length} wierszy WorkMain.`;
   } catch (error) {
     workUploadError.value = true;
     workUploadMessage.value = error.message || 'Nie udało się odłożyć aktualnej pracy.';
+  }
+}
+
+async function confirmPostponeCurrentWork() {
+  if (postponeWorkDialog.value.loading) return;
+  postponeWorkDialog.value = {
+    ...postponeWorkDialog.value,
+    loading: true,
+  };
+
+  try {
+    await postponeCurrentWork(postponeWorkDialog.value.note);
+    cancelPostponeWorkDialog();
+  } catch (error) {
+    postponeWorkDialog.value = {
+      ...postponeWorkDialog.value,
+      loading: false,
+    };
+    throw error;
   }
 }
 
