@@ -2772,7 +2772,7 @@ function getMergeCellValidationMessage(row, column) {
   }
 
   const validationLabelByKey = {
-    TekstDoDruku: ['Tekst do druku'],
+    TekstDoDruku: ['Tekst do druku >'],
     material: ['Materiał'],
     dlugosc: ['Długość', 'Długość: nieprawidłowy format'],
     grubosc: ['Grubość', 'Grubość: nieprawidłowy format'],
@@ -2797,6 +2797,10 @@ function getMergeCellValidationMessage(row, column) {
     return matchedMessage;
   }
 
+  if (column === 'TekstDoDruku' && matchedMessage.startsWith('Tekst do druku > ')) {
+    return matchedMessage;
+  }
+
   const expectedLabel = expectedLabels[0];
   if (!expectedLabel) return '';
   return `${expectedLabel} jest wymagane.`;
@@ -2810,7 +2814,7 @@ function getMergeCellValidationCriteria(column) {
 
   switch (column) {
     case 'TekstDoDruku':
-      return `Wymagane pole. Maksymalnie ${printTextMaxLength} znaków, bez polskich znaków.`;
+      return `Pole opcjonalne. Maksymalnie ${printTextMaxLength} znaków, bez polskich znaków.`;
     case 'material':
       return 'Wymagane pole.';
     case 'dlugosc':
@@ -3445,9 +3449,11 @@ function addWorkSnapshot(snapshot) {
 function getWorkRowMissingFields(row) {
   const payload = getWorkRowPayload(row);
   const missingFields = [];
+  const printTextMaxLength = Math.max(1, normalizeWorkCorrectionValue(configSettings.value.printTextMaxLength || DEFAULT_PRINT_TEXT_MAX_LENGTH));
   const boardMaxLength = Math.max(1, normalizeWorkCorrectionValue(configSettings.value.boardMaxLength || DEFAULT_BOARD_MAX_LENGTH));
   const maxQuantity = Math.max(1, normalizeWorkCorrectionValue(configSettings.value.maxQuantity || DEFAULT_MAX_QUANTITY));
 
+  if (String(payload.TekstDoDruku ?? '').trim().length > printTextMaxLength) missingFields.push(`Tekst do druku > ${printTextMaxLength} znaków`);
   if (!payload.Nazwa) missingFields.push('Nazwa');
   if (!payload.Material) missingFields.push('Materiał');
   if (!payload.Przekroj) missingFields.push('Przekrój');
@@ -3485,6 +3491,7 @@ function getWorkRowsValidationMessage(rows, contextMessage) {
 
 function getWorkCellValidationMessage(row, column) {
   const validationLabelByKey = {
+    TekstDoDruku: ['Tekst do druku >'],
     Nazwa: ['Nazwa'],
     Material: ['Materiał'],
     Dlugosc: ['Długość', 'Długość >'],
@@ -3508,6 +3515,10 @@ function getWorkCellValidationMessage(row, column) {
   }
 
   if (column === 'Sztuk' && matchedMessage.startsWith('Ilość > ')) {
+    return matchedMessage;
+  }
+
+  if (column === 'TekstDoDruku' && matchedMessage.startsWith('Tekst do druku > ')) {
     return matchedMessage;
   }
 
@@ -3536,10 +3547,11 @@ function isStrictPositiveIntegerValue(value) {
 
 function getRecipeRowMissingFields(row) {
   const missingFields = [];
+  const printTextMaxLength = Math.max(1, normalizeWorkCorrectionValue(configSettings.value.printTextMaxLength || DEFAULT_PRINT_TEXT_MAX_LENGTH));
   const boardMaxLength = Math.max(1, normalizeWorkCorrectionValue(configSettings.value.boardMaxLength || DEFAULT_BOARD_MAX_LENGTH));
   const maxQuantity = Math.max(1, normalizeWorkCorrectionValue(configSettings.value.maxQuantity || DEFAULT_MAX_QUANTITY));
 
-  if (!String(row?.TekstDoDruku ?? '').trim()) missingFields.push('Tekst do druku');
+  if (String(row?.TekstDoDruku ?? '').trim().length > printTextMaxLength) missingFields.push(`Tekst do druku > ${printTextMaxLength} znaków`);
   if (!String(row?.material ?? '').trim()) missingFields.push('Materiał');
   if (String(row?.dlugosc ?? '').trim() && !isStrictPositiveIntegerValue(row?.dlugosc)) missingFields.push('Długość: nieprawidłowy format');
   if (!normalizeWorkCorrectionValue(row?.dlugosc)) missingFields.push('Długość');
