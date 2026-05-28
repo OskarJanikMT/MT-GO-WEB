@@ -3482,8 +3482,8 @@ function openPostponeWorkDialog() {
   };
 }
 
-function cancelPostponeWorkDialog() {
-  if (postponeWorkDialog.value.loading) return;
+function cancelPostponeWorkDialog(force = false) {
+  if (postponeWorkDialog.value.loading && !force) return;
   postponeWorkDialog.value = {
     visible: false,
     note: '',
@@ -7672,7 +7672,7 @@ async function postponeCurrentWork(note = '') {
   if (workEditingRowId.value !== null) {
     workUploadError.value = true;
     workUploadMessage.value = 'Najpierw zakończ edycję wszystkich wierszy, zanim odłożysz pracę.';
-    return;
+    return false;
   }
 
   const rowsToSave = activeWorkRows.value.map((row, index) => getWorkRowPayload(row, index));
@@ -7682,9 +7682,11 @@ async function postponeCurrentWork(note = '') {
     const snapshot = createWorkSnapshot(note);
     addWorkSnapshot(snapshot);
     workUploadMessage.value = `Odłożono pracę "${snapshot.NazwaRec}" i zapisano ${payload.updatedRows ?? rowsToSave.length} wierszy WorkMain.`;
+    return true;
   } catch (error) {
     workUploadError.value = true;
     workUploadMessage.value = error.message || 'Nie udało się odłożyć aktualnej pracy.';
+    return false;
   }
 }
 
@@ -7695,15 +7697,14 @@ async function confirmPostponeCurrentWork() {
     loading: true,
   };
 
-  try {
-    await postponeCurrentWork(postponeWorkDialog.value.note);
-    cancelPostponeWorkDialog();
-  } catch (error) {
+  const wasPostponed = await postponeCurrentWork(postponeWorkDialog.value.note);
+  if (wasPostponed) {
+    cancelPostponeWorkDialog(true);
+  } else {
     postponeWorkDialog.value = {
       ...postponeWorkDialog.value,
       loading: false,
     };
-    throw error;
   }
 }
 
