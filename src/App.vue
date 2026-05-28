@@ -1162,7 +1162,7 @@
                                 <span
                                   v-if="getMergeCellValidationMessage(row, column)"
                                   class="cell-warning-indicator inline-warning-indicator"
-                                  :title="getMergeCellValidationMessage(row, column)"
+                                  :title="getMergeCellValidationCriteria(column)"
                                 >
                                   !
                                 </span>
@@ -1191,7 +1191,7 @@
                                 <span
                                   v-if="getRecipeWybijakValidationIssue(row)"
                                   class="cell-warning-indicator"
-                                  :title="getRecipeWybijakValidationIssue(row)"
+                                  :title="getMergeCellValidationCriteria(column)"
                                 >
                                   !
                                 </span>
@@ -1211,7 +1211,7 @@
                                 <span
                                   v-if="getMergeCellValidationMessage(row, column)"
                                   class="cell-warning-indicator inline-warning-indicator"
-                                  :title="getMergeCellValidationMessage(row, column)"
+                                  :title="getMergeCellValidationCriteria(column)"
                                 >
                                   !
                                 </span>
@@ -1221,7 +1221,7 @@
                                 <span
                                   v-if="getRecipeWybijakValidationIssue(row)"
                                   class="cell-warning-indicator"
-                                  :title="getRecipeWybijakValidationIssue(row)"
+                                  :title="getMergeCellValidationCriteria(column)"
                                 >
                                   !
                                 </span>
@@ -1230,7 +1230,7 @@
                                 <span>{{ row[column] ?? '' }}</span>
                                 <span
                                   class="cell-warning-indicator"
-                                  :title="getMergeCellValidationMessage(row, column)"
+                                  :title="getMergeCellValidationCriteria(column)"
                                 >
                                   !
                                 </span>
@@ -2756,6 +2756,32 @@ function getMergeCellValidationMessage(row, column) {
   const expectedLabel = expectedLabels[0];
   if (!expectedLabel) return '';
   return `${expectedLabel} jest wymagane.`;
+}
+
+function getMergeCellValidationCriteria(column) {
+  const printTextMaxLength = Math.max(1, normalizeWorkCorrectionValue(configSettings.value.printTextMaxLength || DEFAULT_PRINT_TEXT_MAX_LENGTH));
+  const boardMaxLength = Math.max(1, normalizeWorkCorrectionValue(configSettings.value.boardMaxLength || DEFAULT_BOARD_MAX_LENGTH));
+  const maxQuantity = Math.max(1, normalizeWorkCorrectionValue(configSettings.value.maxQuantity || DEFAULT_MAX_QUANTITY));
+  const maxPunchCount = Math.max(1, normalizeWorkCorrectionValue(configSettings.value.machinePunchCount || DEFAULT_MACHINE_PUNCH_COUNT));
+
+  switch (column) {
+    case 'TekstDoDruku':
+      return `Wymagane pole. Maksymalnie ${printTextMaxLength} znaków, bez polskich znaków.`;
+    case 'material':
+      return 'Wymagane pole.';
+    case 'dlugosc':
+      return `Wymagane pole. Liczba całkowita w mm. Zakres: 1-${boardMaxLength}.`;
+    case 'grubosc':
+      return 'Wymagane pole. Liczba całkowita.';
+    case 'szerokosc':
+      return 'Wymagane pole. Liczba całkowita.';
+    case 'ilosc':
+      return `Wymagane pole. Liczba całkowita. Zakres: 1-${maxQuantity}.`;
+    case 'wybijak':
+      return `Wymagane pole. 1 lub 2 wybijaki. Każdy wybijak musi mieć 1 cyfrę i być w zakresie 1-${maxPunchCount}.`;
+    default:
+      return '';
+  }
 }
 
 function nextWorkRowClientId() {
