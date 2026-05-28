@@ -1600,7 +1600,7 @@
                 <div class="work-actions-row">
                   <button
                     class="tool-btn"
-                    :disabled="!activeWorkRows.length || !hasConfiguredStationLengthRanges || workEditingRowId !== null || isWorkCorrectionSaving"
+                    :disabled="!activeWorkRows.length || !hasConfiguredStationLengthRanges || workEditingRowId !== null || isWorkCorrectionSaving || isWorkEditPreparing"
                     @click="applyWorkPunchAssignmentsByLength"
                   >
                     Przypisz wybijaki wg długości
@@ -1612,7 +1612,7 @@
                   >
                     {{ isReportExportLoading ? 'Generowanie...' : 'Generuj raport' }}
                   </button>
-                  <button class="tool-btn" :disabled="isWorkCorrectionSaving" @click="postponeCurrentWork">
+                  <button class="tool-btn" :disabled="isWorkCorrectionSaving || isWorkEditPreparing" @click="postponeCurrentWork">
                     Odłóż aktualną pracę
                   </button>
                 </div>
@@ -1620,7 +1620,7 @@
             </div>
           </div>
 
-          <div v-if="workUploadMessage" class="save-status" :class="{ error: workUploadError }">{{ workUploadMessage }}</div>
+          <div v-if="workUploadMessage" class="save-status" :class="{ error: workUploadError }" v-html="getWorkUploadMessageHtml()"></div>
 
           <div v-if="isWorkRecipePreviewOpen" class="confirm-modal-overlay" @click.self="closeWorkRecipePreview">
             <div class="confirm-modal panel panel-wide work-recipe-preview-modal" @click.stop>
@@ -1662,7 +1662,7 @@
                 </div>
                 <button
                   class="tool-btn compact work-table-save-btn"
-                  :disabled="!hasPendingWorkChanges || isWorkCorrectionSaving"
+                  :disabled="!hasPendingWorkChanges || isWorkCorrectionSaving || isWorkEditPreparing"
                   @click="saveWorkTable"
                 >
                   {{ isWorkCorrectionSaving ? 'Zapisywanie...' : 'Zapisz zmiany do bazy danych' }}
@@ -1675,10 +1675,10 @@
                 empty-text="WorkMain jest pusty"
               />
               <div class="work-table-footer">
-                <button class="tool-btn" :disabled="isWorkCorrectionSaving" @click="addWorkRow">Dodaj wiersz</button>
+                <button class="tool-btn" :disabled="isWorkCorrectionSaving || isWorkEditPreparing" @click="addWorkRow">Dodaj wiersz</button>
                 <button
                   class="tool-btn"
-                  :disabled="isWorkCorrectionSaving || !availableProductNames.length || workRows.length >= activeRowLimit"
+                  :disabled="isWorkCorrectionSaving || isWorkEditPreparing || !availableProductNames.length || workRows.length >= activeRowLimit"
                   @click="openWorkProductModal"
                 >
                   Dodaj z produktu
@@ -2194,6 +2194,7 @@ const isSaving = ref(false);
 const saveMessage = ref('');
 const saveError = ref(false);
 const isWorkCorrectionSaving = ref(false);
+const isWorkEditPreparing = ref(false);
 const workUploadMessage = ref('');
 const workUploadError = ref(false);
 const workEditingRowId = ref(null);
@@ -2784,6 +2785,24 @@ function getMergeCellValidationCriteria(column) {
   }
 }
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function getWorkUploadMessageHtml() {
+  const normalizedMessage = String(workUploadMessage.value ?? '').trim();
+  const targetMessage = 'Edycja aktualnej pracy jest dostępna tylko gdy maszyna jest zatrzymana.';
+  if (normalizedMessage === targetMessage) {
+    return 'Edycja <strong>aktualnej pracy</strong> jest dostępna tylko gdy maszyna jest zatrzymana.';
+  }
+  return escapeHtml(workUploadMessage.value);
+}
+
 function nextWorkRowClientId() {
   const nextId = workRowClientIdCounter;
   workRowClientIdCounter += 1;
@@ -2918,8 +2937,57 @@ function isWorkRowEditing(rowId) {
   return workEditingRowId.value === rowId;
 }
 
-function startWorkCorrectionEdit(rowId) {
-  workEditingRowId.value = rowId;
+async function ensureCurrentWorkEditingReady(targetRowId = null) {
+  if (workTableSourceMode.value !== 'active') {
+    return { allowed: true, resolvedRowId: targetRowId };
+  }
+
+  const targetRow = targetRowId ? workRows.value.find((entry) => entry.__clientId === targetRowId) ?? null : null;
+  const targetDatabaseRowId = targetRow ? getWorkRowPayload(targetRow).id : null;
+
+  isWorkEditPreparing.value = true;
+  workUploadMessage.value = '';
+  workUploadError.value = false;
+
+  try {
+    await loadMachineStatus();
+
+    if (machineStatusValue.value !== 0) {
+      workUploadError.value = true;
+      workUploadMessage.value = 'Edycja aktualnej pracy jest dostępna tylko gdy maszyna jest zatrzymana.';
+      return { allowed: false, resolvedRowId: null };
+    }
+
+    await loadWorkMainRows({ preserveDisabled: false });
+
+    if (targetDatabaseRowId === null) {
+      return { allowed: true, resolvedRowId: null };
+    }
+
+    const refreshedRow = workRows.value.find((entry) => Number(entry.id ?? 0) === Number(targetDatabaseRowId)) ?? null;
+    if (!refreshedRow) {
+      workUploadError.value = true;
+      workUploadMessage.value = 'Nie udało się odnaleźć wybranego wiersza po odświeżeniu danych z bazy.';
+      return { allowed: false, resolvedRowId: null };
+    }
+
+    return { allowed: true, resolvedRowId: refreshedRow.__clientId };
+  } catch (error) {
+    workUploadError.value = true;
+    workUploadMessage.value = error.message || 'Nie udało się sprawdzić statusu maszyny i odświeżyć aktualnej pracy.';
+    return { allowed: false, resolvedRowId: null };
+  } finally {
+    isWorkEditPreparing.value = false;
+  }
+}
+
+async function startWorkCorrectionEdit(rowId) {
+  if (isWorkCorrectionSaving.value || isWorkEditPreparing.value) return;
+
+  const { allowed, resolvedRowId } = await ensureCurrentWorkEditingReady(rowId);
+  if (!allowed) return;
+
+  workEditingRowId.value = resolvedRowId ?? rowId;
 }
 
 function finishWorkCorrectionEdit() {
@@ -2980,15 +3048,26 @@ function resetWorkRowsSnapshot() {
   workRowsSnapshot.value = serializeWorkRows(workRows.value);
 }
 
-function addWorkRow() {
+async function addWorkRow() {
+  if (isWorkCorrectionSaving.value || isWorkEditPreparing.value) return;
+
+  const { allowed } = await ensureCurrentWorkEditingReady();
+  if (!allowed) return;
+
   const newRow = createEmptyWorkRow();
   workRows.value = [...workRows.value, newRow];
   workEditingRowId.value = newRow.__clientId;
 }
 
-function toggleWorkRowDisabled(rowId) {
+async function toggleWorkRowDisabled(rowId) {
+  if (isWorkCorrectionSaving.value || isWorkEditPreparing.value) return;
+
+  const { allowed, resolvedRowId } = await ensureCurrentWorkEditingReady(rowId);
+  if (!allowed) return;
+
+  const effectiveRowId = resolvedRowId ?? rowId;
   workRows.value = workRows.value.map((row) =>
-    row.__clientId === rowId
+    row.__clientId === effectiveRowId
       ? {
           ...row,
           __disabled: !row.__disabled,
@@ -2996,7 +3075,7 @@ function toggleWorkRowDisabled(rowId) {
       : row,
   );
 
-  if (workEditingRowId.value === rowId) {
+  if (workEditingRowId.value === effectiveRowId) {
     workEditingRowId.value = null;
   }
 }
@@ -3005,8 +3084,13 @@ function resetWorkSourceSelection() {
   workSelectedRowIds.value = {};
 }
 
-function openWorkProductModal() {
+async function openWorkProductModal() {
   if (!availableProductNames.value.length) return;
+  if (isWorkCorrectionSaving.value || isWorkEditPreparing.value) return;
+
+  const { allowed } = await ensureCurrentWorkEditingReady();
+  if (!allowed) return;
+
   if (!workSourceProductName.value || !availableProductNames.value.includes(workSourceProductName.value)) {
     workSourceProductName.value = availableProductNames.value[0] || '';
   }
@@ -7651,6 +7735,7 @@ const WorkTable = defineComponent({
                                 class: ['tool-btn compact', row.__disabled ? 'primary' : ''],
                                 type: 'button',
                                 title: row.__disabled ? 'Włącz wiersz do wysyłki' : 'Wyłącz wiersz z wysyłki',
+                                disabled: isWorkCorrectionSaving.value || isWorkEditPreparing.value,
                                 onClick: () => toggleWorkRowDisabled(row.__clientId),
                               },
                               row.__disabled ? 'Włącz' : 'Wyłącz',
@@ -7661,6 +7746,7 @@ const WorkTable = defineComponent({
                                 class: 'tool-btn compact',
                                 type: 'button',
                                 title: 'Edytuj wiersz',
+                                disabled: isWorkCorrectionSaving.value || isWorkEditPreparing.value,
                                 onClick: () => startWorkCorrectionEdit(row.__clientId),
                               },
                               'Edytuj',
