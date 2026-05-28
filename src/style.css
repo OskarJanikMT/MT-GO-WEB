@@ -233,12 +233,12 @@ button {
 }
 
 .connection-badge.online {
-  background: rgba(34, 197, 94, 0.15);
-  color: var(--green);
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
 }
 
 .connection-badge.offline {
-  background: rgba(239, 68, 68, 0.14);
+  background: rgba(248, 113, 113, 0.12);
   color: #fca5a5;
 }
 
@@ -407,7 +407,7 @@ button {
   position: absolute;
   inset: 0 auto 0 0;
   border-radius: inherit;
-  background: linear-gradient(90deg, #0f766e 0%, #10b981 100%);
+  background: var(--accent);
 }
 
 .work-overall-progress-content {
@@ -485,6 +485,7 @@ button {
   align-items: center;
   gap: 10px;
   min-width: 0;
+  flex-wrap: wrap;
 }
 
 .work-table-source-label {
@@ -494,6 +495,14 @@ button {
 }
 
 .work-table-save-btn {
+  flex: 0 0 auto;
+}
+
+.work-table-source-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
   flex: 0 0 auto;
 }
 
@@ -514,6 +523,59 @@ button {
 .work-table-source-status.preview {
   color: #fbbf24;
   background: rgba(251, 191, 36, 0.12);
+}
+
+.work-table-refresh-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.work-table-refresh-time {
+  color: rgba(226, 232, 240, 0.62);
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.work-table-refresh-btn {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: rgba(226, 232, 240, 0.62);
+  cursor: pointer;
+  transition: transform 140ms ease, opacity 140ms ease, filter 140ms ease;
+}
+
+.work-table-refresh-btn:hover:not(:disabled) {
+  transform: rotate(20deg);
+  filter: brightness(1.18);
+}
+
+.work-table-refresh-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.work-table-refresh-btn img {
+  width: 18px;
+  height: 18px;
+  display: block;
+  opacity: 0.62;
+  filter: invert(83%) sepia(8%) saturate(188%) hue-rotate(177deg) brightness(88%) contrast(86%);
+}
+
+.work-table-refresh-btn:hover:not(:disabled) img {
+  opacity: 0.9;
+  filter: invert(92%) sepia(8%) saturate(191%) hue-rotate(177deg) brightness(96%) contrast(92%);
 }
 
 .filter-btn,
@@ -652,16 +714,10 @@ button {
 }
 
 .recipe-catalog-content .table-wrap {
-  width: calc(100% - 4px);
-  max-width: calc(100% - 4px);
-  margin-left: 4px;
   box-sizing: border-box;
 }
 
 .recipe-library-panel .table-wrap {
-  width: calc(100% - 4px);
-  max-width: calc(100% - 4px);
-  margin-left: 4px;
   box-sizing: border-box;
 }
 
@@ -670,15 +726,9 @@ button {
 }
 
 .products-summary-panel .table-wrap {
-  width: calc(100% - 4px);
-  max-width: calc(100% - 4px);
-  margin-left: 4px;
 }
 
 .recipe-preview-section > .panel.panel-wide .table-wrap {
-  width: calc(100% - 4px);
-  max-width: calc(100% - 4px);
-  margin-left: 4px;
   box-sizing: border-box;
 }
 
@@ -784,19 +834,6 @@ button {
   overflow: hidden;
 }
 
-.produkcja-container::before,
-.panel::before,
-.saved-panel::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background: var(--accent);
-  z-index: 2;
-}
-
 .table-wrap {
   position: relative;
   width: 100%;
@@ -806,7 +843,6 @@ button {
 
 .produkcja-container > .table-wrap {
   padding-top: 0;
-  padding-left: 4px;
   box-sizing: border-box;
 }
 
@@ -922,9 +958,6 @@ button {
 }
 
 .nested-table-wrap {
-  width: calc(100% - 4px);
-  max-width: calc(100% - 4px);
-  margin-left: 4px;
   max-height: 360px;
   overflow: auto;
   border: 1px solid var(--border);
@@ -1004,6 +1037,8 @@ button {
   padding: 24px 32px;
   font-size: 14px;
   line-height: 1.5;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .product-modal-overlay {
@@ -1231,6 +1266,7 @@ button {
 
 .save-status {
   padding: 12px 20px 0 20px;
+  margin-bottom: 10px;
   color: #86efac;
   font-size: 12px;
   font-weight: 600;
@@ -1254,6 +1290,7 @@ button {
 
 .product-file-status {
   padding: 0 4px 12px;
+  margin-bottom: 0;
 }
 
 .visually-hidden {
@@ -1285,9 +1322,11 @@ button {
 }
 
 .work-progress-cell {
-  display: flex;
+  display: grid;
+  grid-template-columns: 16px 120px 16px;
   align-items: center;
   justify-content: center;
+  column-gap: 8px;
   min-width: 0;
   width: 100%;
 }
@@ -1402,7 +1441,7 @@ button {
 .work-progress-bar-wrap {
   width: 120px;
   max-width: 120px;
-  justify-self: start;
+  justify-self: center;
 }
 
 .work-progress-bar-track {
@@ -1430,11 +1469,6 @@ button {
   font-size: 11px;
   font-weight: 800;
   line-height: 1;
-  text-shadow:
-    -1px -1px 0 rgba(0, 0, 0, 0.65),
-    1px -1px 0 rgba(0, 0, 0, 0.65),
-    -1px 1px 0 rgba(0, 0, 0, 0.65),
-    1px 1px 0 rgba(0, 0, 0, 0.65);
 }
 
 .work-progress-inline-edit {
@@ -1446,21 +1480,36 @@ button {
 .work-progress-slash {
   color: var(--text-heading);
   font-weight: 800;
-  text-shadow:
-    -1px -1px 0 rgba(0, 0, 0, 0.65),
-    1px -1px 0 rgba(0, 0, 0, 0.65),
-    -1px 1px 0 rgba(0, 0, 0, 0.65),
-    1px 1px 0 rgba(0, 0, 0, 0.65);
+}
+
+.work-progress-complete-slot {
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.work-progress-complete-mark {
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 900;
+  line-height: 1;
+  opacity: 0;
+}
+
+.work-progress-complete-mark.visible {
+  opacity: 1;
 }
 
 .work-progress-bar-fill {
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #b45309, #d97706);
+  background: var(--accent);
 }
 
 .work-progress-bar-fill.complete {
-  background: linear-gradient(90deg, #15803d, #16a34a);
+  background: var(--accent);
 }
 
 .work-edit-btn {
@@ -1889,9 +1938,6 @@ button {
 
 .work-recipe-preview-modal .table-wrap {
   flex: 1 1 auto;
-  width: calc(100% - 4px);
-  max-width: calc(100% - 4px);
-  margin-left: 4px;
   box-sizing: border-box;
   max-height: calc(88dvh - 170px);
   overflow-x: auto;
@@ -1900,9 +1946,6 @@ button {
 }
 
 .saved-recipe-preview-modal .table-wrap {
-  width: calc(100% - 4px);
-  max-width: calc(100% - 4px);
-  margin-left: 4px;
   max-height: calc(88dvh - 170px);
   scrollbar-gutter: stable;
 }
@@ -2948,6 +2991,10 @@ button {
   background: rgba(236, 72, 153, 0.08);
 }
 
+.recipe-group-add-card {
+  background: rgba(148, 163, 184, 0.06);
+}
+
 .recipe-group-header {
   width: 100%;
   display: flex;
@@ -2962,6 +3009,15 @@ button {
 
 .recipe-group-header:hover {
   background: rgba(18, 18, 28, 0.78);
+}
+
+.recipe-group-add-trigger {
+  border: 0;
+}
+
+.recipe-group-add-trigger:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .recipe-group-toggle {
@@ -2979,13 +3035,59 @@ button {
   flex: 1;
 }
 
+.recipe-group-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
 .recipe-group-meta strong {
   font-size: 12px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .recipe-group-meta small {
   color: var(--text-muted);
   font-size: 11px;
+}
+
+.recipe-group-name-input {
+  min-height: 30px;
+  max-width: 220px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.recipe-group-rename-btn {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease, border-color 140ms ease;
+}
+
+.recipe-group-rename-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.14);
+  color: var(--text-heading);
+}
+
+.recipe-group-rename-btn svg {
+  width: 14px;
+  height: 14px;
 }
 
 .recipe-group-quantity {
@@ -3072,12 +3174,22 @@ button {
   min-width: 100%;
 }
 
+.recipe-group-table-content {
+  width: max-content;
+  min-width: 100%;
+}
+
 .merge-group-footer {
   display: flex;
   justify-content: flex-end;
   padding: 10px 12px 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
   background: rgba(0, 0, 0, 0.12);
+}
+
+.merge-group-add-row-btn {
+  margin-left: auto;
+  margin-right: 0;
 }
 
 .save-recipe-modal {
@@ -3097,7 +3209,6 @@ button {
 }
 
 .saved-panel .table-wrap {
-  padding-left: 4px;
   max-height: calc(100vh - 280px);
   box-sizing: border-box;
 }

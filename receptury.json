@@ -5,7 +5,7 @@
       "nazwaReceptury": "testowa gorka",
       "CzasOdloz": "2026-05-26 11:15:25",
       "createdAt": "2026-05-26 11:15:25",
-      "lastUsedAt": "2026-05-26 14:42:18",
+      "lastUsedAt": "2026-05-28 17:05:13",
       "Usr": "Default",
       "rows": [
         {
@@ -475,7 +475,7 @@
       "nazwaReceptury": "testowaaa",
       "CzasOdloz": "2026-05-26 14:33:19",
       "createdAt": "2026-05-26 14:33:19",
-      "lastUsedAt": "2026-05-26 14:35:20",
+      "lastUsedAt": "2026-05-28 17:05:22",
       "Usr": "Default",
       "rows": [
         {
@@ -1137,6 +1137,36 @@
           "Stanowisko": "1",
           "Informacje": "Kopia tymczasowa",
           "TekstDoDruku": "BULL S 13,1"
+        }
+      ]
+    },
+    {
+      "idRap": 1779977207048,
+      "nazwaReceptury": "testtrt",
+      "CzasOdloz": "2026-05-28 16:06:47",
+      "createdAt": "2026-05-28 16:06:47",
+      "lastUsedAt": "",
+      "Usr": "Default",
+      "rows": [
+        {
+          "nazwaReceptury": "testtrt",
+          "nazwaProduktu": "Pusty produkt 1",
+          "nazwaSkladowej": "",
+          "dlugosc": "600",
+          "grubosc": "20",
+          "szerokosc": "20",
+          "material": "so",
+          "idReceptury": 26,
+          "idSkladowej": 0,
+          "wybijak": "5 i 6",
+          "grupa": "",
+          "priorytet": "",
+          "ilosc": 20,
+          "iloscWykonana": 0,
+          "Klasa": 2,
+          "Stanowisko": "3",
+          "Informacje": "Kopia tymczasowa",
+          "TekstDoDruku": "test"
         }
       ]
     }
