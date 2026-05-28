@@ -566,6 +566,7 @@
                             class="edit-input wybijak-part-input"
                             :value="getWybijakInputParts(item[column], item.Stanowisko)[0]"
                             inputmode="numeric"
+                            maxlength="1"
                             @input="updateEditedWybijakPart(item._localId, 0, $event.target.value)"
                           />
                           <span class="wybijak-separator">i</span>
@@ -573,6 +574,7 @@
                             class="edit-input wybijak-part-input"
                             :value="getWybijakInputParts(item[column], item.Stanowisko)[1]"
                             inputmode="numeric"
+                            maxlength="1"
                             @input="updateEditedWybijakPart(item._localId, 1, $event.target.value)"
                           />
                         </div>
@@ -1164,6 +1166,7 @@
                                   class="edit-input wybijak-part-input"
                                   :value="getWybijakInputParts(row[column], row.Stanowisko)[0]"
                                   inputmode="numeric"
+                                  maxlength="1"
                                   @input="updateMergeRecipeWybijakPart(group.productName, row._localId, 0, $event.target.value)"
                                 />
                                 <span class="wybijak-separator">i</span>
@@ -1171,6 +1174,7 @@
                                   class="edit-input wybijak-part-input"
                                   :value="getWybijakInputParts(row[column], row.Stanowisko)[1]"
                                   inputmode="numeric"
+                                  maxlength="1"
                                   @input="updateMergeRecipeWybijakPart(group.productName, row._localId, 1, $event.target.value)"
                                 />
                               </div>
@@ -2605,6 +2609,12 @@ function normalizeWorkCorrectionValue(value) {
     .trim();
   const parsed = normalizedText ? Number.parseInt(normalizedText, 10) : 0;
   return Number.isFinite(parsed) ? Math.max(parsed, 0) : 0;
+}
+
+function normalizeWybijakPartInputValue(value) {
+  return String(value ?? '')
+    .replace(/[^\d]/g, '')
+    .slice(0, 1);
 }
 
 function nextWorkRowClientId() {
@@ -5529,7 +5539,7 @@ function updateEditedWybijakPart(localId, partIndex, value) {
   const row = editingRows.value.find((item) => item._localId === localId);
   if (!row) return;
   const parts = getWybijakInputParts(row.Wybijak, row.Stanowisko);
-  parts[partIndex] = String(value ?? '').replace(/[^\d]/g, '').trim();
+  parts[partIndex] = normalizeWybijakPartInputValue(value);
   row.Wybijak = buildWybijakValueFromParts(parts[0], parts[1]);
 }
 
@@ -6578,7 +6588,7 @@ function updateRecipePreviewWybijakPart(localId, partIndex, value) {
   const row = recipePreviewDraftRows.value.find((item) => item._localId === localId);
   if (!row) return;
   const parts = getWybijakInputParts(row.wybijak, row.Stanowisko);
-  parts[partIndex] = String(value ?? '').replace(/[^\d]/g, '').trim();
+  parts[partIndex] = normalizeWybijakPartInputValue(value);
   row.wybijak = buildWybijakValueFromParts(parts[0], parts[1]);
 }
 
@@ -6951,7 +6961,7 @@ function updateMergeRecipeWybijakPart(productName, localId, partIndex, value) {
   const row = (mergeRecipeDrafts.value[productName] ?? []).find((item) => item._localId === localId);
   if (!row) return;
   const parts = getWybijakInputParts(row.wybijak, row.Stanowisko);
-  parts[partIndex] = String(value ?? '').replace(/[^\d]/g, '').trim();
+  parts[partIndex] = normalizeWybijakPartInputValue(value);
   row.wybijak = buildWybijakValueFromParts(parts[0], parts[1]);
 }
 
@@ -7522,6 +7532,7 @@ const RecipePreviewTable = defineComponent({
                                 class: 'edit-input recipe-preview-input wybijak-part-input',
                                 value: firstPart,
                                 inputmode: 'numeric',
+                                maxlength: 1,
                                 onInput: (event) => updateRecipePreviewWybijakPart(row._localId, 0, event.target.value),
                               }),
                               h('span', { class: 'wybijak-separator' }, 'i'),
@@ -7529,6 +7540,7 @@ const RecipePreviewTable = defineComponent({
                                 class: 'edit-input recipe-preview-input wybijak-part-input',
                                 value: secondPart,
                                 inputmode: 'numeric',
+                                maxlength: 1,
                                 onInput: (event) => updateRecipePreviewWybijakPart(row._localId, 1, event.target.value),
                               }),
                             ]),
