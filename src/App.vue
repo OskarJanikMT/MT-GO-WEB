@@ -2622,24 +2622,45 @@ function getRecipePreviewWybijakValidationError(rows = []) {
 
   for (let rowIndex = 0; rowIndex < rows.length; rowIndex += 1) {
     const row = rows[rowIndex] || {};
-    const rawDigits = String(row.wybijak ?? row.Wybijak ?? '').replace(/[^\d]/g, '').trim();
+    const rawValue = String(row.wybijak ?? row.Wybijak ?? '').trim();
+    const [firstPart, secondPart] = getWybijakInputParts(rawValue, row.Stanowisko);
+    const normalizedFirstPart = String(firstPart ?? '').replace(/[^\d]/g, '').trim();
+    const normalizedSecondPart = String(secondPart ?? '').replace(/[^\d]/g, '').trim();
 
-    if (!rawDigits) {
+    if (!normalizedFirstPart && !normalizedSecondPart) {
       return `Wiersz ${rowIndex + 1}: wybijak jest wymagany.`;
     }
+
+    if (rawValue.includes(' i ')) {
+      if (!normalizedFirstPart || !normalizedSecondPart) {
+        return `Wiersz ${rowIndex + 1}: wybijak musi mieć dwie poprawne wartości.`;
+      }
+      if (normalizedFirstPart.length > 1 || normalizedSecondPart.length > 1) {
+        return `Wiersz ${rowIndex + 1}: każdy wybijak może mieć tylko jedną cyfrę.`;
+      }
+      if (normalizedFirstPart === '0' || Number(normalizedFirstPart) > maxPunchCount) {
+        return `Wiersz ${rowIndex + 1}: pierwszy wybijak musi być w zakresie 1-${maxPunchCount}.`;
+      }
+      if (normalizedSecondPart === '0' || Number(normalizedSecondPart) > maxPunchCount) {
+        return `Wiersz ${rowIndex + 1}: drugi wybijak musi być w zakresie 1-${maxPunchCount}.`;
+      }
+      continue;
+    }
+
+    const rawDigits = `${normalizedFirstPart}${normalizedSecondPart}`;
 
     if (rawDigits.length > 2) {
       return `Wiersz ${rowIndex + 1}: wybijak może mieć maksymalnie 2 cyfry.`;
     }
 
-    const firstPart = rawDigits[0] ?? '';
-    const secondPart = rawDigits[1] ?? '';
+    const digitFirstPart = rawDigits[0] ?? '';
+    const digitSecondPart = rawDigits[1] ?? '';
 
-    if (firstPart === '0' || Number(firstPart) > maxPunchCount) {
+    if (digitFirstPart === '0' || Number(digitFirstPart) > maxPunchCount) {
       return `Wiersz ${rowIndex + 1}: pierwszy wybijak musi być w zakresie 1-${maxPunchCount}.`;
     }
 
-    if (rawDigits.length === 2 && (secondPart === '0' || Number(secondPart) > maxPunchCount)) {
+    if (rawDigits.length === 2 && (digitSecondPart === '0' || Number(digitSecondPart) > maxPunchCount)) {
       return `Wiersz ${rowIndex + 1}: drugi wybijak musi być w zakresie 1-${maxPunchCount}.`;
     }
   }
