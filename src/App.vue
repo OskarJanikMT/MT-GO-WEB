@@ -2614,6 +2614,26 @@ const hasConfiguredStations = computed(() => configStations.value.length > 0);
 const maxConfiguredStationCount = computed(() => Math.max(1, normalizeWorkCorrectionValue(configSettings.value.machinePunchCount || DEFAULT_MACHINE_PUNCH_COUNT)));
 
 const hasPendingWorkChanges = computed(() => serializeWorkRows(workRows.value) !== workRowsSnapshot.value);
+const savedWorkRowsSnapshot = computed(() => {
+  try {
+    const parsed = JSON.parse(workRowsSnapshot.value || '[]');
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+});
+const savedWorkRowsById = computed(
+  () =>
+    new Map(
+      savedWorkRowsSnapshot.value.map((row, index) => [
+        Number(getWorkRowPayload(row, index).id),
+        {
+          ...getWorkRowPayload(row, index),
+          __disabled: Boolean(row?.__disabled),
+        },
+      ]),
+    ),
+);
 const activeWorkRows = computed(() => workRows.value.filter((row) => !row.__disabled));
 const overallWorkDone = computed(() =>
   activeWorkRows.value.reduce((sum, row) => sum + normalizeWorkCorrectionValue(row?.WykonaneSztuki), 0),
@@ -2629,6 +2649,7 @@ const workDisplayRows = computed(() =>
   workRows.value.map((row) => ({
     __clientId: row.__clientId,
     __disabled: Boolean(row.__disabled),
+    __isPendingSync: isWorkRowPendingSync(row),
     id: row.id ?? '',
     Nazwa: row.Nazwa ?? '',
     Material: row.Material ?? '',
@@ -2646,6 +2667,19 @@ const workDisplayRows = computed(() =>
     Stanowisko: row.Stanowisko ?? '',
   })),
 );
+
+function isWorkRowPendingSync(row, index = 0) {
+  if (row?.__isLocalDraft) return true;
+
+  const currentRowSnapshot = {
+    ...getWorkRowPayload(row, index),
+    __disabled: Boolean(row?.__disabled),
+  };
+  const savedRowSnapshot = savedWorkRowsById.value.get(Number(currentRowSnapshot.id));
+  if (!savedRowSnapshot) return true;
+
+  return JSON.stringify(currentRowSnapshot) !== JSON.stringify(savedRowSnapshot);
+}
 
 function syncWorkTableSourceFromRows(rows = []) {
   const uniqueNames = [...new Set(rows.map((row) => String(row?.NazwaRec ?? '').trim()).filter(Boolean))];
@@ -3447,6 +3481,52 @@ function getWorkRowsValidationMessage(rows, contextMessage) {
     invalidRowsCount === 1 ? '1 wiersz ma braki' : invalidRowsCount < 5 ? `${invalidRowsCount} wiersze mają braki` : `${invalidRowsCount} wierszy ma braki`;
 
   return `${contextMessage} ${pluralLabel}. ${validationErrors[0]}`;
+}
+
+function getWorkCellValidationMessage(row, column) {
+  const validationLabelByKey = {
+    Nazwa: ['Nazwa'],
+    Material: ['Materiał'],
+    Dlugosc: ['Długość', 'Długość >'],
+    Grubosc: ['Grubość'],
+    Szerokosc: ['Szerokość'],
+    Wybijak: ['Wybijak'],
+    Sztuk: ['Ilość', 'Ilość >'],
+  };
+
+  const expectedLabels = validationLabelByKey[column];
+  if (!expectedLabels) return '';
+
+  const missingFields = getWorkRowMissingFields(row);
+  const matchedMessage = missingFields.find((field) =>
+    expectedLabels.some((label) => (label.endsWith('>') ? field.startsWith(label) : field === label)),
+  );
+  if (!matchedMessage) return '';
+
+  if (column === 'Dlugosc' && matchedMessage.startsWith('Długość > ')) {
+    return matchedMessage;
+  }
+
+  if (column === 'Sztuk' && matchedMessage.startsWith('Ilość > ')) {
+    return matchedMessage;
+  }
+
+  const expectedLabel = expectedLabels[0];
+  return `Pole ${expectedLabel} jest wymagane.`;
+}
+
+function getWorkCellValidationCriteria(column) {
+  const validationMessagesByColumn = {
+    Nazwa: 'Wpisz nazwę elementu.',
+    Material: 'Wybierz lub wpisz materiał.',
+    Dlugosc: `Podaj długość elementu w mm. Maksymalna długość: ${Math.max(1, normalizeWorkCorrectionValue(configSettings.value.boardMaxLength || DEFAULT_BOARD_MAX_LENGTH))} mm.`,
+    Grubosc: 'Podaj grubość elementu w mm.',
+    Szerokosc: 'Podaj szerokość elementu w mm.',
+    Wybijak: 'Wybierz stanowisko lub uzupełnij wartość wybijaka.',
+    Sztuk: `Podaj ilość elementów. Maksymalna ilość: ${Math.max(1, normalizeWorkCorrectionValue(configSettings.value.maxQuantity || DEFAULT_MAX_QUANTITY))}.`,
+  };
+
+  return validationMessagesByColumn[column] || '';
 }
 
 function isStrictPositiveIntegerValue(value) {
@@ -7657,7 +7737,13 @@ const WorkTable = defineComponent({
                   ? sortedRows.value.map((row) =>
                       h(
                         'tr',
-                    { key: row.__clientId ?? row.id ?? row.Nazwa, class: { disabled: row.__disabled } },
+                    {
+                      key: row.__clientId ?? row.id ?? row.Nazwa,
+                      class: {
+                        disabled: row.__disabled,
+                        'pending-sync': row.__isPendingSync,
+                      },
+                    },
                     props.columns.map((column) => {
                       if (column === 'id') {
                         return h('td', { key: `${row.__clientId}-${column}` }, row.id ?? '');
@@ -7665,35 +7751,83 @@ const WorkTable = defineComponent({
 
                       if (column !== 'Progress' && !isWorkRowEditing(row.__clientId)) {
                         const displayValue = column === 'Wybijak' ? formatWorkWybijakDisplayValue(row) : (row[column] ?? '');
-                        return h('td', { key: `${row.__clientId}-${column}` }, displayValue);
+                        const validationMessage = getWorkCellValidationMessage(row, column);
+                        if (!validationMessage) {
+                          return h('td', { key: `${row.__clientId}-${column}` }, displayValue);
+                        }
+
+                        return h('td', { key: `${row.__clientId}-${column}` }, [
+                          h('span', { class: 'cell-warning-wrap' }, [
+                            h('span', displayValue),
+                            h(
+                              'span',
+                              {
+                                class: 'cell-warning-indicator',
+                                title: validationMessage || getWorkCellValidationCriteria(column),
+                              },
+                              '!',
+                            ),
+                          ]),
+                        ]);
                       }
 
                       if (column !== 'Progress') {
                         if (row.__disabled) {
-                          return h('td', { key: `${row.__clientId}-${column}` }, row[column] ?? '');
+                          const validationMessage = getWorkCellValidationMessage(row, column);
+                          if (!validationMessage) {
+                            return h('td', { key: `${row.__clientId}-${column}` }, row[column] ?? '');
+                          }
+
+                          return h('td', { key: `${row.__clientId}-${column}` }, [
+                            h('span', { class: 'cell-warning-wrap' }, [
+                              h('span', row[column] ?? ''),
+                              h(
+                                'span',
+                                {
+                                  class: 'cell-warning-indicator',
+                                  title: validationMessage || getWorkCellValidationCriteria(column),
+                                },
+                                '!',
+                              ),
+                            ]),
+                          ]);
                         }
                         if (isStationColumn(column)) {
+                          const validationMessage = getWorkCellValidationMessage(row, column);
                           return h('td', { key: `${row.__clientId}-${column}` }, [
-                            h(
-                              'select',
-                              {
-                                class: 'edit-input work-cell-input',
-                                value: row[column] ?? '',
-                                style: getWorkEditInputStyle(column, row[column]),
-                                onInput: (event) => updateWorkCell(row.__clientId, column, event.target.value),
-                              },
-                              [
-                                h('option', { value: '' }, ''),
-                                ...getStationDropdownOptions(row[column]).map((option) =>
-                                  h('option', { key: `${row.__clientId}-${column}-${option.value}`, value: option.value }, option.label),
-                                ),
-                              ],
-                            ),
+                            h('div', { class: 'cell-edit-with-warning' }, [
+                              h(
+                                'select',
+                                {
+                                  class: 'edit-input work-cell-input',
+                                  value: row[column] ?? '',
+                                  style: getWorkEditInputStyle(column, row[column]),
+                                  onInput: (event) => updateWorkCell(row.__clientId, column, event.target.value),
+                                },
+                                [
+                                  h('option', { value: '' }, ''),
+                                  ...getStationDropdownOptions(row[column]).map((option) =>
+                                    h('option', { key: `${row.__clientId}-${column}-${option.value}`, value: option.value }, option.label),
+                                  ),
+                                ],
+                              ),
+                              validationMessage
+                                ? h(
+                                    'span',
+                                    {
+                                      class: 'cell-warning-indicator inline-warning-indicator',
+                                      title: validationMessage || getWorkCellValidationCriteria(column),
+                                    },
+                                    '!',
+                                  )
+                                : null,
+                            ]),
                           ]);
                         }
 
                         if (column === 'Wybijak') {
                           const [firstPart, secondPart] = getWybijakInputParts(row[column], row.Stanowisko);
+                          const validationMessage = getWorkCellValidationMessage(row, column);
                           return h('td', { key: `${row.__clientId}-${column}` }, [
                             h('div', { class: 'wybijak-edit-group' }, [
                               h('input', {
@@ -7709,18 +7843,41 @@ const WorkTable = defineComponent({
                                 inputmode: 'numeric',
                                 onInput: (event) => updateWorkWybijakPart(row.__clientId, 1, event.target.value),
                               }),
+                              validationMessage
+                                ? h(
+                                    'span',
+                                    {
+                                      class: 'cell-warning-indicator',
+                                      title: validationMessage || getWorkCellValidationCriteria(column),
+                                    },
+                                    '!',
+                                  )
+                                : null,
                             ]),
                           ]);
                         }
 
+                        const validationMessage = getWorkCellValidationMessage(row, column);
                         return h('td', { key: `${row.__clientId}-${column}` }, [
-                          h('input', {
-                            class: 'edit-input work-cell-input',
-                            value: row[column] ?? '',
-                            style: getWorkEditInputStyle(column, row[column]),
-                            inputmode: ['Dlugosc', 'Wybijak', 'Grubosc', 'Szerokosc', 'Sztuk', 'Stanowisko'].includes(column) ? 'numeric' : undefined,
-                            onInput: (event) => updateWorkCell(row.__clientId, column, event.target.value),
-                          }),
+                          h('div', { class: 'cell-edit-with-warning' }, [
+                            h('input', {
+                              class: 'edit-input work-cell-input',
+                              value: row[column] ?? '',
+                              style: getWorkEditInputStyle(column, row[column]),
+                              inputmode: ['Dlugosc', 'Wybijak', 'Grubosc', 'Szerokosc', 'Sztuk', 'Stanowisko'].includes(column) ? 'numeric' : undefined,
+                              onInput: (event) => updateWorkCell(row.__clientId, column, event.target.value),
+                            }),
+                            validationMessage
+                              ? h(
+                                  'span',
+                                  {
+                                    class: 'cell-warning-indicator inline-warning-indicator',
+                                    title: validationMessage || getWorkCellValidationCriteria(column),
+                                  },
+                                  '!',
+                                )
+                              : null,
+                          ]),
                         ]);
                       }
 

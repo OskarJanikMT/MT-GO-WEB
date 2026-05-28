@@ -1514,8 +1514,20 @@ button {
   opacity: 0.55;
 }
 
+.work-data-table tbody tr.pending-sync td {
+  background: rgba(234, 179, 8, 0.16);
+}
+
+.work-data-table tbody tr.pending-sync:hover td {
+  background: rgba(234, 179, 8, 0.22);
+}
+
 .work-data-table tbody tr.disabled td {
   background: rgba(127, 29, 29, 0.08);
+}
+
+.work-data-table tbody tr.pending-sync.disabled td {
+  background: rgba(180, 83, 9, 0.16);
 }
 
 .work-table-footer {
