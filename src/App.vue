@@ -1637,7 +1637,11 @@
                   >
                     {{ isReportExportLoading ? 'Generowanie...' : 'Generuj raport' }}
                   </button>
-                  <button class="tool-btn" :disabled="isWorkCorrectionSaving || isWorkEditPreparing" @click="openPostponeWorkDialog">
+                  <button
+                    class="tool-btn"
+                    :disabled="isWorkCorrectionSaving || isWorkEditPreparing || workEditingRowId !== null || hasPendingWorkChanges"
+                    @click="openPostponeWorkDialog"
+                  >
                     Odłóż aktualną pracę
                   </button>
                 </div>
@@ -3612,6 +3616,12 @@ function persistSavedRows() {
 }
 
 function openPostponeWorkDialog() {
+  if (workEditingRowId.value !== null || hasPendingWorkChanges.value) {
+    workUploadError.value = true;
+    workUploadMessage.value = 'Odłożenie aktualnej pracy jest możliwe tylko wtedy, gdy nie ma niezapisanych zmian.';
+    return;
+  }
+
   postponeWorkDialog.value = {
     visible: true,
     note: '',
