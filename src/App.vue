@@ -2632,14 +2632,14 @@ function getRecipePreviewWybijakValidationError(rows = []) {
       return `Wiersz ${rowIndex + 1}: wybijak może mieć maksymalnie 2 cyfry.`;
     }
 
-    const firstPart = normalizeWorkCorrectionValue(rawDigits[0] ?? '');
-    const secondPart = normalizeWorkCorrectionValue(rawDigits[1] ?? '');
+    const firstPart = rawDigits[0] ?? '';
+    const secondPart = rawDigits[1] ?? '';
 
-    if (firstPart < 1 || firstPart > maxPunchCount) {
+    if (firstPart === '0' || Number(firstPart) > maxPunchCount) {
       return `Wiersz ${rowIndex + 1}: pierwszy wybijak musi być w zakresie 1-${maxPunchCount}.`;
     }
 
-    if (rawDigits.length === 2 && (secondPart < 1 || secondPart > maxPunchCount)) {
+    if (rawDigits.length === 2 && (secondPart === '0' || Number(secondPart) > maxPunchCount)) {
       return `Wiersz ${rowIndex + 1}: drugi wybijak musi być w zakresie 1-${maxPunchCount}.`;
     }
   }
