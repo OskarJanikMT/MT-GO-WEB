@@ -1299,22 +1299,24 @@ button {
 }
 
 .work-done-input {
-  width: 56px;
-  min-width: 56px;
+  width: auto;
+  min-width: 7ch;
   height: 26px;
   padding: 0 6px;
   text-align: center;
+  field-sizing: content;
 }
 
 .work-cell-input {
   display: block;
   width: auto;
-  min-width: 4ch;
+  min-width: 8ch;
   max-width: none;
   margin: 0 auto;
   padding: 0 8px;
   text-align: center;
   white-space: nowrap;
+  field-sizing: content;
 }
 
 .work-cell-input:is(select) {

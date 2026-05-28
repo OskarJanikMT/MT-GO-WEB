@@ -738,6 +738,13 @@
                   <div class="temporary-product-toolbar">
                     <button
                       class="tool-btn compact"
+                      :disabled="!remainingRecipeCapacity"
+                      @click="addEmptyMergeElement"
+                    >
+                      Dodaj pusty element
+                    </button>
+                    <button
+                      class="tool-btn compact"
                       :disabled="!availableProductNames.length || !remainingRecipeCapacity"
                       @click="openSingleElementModal"
                     >
@@ -1121,6 +1128,7 @@
                       <table class="data-table recipe-group-table">
                         <thead>
                           <tr>
+                            <th class="recipe-index-column">Nr</th>
                             <th
                               v-for="column in mergeRecipeColumns"
                               :key="`${group.productName}-${column}`"
@@ -1138,6 +1146,7 @@
                         </thead>
                         <tbody>
                           <tr v-for="row in group.rows" :key="`${group.productName}-${row._localId}`">
+                            <td class="recipe-index-column">{{ getMergeRecipeRowDisplayIndex(row) }}</td>
                             <td v-for="column in mergeRecipeColumns" :key="`${group.productName}-${row.idSkladowej}-${column}`">
                               <div
                                 v-if="isMergeProductEditMode(group.productName) && (isDropdownColumn(column) || isStationColumn(column))"
@@ -2785,6 +2794,12 @@ function getMergeCellValidationCriteria(column) {
   }
 }
 
+function getMergeRecipeRowDisplayIndex(row) {
+  const numericIndex = Number(row?.idSkladowej);
+  if (!Number.isFinite(numericIndex) || numericIndex < 0) return '';
+  return numericIndex + 1;
+}
+
 function escapeHtml(value) {
   return String(value ?? '')
     .replaceAll('&', '&amp;')
@@ -2886,6 +2901,7 @@ function serializeWorkRows(rows) {
     rows.map((row, index) => ({
       ...getWorkRowPayload(row, index),
       __disabled: Boolean(row?.__disabled),
+      __isLocalDraft: Boolean(row?.__isLocalDraft),
     })),
   );
 }
@@ -2895,17 +2911,23 @@ function normalizeWorkRow(row, index = 0) {
   return {
     __clientId: row?.__clientId || nextWorkRowClientId(),
     __disabled: Boolean(row?.__disabled),
+    __isLocalDraft: Boolean(row?.__isLocalDraft),
     ...payload,
   };
 }
 
-function getNextWorkRowId() {
-  return workRows.value.reduce((maxId, row, index) => Math.max(maxId, getWorkRowPayload(row, index).id), 0) + 1;
+function getNextWorkRowIdFromRows(rows = workRows.value) {
+  return rows.reduce((maxId, row, index) => Math.max(maxId, getWorkRowPayload(row, index).id), 0) + 1;
 }
 
-function createEmptyWorkRow() {
+function getNextWorkRowId() {
+  return getNextWorkRowIdFromRows(workRows.value);
+}
+
+function createEmptyWorkRow(rowId = getNextWorkRowId()) {
   return normalizeWorkRow({
-    id: getNextWorkRowId(),
+    id: rowId,
+    __isLocalDraft: true,
     SourceProductName: '',
     Nazwa: '',
     Material: '',
@@ -2937,8 +2959,13 @@ function isWorkRowEditing(rowId) {
   return workEditingRowId.value === rowId;
 }
 
-async function ensureCurrentWorkEditingReady(targetRowId = null) {
+async function ensureCurrentWorkEditingReady(targetRowId = null, options = {}) {
+  const { refreshRows = true } = options;
   if (workTableSourceMode.value !== 'active') {
+    return { allowed: true, resolvedRowId: targetRowId };
+  }
+
+  if (workEditingRowId.value !== null || hasPendingWorkChanges.value) {
     return { allowed: true, resolvedRowId: targetRowId };
   }
 
@@ -2956,6 +2983,10 @@ async function ensureCurrentWorkEditingReady(targetRowId = null) {
       workUploadError.value = true;
       workUploadMessage.value = 'Edycja aktualnej pracy jest dostępna tylko gdy maszyna jest zatrzymana.';
       return { allowed: false, resolvedRowId: null };
+    }
+
+    if (!refreshRows) {
+      return { allowed: true, resolvedRowId: targetRowId };
     }
 
     await loadWorkMainRows({ preserveDisabled: true });
@@ -3127,7 +3158,7 @@ function handleWorkSourceRowCheckboxChange(localId, isChecked) {
   };
 }
 
-function createWorkRowFromProductRow(sourceRow = {}) {
+function createWorkRowFromProductRow(sourceRow = {}, rowId = getNextWorkRowId()) {
   const length = normalizeWorkCorrectionValue(sourceRow['Długość'] ?? sourceRow.dlugosc);
   const thickness = normalizeWorkCorrectionValue(sourceRow['Grubość'] ?? sourceRow.grubosc);
   const width = normalizeWorkCorrectionValue(sourceRow['Szerokość'] ?? sourceRow.szerokosc);
@@ -3135,7 +3166,8 @@ function createWorkRowFromProductRow(sourceRow = {}) {
   const station = normalizeStationValue(sourceRow.Stanowisko ?? sourceRow.stanowisko);
 
   return normalizeWorkRow({
-    id: getNextWorkRowId(),
+    id: rowId,
+    __isLocalDraft: true,
     SourceProductName: sourceRow._sourceFile ?? sourceRow.SourceProductName ?? '',
     Nazwa: sourceRow.Nazwa ?? sourceRow.nazwaSkladowej ?? '',
     Material: sourceRow['Materiał'] ?? sourceRow.material ?? '',
@@ -3163,9 +3195,10 @@ function addSelectedWorkRows() {
   const selectedIds = Object.entries(workSelectedRowIds.value)
     .filter(([, isSelected]) => isSelected)
     .map(([localId]) => localId);
+  const startingRowId = getNextWorkRowId();
   const rowsToAdd = workSourceRowOptions.value
     .filter((row) => selectedIds.includes(row._localId))
-    .map((row) => createWorkRowFromProductRow(row));
+    .map((row, index) => createWorkRowFromProductRow(row, startingRowId + index));
   const validationInfo = rowsToAdd.map((row) => ({
     row,
     missingFields: getWorkRowMissingFields(row),
@@ -3467,6 +3500,7 @@ function duplicateWorkRow(rowId) {
   const duplicate = normalizeWorkRow({
     ...JSON.parse(JSON.stringify(workRows.value[rowIndex])),
     __clientId: null,
+    __isLocalDraft: true,
     id: getNextWorkRowId(),
   });
   workRows.value = [...workRows.value.slice(0, rowIndex + 1), duplicate, ...workRows.value.slice(rowIndex + 1)];
@@ -3481,8 +3515,9 @@ function removeWorkRow(rowId) {
 
 async function loadWorkMainRows({ preserveDisabled = true } = {}) {
   const disabledRows = preserveDisabled
-    ? workRows.value.filter((row) => row.__disabled).map((row) => normalizeWorkRow(row))
+    ? workRows.value.filter((row) => row.__disabled && !row.__isLocalDraft).map((row) => normalizeWorkRow(row))
     : [];
+  const localDraftRows = workRows.value.filter((row) => row.__isLocalDraft).map((row) => normalizeWorkRow(row));
 
   const response = await fetch(`/api/workmain?t=${Date.now()}`, { cache: 'no-store' });
   const payload = await response.json().catch(() => ({}));
@@ -3492,9 +3527,17 @@ async function loadWorkMainRows({ preserveDisabled = true } = {}) {
   }
 
   const activeRows = Array.isArray(payload.rows) ? payload.rows.map((row, index) => normalizeWorkRow(row, index)) : [];
-  workRows.value = [...activeRows, ...disabledRows];
+  let nextDraftId = getNextWorkRowIdFromRows(activeRows);
+  const reconciledLocalDraftRows = localDraftRows.map((row) =>
+    normalizeWorkRow({
+      ...row,
+      id: nextDraftId++,
+      __isLocalDraft: true,
+    }),
+  );
+  workRows.value = [...activeRows, ...reconciledLocalDraftRows, ...disabledRows];
   syncWorkTableSourceFromRows(activeRows);
-  resetWorkRowsSnapshot();
+  workRowsSnapshot.value = serializeWorkRows([...activeRows, ...disabledRows]);
 }
 
 async function loadMachineStatus() {
@@ -4708,6 +4751,30 @@ function addFavoriteElementToMerge(favoriteId) {
     [TEMP_PRODUCT_KEY]: [...temporaryProductRows.value, nextRow],
   };
   syncTemporaryProductSelection();
+  clearMergeMessage();
+}
+
+function addEmptyMergeElement() {
+  if (!remainingRecipeCapacity.value) {
+    showMergeLimitMessage();
+    return;
+  }
+
+  const nextRow = createMergeDraftRow(TEMP_PRODUCT_KEY);
+  mergeRecipeDrafts.value = {
+    ...mergeRecipeDrafts.value,
+    [TEMP_PRODUCT_KEY]: [...temporaryProductRows.value, nextRow],
+  };
+  syncTemporaryProductSelection();
+  mergeEditModes.value = {
+    ...mergeEditModes.value,
+    [TEMP_PRODUCT_KEY]: true,
+  };
+  collapsedRecipeGroups.value = {
+    ...collapsedRecipeGroups.value,
+    [TEMP_PRODUCT_KEY]: false,
+  };
+  mergeEditingCell.value = `${nextRow._localId}:TekstDoDruku`;
   clearMergeMessage();
 }
 
