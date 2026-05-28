@@ -2958,7 +2958,7 @@ async function ensureCurrentWorkEditingReady(targetRowId = null) {
       return { allowed: false, resolvedRowId: null };
     }
 
-    await loadWorkMainRows({ preserveDisabled: false });
+    await loadWorkMainRows({ preserveDisabled: true });
 
     if (targetDatabaseRowId === null) {
       return { allowed: true, resolvedRowId: null };
@@ -7201,10 +7201,17 @@ function isMergeProductEditMode(productName) {
 }
 
 function toggleMergeProductEditMode(productName) {
+  const nextEditMode = !isMergeProductEditMode(productName);
   mergeEditModes.value = {
     ...mergeEditModes.value,
-    [productName]: !isMergeProductEditMode(productName),
+    [productName]: nextEditMode,
   };
+  if (nextEditMode) {
+    collapsedRecipeGroups.value = {
+      ...collapsedRecipeGroups.value,
+      [productName]: false,
+    };
+  }
   mergeEditingCell.value = null;
 }
 
