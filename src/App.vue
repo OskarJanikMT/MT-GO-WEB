@@ -1139,23 +1139,34 @@
                         <tbody>
                           <tr v-for="row in group.rows" :key="`${group.productName}-${row._localId}`">
                             <td v-for="column in mergeRecipeColumns" :key="`${group.productName}-${row.idSkladowej}-${column}`">
-                              <select
+                              <div
                                 v-if="isMergeProductEditMode(group.productName) && (isDropdownColumn(column) || isStationColumn(column))"
-                                class="edit-input"
-                                :value="row[column] ?? ''"
-                                @focus="mergeEditingCell = `${row._localId}:${column}`"
-                                @blur="mergeEditingCell = null"
-                                @input="updateMergeRecipeCell(group.productName, row._localId, column, $event.target.value)"
+                                class="cell-edit-with-warning"
                               >
-                                <option value=""></option>
-                                <option
-                                  v-for="option in getMergeDropdownOptions(group.productName, row, column)"
-                                  :key="`${column}-${row._localId}-${option.value ?? option}`"
-                                  :value="option.value ?? option"
+                                <select
+                                  class="edit-input"
+                                  :value="row[column] ?? ''"
+                                  @focus="mergeEditingCell = `${row._localId}:${column}`"
+                                  @blur="mergeEditingCell = null"
+                                  @input="updateMergeRecipeCell(group.productName, row._localId, column, $event.target.value)"
                                 >
-                                  {{ option.label ?? option }}
-                                </option>
-                              </select>
+                                  <option value=""></option>
+                                  <option
+                                    v-for="option in getMergeDropdownOptions(group.productName, row, column)"
+                                    :key="`${column}-${row._localId}-${option.value ?? option}`"
+                                    :value="option.value ?? option"
+                                  >
+                                    {{ option.label ?? option }}
+                                  </option>
+                                </select>
+                                <span
+                                  v-if="getMergeCellValidationMessage(row, column)"
+                                  class="cell-warning-indicator inline-warning-indicator"
+                                  :title="getMergeCellValidationMessage(row, column)"
+                                >
+                                  !
+                                </span>
+                              </div>
                               <div
                                 v-else-if="isMergeProductEditMode(group.productName) && column === 'wybijak'"
                                 class="wybijak-edit-group"
@@ -1177,16 +1188,53 @@
                                   maxlength="1"
                                   @input="updateMergeRecipeWybijakPart(group.productName, row._localId, 1, $event.target.value)"
                                 />
+                                <span
+                                  v-if="getRecipeWybijakValidationIssue(row)"
+                                  class="cell-warning-indicator"
+                                  :title="getRecipeWybijakValidationIssue(row)"
+                                >
+                                  !
+                                </span>
                               </div>
-                              <input
+                              <div
                                 v-else-if="isMergeProductEditMode(group.productName)"
-                                class="edit-input"
-                                :value="row[column] ?? ''"
-                                :style="getMergeEditInputStyle(column, row[column])"
-                                @focus="mergeEditingCell = `${row._localId}:${column}`"
-                                @blur="mergeEditingCell = null"
-                                @input="updateMergeRecipeCell(group.productName, row._localId, column, $event.target.value)"
-                              />
+                                class="cell-edit-with-warning"
+                              >
+                                <input
+                                  class="edit-input"
+                                  :value="row[column] ?? ''"
+                                  :style="getMergeEditInputStyle(column, row[column])"
+                                  @focus="mergeEditingCell = `${row._localId}:${column}`"
+                                  @blur="mergeEditingCell = null"
+                                  @input="updateMergeRecipeCell(group.productName, row._localId, column, $event.target.value)"
+                                />
+                                <span
+                                  v-if="getMergeCellValidationMessage(row, column)"
+                                  class="cell-warning-indicator inline-warning-indicator"
+                                  :title="getMergeCellValidationMessage(row, column)"
+                                >
+                                  !
+                                </span>
+                              </div>
+                              <span v-else-if="column === 'wybijak'" class="cell-warning-wrap">
+                                <span>{{ row[column] ?? '' }}</span>
+                                <span
+                                  v-if="getRecipeWybijakValidationIssue(row)"
+                                  class="cell-warning-indicator"
+                                  :title="getRecipeWybijakValidationIssue(row)"
+                                >
+                                  !
+                                </span>
+                              </span>
+                              <span v-else-if="getMergeCellValidationMessage(row, column)" class="cell-warning-wrap">
+                                <span>{{ row[column] ?? '' }}</span>
+                                <span
+                                  class="cell-warning-indicator"
+                                  :title="getMergeCellValidationMessage(row, column)"
+                                >
+                                  !
+                                </span>
+                              </span>
                               <span v-else>{{ row[column] ?? '' }}</span>
                             </td>
                             <td v-if="isMergeProductEditMode(group.productName)" class="row-actions-cell">
@@ -2617,55 +2665,97 @@ function normalizeWybijakPartInputValue(value) {
     .slice(0, 1);
 }
 
-function getRecipePreviewWybijakValidationError(rows = []) {
+function getRecipeWybijakValidationIssue(row, rowIndex = null) {
   const maxPunchCount = Math.max(1, normalizeWorkCorrectionValue(configSettings.value.machinePunchCount || DEFAULT_MACHINE_PUNCH_COUNT));
+  const rowPrefix = rowIndex === null ? '' : `Wiersz ${rowIndex + 1}: `;
+  const sourceRow = row || {};
+  const rawValue = String(sourceRow.wybijak ?? sourceRow.Wybijak ?? '').trim();
+  const [firstPart, secondPart] = getWybijakInputParts(rawValue, sourceRow.Stanowisko);
+  const normalizedFirstPart = String(firstPart ?? '').replace(/[^\d]/g, '').trim();
+  const normalizedSecondPart = String(secondPart ?? '').replace(/[^\d]/g, '').trim();
 
-  for (let rowIndex = 0; rowIndex < rows.length; rowIndex += 1) {
-    const row = rows[rowIndex] || {};
-    const rawValue = String(row.wybijak ?? row.Wybijak ?? '').trim();
-    const [firstPart, secondPart] = getWybijakInputParts(rawValue, row.Stanowisko);
-    const normalizedFirstPart = String(firstPart ?? '').replace(/[^\d]/g, '').trim();
-    const normalizedSecondPart = String(secondPart ?? '').replace(/[^\d]/g, '').trim();
+  if (!normalizedFirstPart && !normalizedSecondPart) {
+    return `${rowPrefix}wybijak jest wymagany.`;
+  }
 
-    if (!normalizedFirstPart && !normalizedSecondPart) {
-      return `Wiersz ${rowIndex + 1}: wybijak jest wymagany.`;
+  if (rawValue.includes(' i ')) {
+    if (!normalizedFirstPart || !normalizedSecondPart) {
+      return `${rowPrefix}wybijak musi mieć dwie poprawne wartości.`;
     }
-
-    if (rawValue.includes(' i ')) {
-      if (!normalizedFirstPart || !normalizedSecondPart) {
-        return `Wiersz ${rowIndex + 1}: wybijak musi mieć dwie poprawne wartości.`;
-      }
-      if (normalizedFirstPart.length > 1 || normalizedSecondPart.length > 1) {
-        return `Wiersz ${rowIndex + 1}: każdy wybijak może mieć tylko jedną cyfrę.`;
-      }
-      if (normalizedFirstPart === '0' || Number(normalizedFirstPart) > maxPunchCount) {
-        return `Wiersz ${rowIndex + 1}: pierwszy wybijak musi być w zakresie 1-${maxPunchCount}.`;
-      }
-      if (normalizedSecondPart === '0' || Number(normalizedSecondPart) > maxPunchCount) {
-        return `Wiersz ${rowIndex + 1}: drugi wybijak musi być w zakresie 1-${maxPunchCount}.`;
-      }
-      continue;
+    if (normalizedFirstPart.length > 1 || normalizedSecondPart.length > 1) {
+      return `${rowPrefix}każdy wybijak może mieć tylko jedną cyfrę.`;
     }
-
-    const rawDigits = `${normalizedFirstPart}${normalizedSecondPart}`;
-
-    if (rawDigits.length > 2) {
-      return `Wiersz ${rowIndex + 1}: wybijak może mieć maksymalnie 2 cyfry.`;
+    if (normalizedFirstPart === '0' || Number(normalizedFirstPart) > maxPunchCount) {
+      return `${rowPrefix}pierwszy wybijak musi być w zakresie 1-${maxPunchCount}.`;
     }
-
-    const digitFirstPart = rawDigits[0] ?? '';
-    const digitSecondPart = rawDigits[1] ?? '';
-
-    if (digitFirstPart === '0' || Number(digitFirstPart) > maxPunchCount) {
-      return `Wiersz ${rowIndex + 1}: pierwszy wybijak musi być w zakresie 1-${maxPunchCount}.`;
+    if (normalizedSecondPart === '0' || Number(normalizedSecondPart) > maxPunchCount) {
+      return `${rowPrefix}drugi wybijak musi być w zakresie 1-${maxPunchCount}.`;
     }
+    return '';
+  }
 
-    if (rawDigits.length === 2 && (digitSecondPart === '0' || Number(digitSecondPart) > maxPunchCount)) {
-      return `Wiersz ${rowIndex + 1}: drugi wybijak musi być w zakresie 1-${maxPunchCount}.`;
-    }
+  const rawDigits = `${normalizedFirstPart}${normalizedSecondPart}`;
+
+  if (rawDigits.length > 2) {
+    return `${rowPrefix}wybijak może mieć maksymalnie 2 cyfry.`;
+  }
+
+  const digitFirstPart = rawDigits[0] ?? '';
+  const digitSecondPart = rawDigits[1] ?? '';
+
+  if (digitFirstPart === '0' || Number(digitFirstPart) > maxPunchCount) {
+    return `${rowPrefix}pierwszy wybijak musi być w zakresie 1-${maxPunchCount}.`;
+  }
+
+  if (rawDigits.length === 2 && (digitSecondPart === '0' || Number(digitSecondPart) > maxPunchCount)) {
+    return `${rowPrefix}drugi wybijak musi być w zakresie 1-${maxPunchCount}.`;
   }
 
   return '';
+}
+
+function getRecipePreviewWybijakValidationError(rows = []) {
+  for (let rowIndex = 0; rowIndex < rows.length; rowIndex += 1) {
+    const issue = getRecipeWybijakValidationIssue(rows[rowIndex], rowIndex);
+    if (issue) return issue;
+  }
+  return '';
+}
+
+function getMergeCellValidationMessage(row, column) {
+  if (column === 'wybijak') {
+    return getRecipeWybijakValidationIssue(row);
+  }
+
+  const validationLabelByKey = {
+    TekstDoDruku: ['Tekst do druku'],
+    material: ['Materiał'],
+    dlugosc: ['Długość', 'Długość: nieprawidłowy format'],
+    grubosc: ['Grubość', 'Grubość: nieprawidłowy format'],
+    szerokosc: ['Szerokość', 'Szerokość: nieprawidłowy format'],
+    ilosc: ['Ilość', 'Ilość: nieprawidłowy format', 'Ilość >'],
+  };
+
+  const expectedLabels = validationLabelByKey[column];
+  if (!expectedLabels) return '';
+
+  const missingFields = getRecipeRowMissingFields(row);
+  const matchedMessage = missingFields.find((field) =>
+    expectedLabels.some((label) => (label.endsWith('>') ? field.startsWith(label) : field === label)),
+  );
+  if (!matchedMessage) return '';
+
+  if (matchedMessage.includes(': nieprawidłowy format')) {
+    return matchedMessage.replace(': nieprawidłowy format', ' musi być liczbą całkowitą.');
+  }
+
+  if (column === 'ilosc' && matchedMessage.startsWith('Ilość > ')) {
+    return matchedMessage;
+  }
+
+  const expectedLabel = expectedLabels[0];
+  if (!expectedLabel) return '';
+  return `${expectedLabel} jest wymagane.`;
 }
 
 function nextWorkRowClientId() {
@@ -3216,6 +3306,11 @@ function getWorkRowsValidationMessage(rows, contextMessage) {
   return `${contextMessage} ${pluralLabel}. ${validationErrors[0]}`;
 }
 
+function isStrictPositiveIntegerValue(value) {
+  const normalizedValue = String(value ?? '').trim();
+  return /^\d+$/.test(normalizedValue);
+}
+
 function getRecipeRowMissingFields(row) {
   const missingFields = [];
   const boardMaxLength = Math.max(1, normalizeWorkCorrectionValue(configSettings.value.boardMaxLength || DEFAULT_BOARD_MAX_LENGTH));
@@ -3223,11 +3318,15 @@ function getRecipeRowMissingFields(row) {
 
   if (!String(row?.TekstDoDruku ?? '').trim()) missingFields.push('Tekst do druku');
   if (!String(row?.material ?? '').trim()) missingFields.push('Materiał');
+  if (String(row?.dlugosc ?? '').trim() && !isStrictPositiveIntegerValue(row?.dlugosc)) missingFields.push('Długość: nieprawidłowy format');
   if (!normalizeWorkCorrectionValue(row?.dlugosc)) missingFields.push('Długość');
   if (normalizeWorkCorrectionValue(row?.dlugosc) > boardMaxLength) missingFields.push(`Długość > ${boardMaxLength} mm`);
+  if (String(row?.grubosc ?? '').trim() && !isStrictPositiveIntegerValue(row?.grubosc)) missingFields.push('Grubość: nieprawidłowy format');
   if (!normalizeWorkCorrectionValue(row?.grubosc)) missingFields.push('Grubość');
+  if (String(row?.szerokosc ?? '').trim() && !isStrictPositiveIntegerValue(row?.szerokosc)) missingFields.push('Szerokość: nieprawidłowy format');
   if (!normalizeWorkCorrectionValue(row?.szerokosc)) missingFields.push('Szerokość');
   if (!String(row?.wybijak ?? '').replace(/[^\d]/g, '').trim()) missingFields.push('Wybijak');
+  if (String(row?.ilosc ?? '').trim() && !isStrictPositiveIntegerValue(row?.ilosc)) missingFields.push('Ilość: nieprawidłowy format');
   if (!normalizeWorkCorrectionValue(row?.ilosc)) missingFields.push('Ilość');
   if (normalizeWorkCorrectionValue(row?.ilosc) > maxQuantity) missingFields.push(`Ilość > ${maxQuantity}`);
 
@@ -5802,6 +5901,33 @@ function toggleMergeSelectionPanel() {
 
 function openSaveRecipeDialog() {
   if (!recipeRows.value.length) return;
+  const groupingValidationError = getSequentialGroupValidationError(recipeRows.value);
+  if (groupingValidationError) {
+    mergeAlert.value = {
+      visible: true,
+      message: groupingValidationError,
+    };
+    return;
+  }
+
+  const recipeValidationMessage = getRecipeRowsValidationMessage(recipeRows.value, 'Nie można zapisać receptury.');
+  if (recipeValidationMessage) {
+    mergeAlert.value = {
+      visible: true,
+      message: recipeValidationMessage,
+    };
+    return;
+  }
+
+  const wybijakValidationError = getRecipePreviewWybijakValidationError(recipeRows.value);
+  if (wybijakValidationError) {
+    mergeAlert.value = {
+      visible: true,
+      message: wybijakValidationError,
+    };
+    return;
+  }
+
   saveRecipeDialog.value = {
     visible: true,
     name: '',
@@ -5849,6 +5975,15 @@ async function submitSaveRecipe() {
     saveRecipeDialog.value = {
       ...saveRecipeDialog.value,
       error: recipeValidationMessage,
+    };
+    return;
+  }
+
+  const wybijakValidationError = getRecipePreviewWybijakValidationError(recipeRows.value);
+  if (wybijakValidationError) {
+    saveRecipeDialog.value = {
+      ...saveRecipeDialog.value,
+      error: wybijakValidationError,
     };
     return;
   }

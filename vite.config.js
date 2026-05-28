@@ -225,6 +225,37 @@ function normalizeRecipeEntry(entry) {
   };
 }
 
+function getRecipeWybijakValidationError(rows, machinePunchCount) {
+  const maxPunchCount = Math.max(1, Number.parseInt(String(machinePunchCount ?? DEFAULT_MACHINE_PUNCH_COUNT), 10) || DEFAULT_MACHINE_PUNCH_COUNT);
+
+  for (let rowIndex = 0; rowIndex < rows.length; rowIndex += 1) {
+    const row = rows[rowIndex] && typeof rows[rowIndex] === 'object' ? rows[rowIndex] : {};
+    const rawValue = String(row.wybijak ?? row.Wybijak ?? '').trim();
+    const digits = rawValue.replace(/[^\d]/g, '');
+
+    if (!digits) {
+      return `Wiersz ${rowIndex + 1}: wybijak jest wymagany.`;
+    }
+
+    if (digits.length > 2) {
+      return `Wiersz ${rowIndex + 1}: wybijak może mieć maksymalnie 2 cyfry.`;
+    }
+
+    const firstPunch = digits[0] ?? '';
+    const secondPunch = digits[1] ?? '';
+
+    if (!firstPunch || firstPunch === '0' || Number(firstPunch) > maxPunchCount) {
+      return `Wiersz ${rowIndex + 1}: pierwszy wybijak musi być w zakresie 1-${maxPunchCount}.`;
+    }
+
+    if (secondPunch && (secondPunch === '0' || Number(secondPunch) > maxPunchCount)) {
+      return `Wiersz ${rowIndex + 1}: drugi wybijak musi być w zakresie 1-${maxPunchCount}.`;
+    }
+  }
+
+  return '';
+}
+
 async function readRecipeCatalog() {
   try {
     const content = await fs.readFile(recipesFilePath, 'utf8');
@@ -1112,6 +1143,7 @@ function productSavePlugin() {
         try {
           const body = await readJsonBody(req);
           const recipe = body?.recipe;
+          const appConfig = await readAppConfig();
 
           if (!recipe || typeof recipe !== 'object') {
             sendJson(res, 400, { error: 'Brak danych receptury do zapisu.' });
@@ -1123,6 +1155,12 @@ function productSavePlugin() {
 
           if (!recipeName) {
             sendJson(res, 400, { error: 'Nazwa receptury jest wymagana.' });
+            return;
+          }
+
+          const wybijakValidationError = getRecipeWybijakValidationError(rows, appConfig?.settings?.machinePunchCount);
+          if (wybijakValidationError) {
+            sendJson(res, 400, { error: wybijakValidationError });
             return;
           }
 
@@ -1160,6 +1198,7 @@ function productSavePlugin() {
         try {
           const body = await readJsonBody(req);
           const recipe = body?.recipe;
+          const appConfig = await readAppConfig();
 
           if (!recipe || typeof recipe !== 'object') {
             sendJson(res, 400, { error: 'Brak danych receptury do aktualizacji.' });
@@ -1171,6 +1210,12 @@ function productSavePlugin() {
 
           if (!recipeName) {
             sendJson(res, 400, { error: 'Nazwa receptury jest wymagana.' });
+            return;
+          }
+
+          const wybijakValidationError = getRecipeWybijakValidationError(rows, appConfig?.settings?.machinePunchCount);
+          if (wybijakValidationError) {
+            sendJson(res, 400, { error: wybijakValidationError });
             return;
           }
 
