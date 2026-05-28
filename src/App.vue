@@ -3223,10 +3223,25 @@ async function startWorkCorrectionEdit(rowId) {
   const { allowed, resolvedRowId } = await ensureCurrentWorkEditingReady(rowId);
   if (!allowed) return;
 
-  workEditingRowId.value = resolvedRowId ?? rowId;
+  const effectiveRowId = resolvedRowId ?? rowId;
+  const row = workRows.value.find((entry) => entry.__clientId === effectiveRowId);
+  workEditingRowId.value = effectiveRowId;
+  if (row) {
+    workCorrectionDrafts.value = {
+      ...workCorrectionDrafts.value,
+      [effectiveRowId]: {
+        WykonaneSztuki: String(normalizeWorkCorrectionValue(row.WykonaneSztuki)),
+        Sztuk: String(normalizeWorkCorrectionValue(row.Sztuk)),
+      },
+    };
+  }
 }
 
 function finishWorkCorrectionEdit() {
+  const rowId = workEditingRowId.value;
+  if (rowId !== null && Object.prototype.hasOwnProperty.call(workCorrectionDrafts.value, rowId)) {
+    commitWorkProgressDraft(rowId);
+  }
   workEditingRowId.value = null;
 }
 
@@ -3271,13 +3286,40 @@ function updateWorkWybijakPart(rowId, partIndex, value) {
 }
 
 function updateWorkProgressValue(rowId, field, value) {
+  const currentDraft = workCorrectionDrafts.value[rowId] ?? {
+    WykonaneSztuki: '0',
+    Sztuk: '0',
+  };
+  workCorrectionDrafts.value = {
+    ...workCorrectionDrafts.value,
+    [rowId]: {
+      ...currentDraft,
+      [field]: String(value ?? '').replace(/[^\d]/g, ''),
+    },
+  };
+}
+
+function getWorkProgressDraftValue(rowId, field, fallbackValue) {
+  const draft = workCorrectionDrafts.value[rowId];
+  if (!draft) return normalizeWorkCorrectionValue(fallbackValue);
+  if (!Object.prototype.hasOwnProperty.call(draft, field)) return normalizeWorkCorrectionValue(fallbackValue);
+  return normalizeWorkCorrectionValue(draft[field]);
+}
+
+function commitWorkProgressDraft(rowId) {
   const row = workRows.value.find((entry) => entry.__clientId === rowId);
-  if (!row) return;
-  row[field] = normalizeWorkCorrectionValue(value);
+  const draft = workCorrectionDrafts.value[rowId];
+  if (!row || !draft) return;
+
+  row.WykonaneSztuki = normalizeWorkCorrectionValue(draft.WykonaneSztuki);
+  row.Sztuk = normalizeWorkCorrectionValue(draft.Sztuk);
+  delete workCorrectionDrafts.value[rowId];
+  workCorrectionDrafts.value = { ...workCorrectionDrafts.value };
 }
 
 function clearWorkCorrectionState() {
   workEditingRowId.value = null;
+  workCorrectionDrafts.value = {};
 }
 
 function resetWorkRowsSnapshot() {
@@ -8307,6 +8349,8 @@ const WorkTable = defineComponent({
 
                       const doneValue = getWorkDisplayedDoneValue(row.__clientId, row.Progress?.done ?? 0);
                       const totalValue = getWorkDisplayedTotalValue(row.__clientId, row.Progress?.total ?? 0);
+                      const draftDoneValue = getWorkProgressDraftValue(row.__clientId, 'WykonaneSztuki', doneValue);
+                      const draftTotalValue = getWorkProgressDraftValue(row.__clientId, 'Sztuk', totalValue);
                       const progressPercent = getWorkProgressPercent(doneValue, totalValue);
 
                       return h('td', { key: `${row.__clientId}-${column}` }, [
@@ -8323,22 +8367,24 @@ const WorkTable = defineComponent({
                                   ? h('div', { class: 'work-progress-inline-edit' }, [
                                       h('input', {
                                         class: 'edit-input work-done-input',
-                                        value: doneValue,
+                                        value: draftDoneValue,
                                         inputmode: 'numeric',
                                         onInput: (event) => updateWorkProgressValue(row.__clientId, 'WykonaneSztuki', event.target.value),
                                         onKeydown: (event) => {
                                           if (event.key === 'Enter') finishWorkCorrectionEdit();
                                         },
+                                        onBlur: () => finishWorkCorrectionEdit(),
                                       }),
                                       h('span', { class: 'work-progress-slash' }, '/'),
                                       h('input', {
                                         class: 'edit-input work-done-input',
-                                        value: totalValue,
+                                        value: draftTotalValue,
                                         inputmode: 'numeric',
                                         onInput: (event) => updateWorkProgressValue(row.__clientId, 'Sztuk', event.target.value),
                                         onKeydown: (event) => {
                                           if (event.key === 'Enter') finishWorkCorrectionEdit();
                                         },
+                                        onBlur: () => finishWorkCorrectionEdit(),
                                       }),
                                     ])
                                   : h('span', { class: 'work-progress-value' }, `${doneValue}/${totalValue}`),
