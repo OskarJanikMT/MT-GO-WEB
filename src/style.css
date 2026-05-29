@@ -2631,6 +2631,10 @@ button {
   font-size: 12px;
 }
 
+.report-saved-summary {
+  margin: 8px 14px 0;
+}
+
 .single-element-list {
   display: flex;
   flex-direction: column;
@@ -2638,6 +2642,10 @@ button {
   max-height: min(48vh, 420px);
   overflow: auto;
   padding-right: 4px;
+}
+
+.report-saved-list {
+  margin: 8px 14px 0;
 }
 
 .single-element-row {

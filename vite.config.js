@@ -1692,11 +1692,13 @@ DECLARE @sql NVARCHAR(MAX) = N'
     FROM dbo.StatusMain
     WHERE NULLIF(LTRIM(RTRIM(CONVERT(NVARCHAR(4000), ' + QUOTENAME(@valueColumn) + N'))), '''') IS NOT NULL
   ) AS status_candidates
+  WHERE
+    NormalizedKomenda = N''statusPracy''
+    OR NormalizedKomenda LIKE N''%statusPracy%''
   ORDER BY
     CASE
       WHEN NormalizedKomenda = N''statusPracy'' THEN 0
       WHEN NormalizedKomenda LIKE N''%statusPracy%'' THEN 1
-      ELSE 2
     END,
     id DESC
   FOR JSON PATH, INCLUDE_NULL_VALUES;

@@ -1302,7 +1302,7 @@
                 </div>
               </transition>
               <div class="merge-preview-footer">
-                <button class="tool-btn primary merge-save-btn" :disabled="!recipeRows.length" @click="openSaveRecipeDialog">
+                <button class="tool-btn primary merge-save-btn" :disabled="!recipeRows.length || !!saveRecipeValidationError" @click="openSaveRecipeDialog">
                   Zapisz recepturę
                 </button>
               </div>
@@ -1329,7 +1329,7 @@
                 </label>
                 <div class="confirm-modal-actions">
                   <button class="tool-btn compact" @click="closeSaveRecipeDialog">Anuluj</button>
-                  <button class="tool-btn compact primary" @click="submitSaveRecipe">Zapisz</button>
+                  <button class="tool-btn compact primary" :disabled="!!saveRecipeValidationError" @click="submitSaveRecipe">Zapisz</button>
                 </div>
               </div>
             </div>
@@ -1458,7 +1458,7 @@
             </div>
 
             <div v-else>
-              <div class="single-element-summary">
+              <div class="single-element-summary report-saved-summary">
                 <span>Dostępne odłożone prace: {{ savedRows.length }}</span>
                 <span>Zaznaczone: {{ selectedReportSavedWorkCount }}</span>
               </div>
@@ -2311,6 +2311,20 @@ const saveRecipeDialog = ref({
   visible: false,
   name: '',
   error: '',
+});
+const saveRecipeValidationError = computed(() => {
+  if (!recipeRows.value.length) return 'Brak wierszy do zapisania.';
+
+  const groupingValidationError = getSequentialGroupValidationError(recipeRows.value);
+  if (groupingValidationError) return groupingValidationError;
+
+  const recipeValidationMessage = getRecipeRowsValidationMessage(recipeRows.value, 'Nie można zapisać receptury.');
+  if (recipeValidationMessage) return recipeValidationMessage;
+
+  const wybijakValidationError = getRecipePreviewWybijakValidationError(recipeRows.value);
+  if (wybijakValidationError) return wybijakValidationError;
+
+  return '';
 });
 const recipeImportConflictDialog = ref({
   visible: false,
@@ -3237,12 +3251,33 @@ async function startWorkCorrectionEdit(rowId) {
   }
 }
 
-function finishWorkCorrectionEdit() {
-  const rowId = workEditingRowId.value;
-  if (rowId !== null && Object.prototype.hasOwnProperty.call(workCorrectionDrafts.value, rowId)) {
-    commitWorkProgressDraft(rowId);
+function finishWorkCorrectionEdit(targetRowId = workEditingRowId.value) {
+  if (targetRowId === null) return;
+
+  if (workEditingRowId.value !== targetRowId) {
+    workEditingRowId.value = targetRowId;
+  }
+
+  const activeEditor = document.activeElement;
+  if (activeEditor instanceof HTMLElement && activeEditor.closest?.(`[data-work-progress-editor="${targetRowId}"]`)) {
+    return;
+  }
+
+  if (targetRowId !== null && Object.prototype.hasOwnProperty.call(workCorrectionDrafts.value, targetRowId)) {
+    commitWorkProgressDraft(targetRowId);
   }
   workEditingRowId.value = null;
+}
+
+function handleWorkProgressInputBlur(event, rowId) {
+  const nextTarget = event?.relatedTarget;
+  if (nextTarget instanceof HTMLElement && nextTarget.closest?.(`[data-work-progress-editor="${rowId}"]`)) {
+    return;
+  }
+
+  window.setTimeout(() => {
+    finishWorkCorrectionEdit(rowId);
+  }, 0);
 }
 
 function updateWorkCell(rowId, column, value) {
@@ -3706,7 +3741,6 @@ function getWorkRowMissingFields(row) {
   const maxQuantity = Math.max(1, normalizeWorkCorrectionValue(configSettings.value.maxQuantity || DEFAULT_MAX_QUANTITY));
 
   if (String(payload.TekstDoDruku ?? '').trim().length > printTextMaxLength) missingFields.push(`Tekst do druku > ${printTextMaxLength} znaków`);
-  if (!payload.Nazwa) missingFields.push('Nazwa');
   if (!payload.Material) missingFields.push('Materiał');
   if (!payload.Przekroj) missingFields.push('Przekrój');
   if (!payload.Dlugosc) missingFields.push('Długość');
@@ -3744,7 +3778,6 @@ function getWorkRowsValidationMessage(rows, contextMessage) {
 function getWorkCellValidationMessage(row, column) {
   const validationLabelByKey = {
     TekstDoDruku: ['Tekst do druku >'],
-    Nazwa: ['Nazwa'],
     Material: ['Materiał'],
     Dlugosc: ['Długość', 'Długość >'],
     Grubosc: ['Grubość'],
@@ -3780,7 +3813,6 @@ function getWorkCellValidationMessage(row, column) {
 
 function getWorkCellValidationCriteria(column) {
   const validationMessagesByColumn = {
-    Nazwa: 'Wpisz nazwę elementu.',
     Material: 'Wybierz lub wpisz materiał.',
     Dlugosc: `Podaj długość elementu w mm. Maksymalna długość: ${Math.max(1, normalizeWorkCorrectionValue(configSettings.value.boardMaxLength || DEFAULT_BOARD_MAX_LENGTH))} mm.`,
     Grubosc: 'Podaj grubość elementu w mm.',
@@ -3918,10 +3950,10 @@ async function discardWorkPendingChanges() {
   try {
     clearWorkCorrectionState();
     restoreWorkRowsFromSnapshot();
-    workUploadMessage.value = 'Porzucono lokalne zmiany i wczytano aktualny stan z bazy danych.';
+    workUploadMessage.value = 'Porzucono lokalne zmiany i przywrócono ostatni zapisany stan tabeli.';
   } catch (error) {
     workUploadError.value = true;
-    workUploadMessage.value = error?.message || 'Nie udało się porzucić zmian i odświeżyć danych z bazy.';
+    workUploadMessage.value = error?.message || 'Nie udało się porzucić zmian i przywrócić ostatniego zapisanego stanu tabeli.';
   } finally {
     isWorkEditPreparing.value = false;
   }
@@ -6591,29 +6623,10 @@ function toggleMergeSelectionPanel() {
 
 function openSaveRecipeDialog() {
   if (!recipeRows.value.length) return;
-  const groupingValidationError = getSequentialGroupValidationError(recipeRows.value);
-  if (groupingValidationError) {
+  if (saveRecipeValidationError.value) {
     mergeAlert.value = {
       visible: true,
-      message: groupingValidationError,
-    };
-    return;
-  }
-
-  const recipeValidationMessage = getRecipeRowsValidationMessage(recipeRows.value, 'Nie można zapisać receptury.');
-  if (recipeValidationMessage) {
-    mergeAlert.value = {
-      visible: true,
-      message: recipeValidationMessage,
-    };
-    return;
-  }
-
-  const wybijakValidationError = getRecipePreviewWybijakValidationError(recipeRows.value);
-  if (wybijakValidationError) {
-    mergeAlert.value = {
-      visible: true,
-      message: wybijakValidationError,
+      message: saveRecipeValidationError.value,
     };
     return;
   }
@@ -6651,29 +6664,10 @@ async function submitSaveRecipe() {
     return;
   }
 
-  const groupingValidationError = getSequentialGroupValidationError(recipeRows.value);
-  if (groupingValidationError) {
+  if (saveRecipeValidationError.value) {
     saveRecipeDialog.value = {
       ...saveRecipeDialog.value,
-      error: groupingValidationError,
-    };
-    return;
-  }
-
-  const recipeValidationMessage = getRecipeRowsValidationMessage(recipeRows.value, 'Nie można zapisać receptury.');
-  if (recipeValidationMessage) {
-    saveRecipeDialog.value = {
-      ...saveRecipeDialog.value,
-      error: recipeValidationMessage,
-    };
-    return;
-  }
-
-  const wybijakValidationError = getRecipePreviewWybijakValidationError(recipeRows.value);
-  if (wybijakValidationError) {
-    saveRecipeDialog.value = {
-      ...saveRecipeDialog.value,
-      error: wybijakValidationError,
+      error: saveRecipeValidationError.value,
     };
     return;
   }
@@ -7913,7 +7907,8 @@ async function loadRecipeToWorkMain() {
     normalizeWorkRow({
       id: index + 1,
       Kod: row.Kod || '',
-      Nazwa: row.nazwaSkladowej || row.Nazwa,
+      SourceProductName: row.nazwaProduktu || row.SourceProductName || '',
+      Nazwa: row.nazwaSkladowej || row.Nazwa || row.nazwaProduktu || row.SourceProductName || '',
       Material: row.material || row.Material,
       Przekroj: buildPrzekrojValue(row.grubosc || row.gr || 0, row.szerokosc || row.szer || 0),
       Grubosc: normalizeWorkCorrectionValue(row.grubosc || row.gr || 0),
@@ -8364,16 +8359,16 @@ const WorkTable = defineComponent({
                               }),
                               h('div', { class: 'work-progress-bar-content' }, [
                                 isWorkRowEditing(row.__clientId)
-                                  ? h('div', { class: 'work-progress-inline-edit' }, [
+                                  ? h('div', { class: 'work-progress-inline-edit', 'data-work-progress-editor': row.__clientId }, [
                                       h('input', {
                                         class: 'edit-input work-done-input',
                                         value: draftDoneValue,
                                         inputmode: 'numeric',
                                         onInput: (event) => updateWorkProgressValue(row.__clientId, 'WykonaneSztuki', event.target.value),
                                         onKeydown: (event) => {
-                                          if (event.key === 'Enter') finishWorkCorrectionEdit();
+                                          if (event.key === 'Enter') finishWorkCorrectionEdit(row.__clientId);
                                         },
-                                        onBlur: () => finishWorkCorrectionEdit(),
+                                        onBlur: (event) => handleWorkProgressInputBlur(event, row.__clientId),
                                       }),
                                       h('span', { class: 'work-progress-slash' }, '/'),
                                       h('input', {
@@ -8382,9 +8377,9 @@ const WorkTable = defineComponent({
                                         inputmode: 'numeric',
                                         onInput: (event) => updateWorkProgressValue(row.__clientId, 'Sztuk', event.target.value),
                                         onKeydown: (event) => {
-                                          if (event.key === 'Enter') finishWorkCorrectionEdit();
+                                          if (event.key === 'Enter') finishWorkCorrectionEdit(row.__clientId);
                                         },
-                                        onBlur: () => finishWorkCorrectionEdit(),
+                                        onBlur: (event) => handleWorkProgressInputBlur(event, row.__clientId),
                                       }),
                                     ])
                                   : h('span', { class: 'work-progress-value' }, `${doneValue}/${totalValue}`),
@@ -8414,7 +8409,7 @@ const WorkTable = defineComponent({
                                 class: 'tool-btn compact primary',
                                 type: 'button',
                                 title: 'Zakończ edycję wiersza',
-                                onClick: () => finishWorkCorrectionEdit(),
+                                onClick: () => finishWorkCorrectionEdit(row.__clientId),
                               },
                               'Gotowe',
                             ),
