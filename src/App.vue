@@ -1584,7 +1584,7 @@
                       <span class="work-recipe-trigger-icon" aria-hidden="true">▾</span>
                     </button>
                     <button
-                      class="tool-btn primary work-recipe-upload-btn"
+                      class="tool-btn work-recipe-upload-btn"
                       :disabled="!selectedRecipe || workEditingRowId !== null || isWorkCorrectionSaving"
                       @click="loadRecipeToWorkMain"
                     >
@@ -1711,7 +1711,7 @@
                     Porzuć zmiany
                   </button>
                   <button
-                    class="tool-btn compact work-table-save-btn"
+                    class="tool-btn compact primary work-table-save-btn"
                     :disabled="!hasPendingWorkChanges || isWorkCorrectionSaving || isWorkEditPreparing"
                     @click="saveWorkTable"
                   >
@@ -4786,6 +4786,10 @@ function applyWorkPunchAssignmentsByLength() {
 }
 
 function getConfigStationOrderedPunches(station) {
+  if (!station || !Array.isArray(station.punches)) {
+    return [];
+  }
+
   return station.punches
     .map((punch) => String(punch.number ?? '').trim())
     .filter(Boolean);
@@ -8214,17 +8218,8 @@ const WorkTable = defineComponent({
           h(
             'tbody',
                 sortedRows.value.length
-                  ? sortedRows.value.map((row) =>
-                      h(
-                        'tr',
-                    {
-                      key: row.__clientId ?? row.id ?? row.Nazwa,
-                      class: {
-                        disabled: row.__disabled,
-                        'pending-sync': row.__isPendingSync,
-                      },
-                    },
-                    props.columns.map((column) => {
+                  ? sortedRows.value.map((row) => {
+                      const rowCells = props.columns.map((column) => {
                       if (column === 'id') {
                         return h('td', { key: `${row.__clientId}-${column}` }, row.id ?? '');
                       }
@@ -8416,70 +8411,89 @@ const WorkTable = defineComponent({
                           ),
                         ]),
                       ]);
-                    }),
-                    h(
-                      'td',
-                      { key: `${row.__clientId}-actions`, class: 'row-actions-cell work-row-actions' },
-                      isWorkRowEditing(row.__clientId)
-                        ? [
-                            h(
-                              'button',
-                              {
-                                class: 'tool-btn compact primary',
-                                type: 'button',
-                                title: 'Zakończ edycję wiersza',
-                                onClick: () => finishWorkCorrectionEdit(row.__clientId),
-                              },
-                              'Gotowe',
-                            ),
-                            h(
-                              'button',
-                              {
-                                class: 'tool-btn compact',
-                                type: 'button',
-                                title: 'Duplikuj wiersz',
-                                onClick: () => duplicateWorkRow(row.__clientId),
-                              },
-                              'Duplikuj',
-                            ),
-                            h(
-                              'button',
-                              {
-                                class: 'tool-btn compact danger',
-                                type: 'button',
-                                title: 'Usuń wiersz',
-                                onClick: () => removeWorkRow(row.__clientId),
-                              },
-                              'Usuń',
-                            ),
-                          ]
-                        : [
-                            h(
-                              'button',
-                              {
-                                class: ['tool-btn compact', row.__disabled ? 'primary' : ''],
-                                type: 'button',
-                                title: row.__disabled ? 'Włącz wiersz do wysyłki' : 'Wyłącz wiersz z wysyłki',
-                                disabled: isWorkCorrectionSaving.value || isWorkEditPreparing.value || workDisableCooldownRowId.value === row.__clientId,
-                                onClick: () => toggleWorkRowDisabled(row.__clientId),
-                              },
-                              row.__disabled ? 'Włącz' : 'Wyłącz',
-                            ),
-                            h(
-                              'button',
-                              {
-                                class: 'tool-btn compact',
-                                type: 'button',
-                                title: 'Edytuj wiersz',
-                                disabled: isWorkCorrectionSaving.value || isWorkEditPreparing.value,
-                                onClick: () => startWorkCorrectionEdit(row.__clientId),
-                              },
-                              'Edytuj',
-                            ),
-                          ],
-                    ),
-                  ),
-                )
+                    });
+
+                      rowCells.push(
+                        h(
+                          'td',
+                          { key: `${row.__clientId}-actions-${isWorkRowEditing(row.__clientId) ? 'editing' : 'view'}`, class: 'row-actions-cell work-row-actions' },
+                          isWorkRowEditing(row.__clientId)
+                            ? [
+                                h(
+                                  'button',
+                                  {
+                                    key: `${row.__clientId}-done`,
+                                    class: 'tool-btn compact primary',
+                                    type: 'button',
+                                    title: 'Zakończ edycję wiersza',
+                                    onClick: () => finishWorkCorrectionEdit(row.__clientId),
+                                  },
+                                  'Gotowe',
+                                ),
+                                h(
+                                  'button',
+                                  {
+                                    key: `${row.__clientId}-duplicate`,
+                                    class: 'tool-btn compact',
+                                    type: 'button',
+                                    title: 'Duplikuj wiersz',
+                                    onClick: () => duplicateWorkRow(row.__clientId),
+                                  },
+                                  'Duplikuj',
+                                ),
+                                h(
+                                  'button',
+                                  {
+                                    key: `${row.__clientId}-remove`,
+                                    class: 'tool-btn compact danger',
+                                    type: 'button',
+                                    title: 'Usuń wiersz',
+                                    onClick: () => removeWorkRow(row.__clientId),
+                                  },
+                                  'Usuń',
+                                ),
+                              ]
+                            : [
+                                h(
+                                  'button',
+                                  {
+                                    key: `${row.__clientId}-${row.__disabled ? 'enable' : 'disable'}`,
+                                    class: ['tool-btn compact', row.__disabled ? 'primary' : ''],
+                                    type: 'button',
+                                    title: row.__disabled ? 'Włącz wiersz do wysyłki' : 'Wyłącz wiersz z wysyłki',
+                                    disabled: isWorkCorrectionSaving.value || isWorkEditPreparing.value || workDisableCooldownRowId.value === row.__clientId,
+                                    onClick: () => toggleWorkRowDisabled(row.__clientId),
+                                  },
+                                  row.__disabled ? 'Włącz' : 'Wyłącz',
+                                ),
+                                h(
+                                  'button',
+                                  {
+                                    key: `${row.__clientId}-edit`,
+                                    class: 'tool-btn compact',
+                                    type: 'button',
+                                    title: 'Edytuj wiersz',
+                                    disabled: isWorkCorrectionSaving.value || isWorkEditPreparing.value,
+                                    onClick: () => startWorkCorrectionEdit(row.__clientId),
+                                  },
+                                  'Edytuj',
+                                ),
+                              ],
+                        ),
+                      );
+
+                      return h(
+                        'tr',
+                        {
+                          key: row.__clientId ?? row.id ?? row.Nazwa,
+                          class: {
+                            disabled: row.__disabled,
+                            'pending-sync': row.__isPendingSync,
+                          },
+                        },
+                        rowCells,
+                      );
+                    })
               : h('tr', [h('td', { colspan: props.columns.length + 1, class: 'empty-cell' }, props.emptyText)]),
           ),
         ]),
