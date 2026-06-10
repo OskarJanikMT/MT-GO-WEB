@@ -2287,11 +2287,13 @@ const isWorkEditPreparing = ref(false);
 const workUploadMessage = ref('');
 const workUploadError = ref(false);
 const workEditingRowId = ref(null);
+const workDisableCooldownRowId = ref(null);
 const isWorkProductModalOpen = ref(false);
 const workSourceProductName = ref('');
 const workSourceRowSearch = ref('');
 const workSelectedRowIds = ref({});
 const workCorrectionDrafts = ref({});
+let workDisableCooldownTimerId = null;
 const isFileActionLoading = ref(false);
 const productFileActionMessage = ref('');
 const productFileActionError = ref(false);
@@ -3251,6 +3253,19 @@ async function startWorkCorrectionEdit(rowId) {
   }
 }
 
+function startWorkDisableCooldown(rowId) {
+  workDisableCooldownRowId.value = rowId;
+  if (workDisableCooldownTimerId) {
+    window.clearTimeout(workDisableCooldownTimerId);
+  }
+  workDisableCooldownTimerId = window.setTimeout(() => {
+    if (workDisableCooldownRowId.value === rowId) {
+      workDisableCooldownRowId.value = null;
+    }
+    workDisableCooldownTimerId = null;
+  }, 300);
+}
+
 function finishWorkCorrectionEdit(targetRowId = workEditingRowId.value) {
   if (targetRowId === null) return;
 
@@ -3267,6 +3282,7 @@ function finishWorkCorrectionEdit(targetRowId = workEditingRowId.value) {
     commitWorkProgressDraft(targetRowId);
   }
   workEditingRowId.value = null;
+  startWorkDisableCooldown(targetRowId);
 }
 
 function handleWorkProgressInputBlur(event, rowId) {
@@ -3384,7 +3400,7 @@ async function addWorkRow() {
 }
 
 async function toggleWorkRowDisabled(rowId) {
-  if (isWorkCorrectionSaving.value || isWorkEditPreparing.value) return;
+  if (isWorkCorrectionSaving.value || isWorkEditPreparing.value || workDisableCooldownRowId.value === rowId) return;
 
   const { allowed, resolvedRowId } = await ensureCurrentWorkEditingReady(rowId);
   if (!allowed) return;
@@ -8091,6 +8107,9 @@ onUnmounted(() => {
   stopMachineStatusAutoRefresh();
   mergeQuantityPulseTimers.forEach((pulseTimerId) => window.clearTimeout(pulseTimerId));
   mergeQuantityPulseTimers.clear();
+  if (workDisableCooldownTimerId) {
+    window.clearTimeout(workDisableCooldownTimerId);
+  }
   if (recipePreviewMessageTimerId) {
     window.clearTimeout(recipePreviewMessageTimerId);
   }
@@ -8441,7 +8460,7 @@ const WorkTable = defineComponent({
                                 class: ['tool-btn compact', row.__disabled ? 'primary' : ''],
                                 type: 'button',
                                 title: row.__disabled ? 'Włącz wiersz do wysyłki' : 'Wyłącz wiersz z wysyłki',
-                                disabled: isWorkCorrectionSaving.value || isWorkEditPreparing.value,
+                                disabled: isWorkCorrectionSaving.value || isWorkEditPreparing.value || workDisableCooldownRowId.value === row.__clientId,
                                 onClick: () => toggleWorkRowDisabled(row.__clientId),
                               },
                               row.__disabled ? 'Włącz' : 'Wyłącz',
