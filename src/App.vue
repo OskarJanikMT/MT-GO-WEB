@@ -78,9 +78,6 @@
             </template>
           </div>
           <div class="filter-actions">
-            <button class="tool-btn" :class="{ primary: activeTab === 'recipes' }" @click="activeTab = 'recipes'">
-              Receptury
-            </button>
             <button class="tool-btn" :class="{ primary: activeTab === 'reports' }" @click="activeTab = 'reports'">
               Raporty
             </button>
@@ -1317,126 +1314,22 @@
               >
                 {{ mergeProductSaveMessage }}
               </div>
-              <div class="merge-preview-footer">
-                <button class="tool-btn primary merge-save-btn" :disabled="!recipeRows.length || !!saveRecipeValidationError" @click="openSaveRecipeDialog">
-                  Zapisz recepturę
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div v-if="saveRecipeDialog.visible" class="confirm-modal-overlay" @click.self="closeSaveRecipeDialog">
-            <div class="confirm-modal panel save-recipe-modal" @click.stop>
-              <div class="panel-header">
-                <span>Zapisz recepturę</span>
-              </div>
-              <div class="confirm-modal-body">
-                <label class="rename-field">
-                  <span>Nazwa receptury</span>
-                  <input
-                    v-model="saveRecipeDialog.name"
-                    class="text-input"
-                    :class="{ invalid: saveRecipeDialog.error }"
-                    placeholder="Wpisz nazwę receptury"
-                    @input="saveRecipeDialog.error = ''"
-                    @keydown.enter.prevent="submitSaveRecipe"
-                  />
-                  <span v-if="saveRecipeDialog.error" data-error-anchor="save-recipe-dialog" class="rename-hint error">{{ saveRecipeDialog.error }}</span>
-                </label>
-                <div class="confirm-modal-actions">
-                  <button class="tool-btn compact" @click="closeSaveRecipeDialog">Anuluj</button>
-                  <button class="tool-btn compact primary" :disabled="!!saveRecipeValidationError" @click="submitSaveRecipe">Zapisz</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </section>
-
-        <section v-if="activeTab === 'recipes'" class="section">
-          <div class="section-header">
-            <div>
-              <h2 class="section-title">Receptury</h2>
-              <p class="section-subtitle">Katalog wszystkich zapisanych receptur z filtrowaniem i podglądem.</p>
-            </div>
-          </div>
-
-          <div class="panel recipe-library-panel">
-            <div class="panel-header">
-              <span>Zapisane receptury</span>
-              <div class="panel-actions">
-                <span class="panel-caption">{{ filteredRecipeCatalog.length }} / {{ recipeCatalog.length }}</span>
-                <input
-                  ref="recipeImportInput"
-                  type="file"
-                  accept=".json,application/json"
-                  class="visually-hidden"
-                  @change="handleRecipeImport"
-                />
-                <button class="tool-btn compact" :disabled="isRecipeCatalogActionLoading" @click="exportRecipeCatalog">
-                  Eksport receptur
-                </button>
-                <button
-                  class="tool-btn compact"
-                  :disabled="isRecipeCatalogActionLoading || !selectedRecipeCatalogCount"
-                  @click="exportSelectedRecipes"
-                >
-                  Eksport zaznaczonych ({{ selectedRecipeCatalogCount }})
-                </button>
-                <button class="tool-btn compact" :disabled="isRecipeCatalogActionLoading" @click="triggerRecipeImport">
-                  {{ isRecipeCatalogActionLoading ? 'Import...' : 'Import receptur' }}
-                </button>
-              </div>
-            </div>
-            <div v-if="recipeCatalogActionMessage" data-error-anchor="recipe-catalog-action" class="save-status" :class="{ error: recipeCatalogActionError }">{{ recipeCatalogActionMessage }}</div>
-            <div class="recipe-library-filters">
-              <div class="merge-search recipe-catalog-search recipe-library-search">
-                <div class="search-input-wrap">
-                  <span class="search-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" focusable="false">
-                      <path
-                        d="M10.5 4a6.5 6.5 0 1 0 4.06 11.58l4.43 4.43 1.41-1.41-4.43-4.43A6.5 6.5 0 0 0 10.5 4Zm0 2a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Z"
-                        fill="currentColor"
-                      />
-                    </svg>
-                  </span>
-                  <input
-                    v-model="recipeCatalogSearch"
-                    class="text-input merge-search-input"
-                    placeholder="Szukaj po nazwie, materiale albo dacie"
-                  />
-                </div>
-              </div>
-              <select v-model="recipeCatalogMaterialFilter" class="select-input recipe-filter-select">
-                <option value="">Wszystkie materiały</option>
-                <option v-for="material in recipeCatalogMaterials" :key="material" :value="material">{{ material }}</option>
-              </select>
-              <select v-model="recipeCatalogUsageFilter" class="select-input recipe-filter-select">
-                <option value="all">Wszystkie receptury</option>
-                <option value="used">Tylko używane</option>
-                <option value="unused">Nigdy nieużyte</option>
-              </select>
-              <button
-                class="tool-btn compact"
-                :disabled="!recipeCatalogSearch && !recipeCatalogMaterialFilter && recipeCatalogUsageFilter === 'all'"
-                @click="resetRecipeCatalogFilters"
+              <div
+                v-if="mergeWorkUploadMessage"
+                data-error-anchor="merge-work-upload"
+                class="save-status"
+                :class="{ error: mergeWorkUploadError }"
               >
-                Wyczyść filtry
-              </button>
+                {{ mergeWorkUploadMessage }}
+              </div>
+              <div class="merge-preview-footer">
+                <button class="tool-btn primary merge-save-btn" :disabled="!recipeRows.length || !!saveRecipeValidationError || isMergeUploadingToWorkMain" @click="requestUploadMergeToWorkMain">
+                  {{ isMergeUploadingToWorkMain ? 'Wgrywanie...' : 'Wgraj do aktualnie ciętych' }}
+                </button>
+              </div>
             </div>
-            <DataTable
-              :columns="recipeCatalogColumns"
-              :rows="filteredRecipeCatalog"
-              :labels="recipeSummaryLabels"
-              empty-text="Brak receptur"
-              :selectable="true"
-              selection-key="nazwaReceptury"
-              :selected-keys="selectedRecipeNames"
-              @row-click="selectRecipePreview"
-              @toggle-row="toggleRecipeCatalogSelection"
-              @toggle-all="toggleAllRecipeCatalogSelection"
-            />
           </div>
+
         </section>
 
         <section v-if="activeTab === 'reports'" class="section">
@@ -1497,68 +1390,6 @@
           </div>
         </section>
 
-        <div v-if="recipeImportConflictDialog.visible" class="confirm-modal-overlay" @click.self="cancelRecipeImportConflict">
-          <div class="confirm-modal panel" @click.stop>
-            <div class="panel-header">
-              <span>Import receptur</span>
-            </div>
-            <div class="confirm-modal-body">
-              <p>W pliku są receptury o nazwach, które już istnieją. Czy chcesz je podmienić?</p>
-              <p class="panel-caption">{{ recipeImportConflictDialog.duplicateNames.join(', ') }}</p>
-              <div class="confirm-modal-actions">
-                <button class="tool-btn compact" :disabled="isRecipeCatalogActionLoading" @click="cancelRecipeImportConflict">Anuluj</button>
-                <button class="tool-btn compact primary" :disabled="isRecipeCatalogActionLoading" @click="confirmRecipeImportConflict">
-                  {{ isRecipeCatalogActionLoading ? 'Import...' : 'Podmień i importuj' }}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div v-if="isSavedRecipePreviewOpen" class="confirm-modal-overlay saved-recipe-preview-overlay" @click.self="closeSavedRecipePreview">
-          <div class="confirm-modal panel panel-wide work-recipe-preview-modal saved-recipe-preview-modal" @click.stop>
-            <div class="panel-header">
-              <span>Podgląd receptury</span>
-              <div class="panel-actions">
-                <span
-                  v-if="recipePreviewSaveMessage"
-                  class="panel-caption"
-                  :class="{ error: recipePreviewSaveError, success: !recipePreviewSaveError }"
-                >
-                  {{ recipePreviewSaveMessage }}
-                </span>
-                <span class="panel-caption">{{ selectedRecipePreviewName || 'Wybierz recepturę' }}</span>
-                <button v-if="selectedRecipePreviewName && !isRecipePreviewEditMode" class="tool-btn compact" type="button" @click.stop="startRecipePreviewEdit">
-                  Edytuj
-                </button>
-                <button v-if="selectedRecipePreviewName && !isRecipePreviewEditMode" class="tool-btn compact danger" type="button" @click.stop="requestDeleteRecipePreview">
-                  Usuń recepturę
-                </button>
-                <button v-if="selectedRecipePreviewName && isRecipePreviewEditMode" class="tool-btn compact" type="button" @click.stop="requestCancelRecipePreviewEdit">
-                  Anuluj
-                </button>
-                <button v-if="selectedRecipePreviewName && isRecipePreviewEditMode" class="tool-btn compact primary" type="button" @click.stop="saveRecipePreviewChanges">
-                  Zapisz
-                </button>
-                <button class="tool-btn compact" type="button" @click.stop="closeSavedRecipePreview">
-                  Zamknij
-                </button>
-              </div>
-            </div>
-            <div v-if="recipePreviewSaveMessage" data-error-anchor="recipe-preview-save" class="save-status" :class="{ error: recipePreviewSaveError }">{{ recipePreviewSaveMessage }}</div>
-            <RecipePreviewTable
-              :columns="workRecipePreviewColumns"
-              :rows="recipePreviewRows"
-              :labels="recipeColumnLabels"
-              :is-edit-mode="isRecipePreviewEditMode"
-              empty-text="Wybierz recepturę, aby zobaczyć jej skład"
-            />
-            <div v-if="selectedRecipePreviewName && isRecipePreviewEditMode" class="work-table-footer">
-              <button class="tool-btn" :disabled="recipePreviewDraftRows.length >= activeRowLimit" @click="addRecipePreviewRow">Dodaj nowy wiersz</button>
-            </div>
-          </div>
-        </div>
-
         <section v-if="activeTab === 'work'" class="section">
           <div class="work-topbar">
             <div class="work-summary-group">
@@ -1593,51 +1424,6 @@
             </div>
             <div class="work-actions">
               <div class="work-actions-stack">
-                <div ref="workRecipePickerRef" class="work-recipe-picker">
-                  <div class="work-recipe-picker-bar">
-                    <button class="select-input work-recipe-trigger" @click="toggleWorkRecipeMenu">
-                      <span class="work-recipe-trigger-label">{{ selectedRecipe || 'Wybierz recepturę' }}</span>
-                      <span class="work-recipe-trigger-icon" aria-hidden="true">▾</span>
-                    </button>
-                    <button
-                      class="tool-btn work-recipe-upload-btn"
-                      :disabled="!selectedRecipe || workEditingRowId !== null || isWorkCorrectionSaving"
-                      @click="loadRecipeToWorkMain"
-                    >
-                      Wczytaj wybraną recepturę do podglądu
-                    </button>
-                  </div>
-                  <div v-if="isWorkRecipeMenuOpen" class="work-recipe-menu panel">
-                    <input
-                      v-model="workRecipeSearch"
-                      class="text-input work-recipe-search"
-                      placeholder="Szukaj receptury"
-                    />
-                    <div v-if="filteredWorkRecipeNames.length" class="work-recipe-options">
-                      <div
-                        v-for="name in filteredWorkRecipeNames"
-                        :key="name"
-                        class="work-recipe-option"
-                        :class="{ active: selectedRecipe === name }"
-                      >
-                        <button class="work-recipe-option-select" @click="selectWorkRecipe(name)">
-                          <span class="work-recipe-option-label">{{ name }}</span>
-                        </button>
-                        <span class="work-recipe-option-actions">
-                          <button class="tool-btn compact product-preview-btn" :title="`Podgląd ${name}`" @click.stop="openWorkRecipePreview(name)">
-                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                              <path
-                                d="M10.5 4a6.5 6.5 0 1 0 4.06 11.58l4.43 4.43 1.41-1.41-4.43-4.43A6.5 6.5 0 0 0 10.5 4Zm0 2a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9Z"
-                                fill="currentColor"
-                              />
-                            </svg>
-                          </button>
-                        </span>
-                      </div>
-                    </div>
-                    <div v-else class="expanded-empty">Brak wyników</div>
-                  </div>
-                </div>
                 <div class="work-actions-row">
                   <button
                     class="tool-btn"
@@ -1666,35 +1452,6 @@
           </div>
 
           <div v-if="workUploadMessage" data-error-anchor="work-upload" class="save-status" :class="{ error: workUploadError }" v-html="getWorkUploadMessageHtml()"></div>
-
-          <div v-if="isWorkRecipePreviewOpen" class="confirm-modal-overlay" @click.self="closeWorkRecipePreview">
-            <div class="confirm-modal panel panel-wide work-recipe-preview-modal" @click.stop>
-              <div class="panel-header">
-                <span>Podgląd receptury</span>
-                <div class="panel-actions">
-                  <span class="panel-caption">{{ selectedRecipePreviewName || 'Wybierz recepturę' }}</span>
-                  <button v-if="selectedRecipePreviewName && !isRecipePreviewEditMode" class="tool-btn compact" type="button" @click.stop="startRecipePreviewEdit">Edytuj</button>
-                  <button v-if="selectedRecipePreviewName && isRecipePreviewEditMode" class="tool-btn compact" type="button" @click.stop="requestCancelRecipePreviewEdit">Anuluj</button>
-                  <button v-if="selectedRecipePreviewName && isRecipePreviewEditMode" class="tool-btn compact primary" type="button" @click.stop="saveRecipePreviewChanges">Zapisz</button>
-                  <button class="tool-btn compact" type="button" @click.stop="closeWorkRecipePreview">Zamknij</button>
-                </div>
-              </div>
-              <div v-if="recipePreviewSaveMessage" data-error-anchor="recipe-preview-save" class="save-status" :class="{ error: recipePreviewSaveError }">{{ recipePreviewSaveMessage }}</div>
-              <RecipePreviewTable
-                :columns="workRecipePreviewColumns"
-                :rows="recipePreviewRows"
-                :labels="recipeColumnLabels"
-                :is-edit-mode="isRecipePreviewEditMode"
-                empty-text="Brak pozycji w recepturze"
-              />
-              <div v-if="selectedRecipePreviewName && isRecipePreviewEditMode" class="work-table-footer">
-                <button class="tool-btn" :disabled="recipePreviewDraftRows.length >= activeRowLimit" @click="addRecipePreviewRow">Dodaj nowy wiersz</button>
-              </div>
-              <div class="confirm-modal-actions">
-                <button class="tool-btn compact" @click="closeWorkRecipePreview">Zamknij</button>
-              </div>
-            </div>
-          </div>
 
           <div class="work-grid">
             <div class="produkcja-container">
@@ -2063,6 +1820,7 @@ const productImportFieldDefinitions = [
 const productImportExportColumns = productImportFieldDefinitions.map((field) => field.key);
 const groupOptions = Array.from({ length: 26 }, (_, index) => String.fromCharCode(65 + index));
 const priorityOptions = Array.from({ length: 10 }, (_, index) => String(index));
+const materialOptions = ['BUK', 'So'];
 const productColumnLabels = {
   Nr: 'Nr',
   Kod: 'Tekst do druku',
@@ -2110,8 +1868,8 @@ const workRecipePreviewColumns = recipeColumns.filter(
 const mergeRecipeColumns = [
   'TekstDoDruku',
   'dlugosc',
-  'grubosc',
   'szerokosc',
+  'grubosc',
   'material',
   'Klasa',
   'Stanowisko',
@@ -2254,6 +2012,9 @@ const mergeQuantityPulse = ref({});
 const mergeProductSaveMessage = ref('');
 const mergeProductSaveError = ref(false);
 const mergeProductSavingMap = ref({});
+const mergeWorkUploadMessage = ref('');
+const mergeWorkUploadError = ref(false);
+const isMergeUploadingToWorkMain = ref(false);
 const mergePreviewProductName = ref('');
 const isFavoriteElementsModalOpen = ref(false);
 const isFavoriteSourceModalOpen = ref(false);
@@ -2339,11 +2100,6 @@ const confirmDialog = ref({
   visible: false,
   action: '',
   message: '',
-});
-const saveRecipeDialog = ref({
-  visible: false,
-  name: '',
-  error: '',
 });
 const saveRecipeValidationError = computed(() => {
   if (!recipeRows.value.length) return 'Brak wierszy do zapisania.';
@@ -2461,7 +2217,7 @@ watchErrorAnchor(() => (configSaveError.value ? configSaveMessage.value : ''), '
 watchErrorAnchor(() => (productFileActionError.value ? productFileActionMessage.value : ''), 'product-file-action');
 watchErrorAnchor(() => (saveError.value ? saveMessage.value : ''), 'product-save');
 watchErrorAnchor(() => (mergeProductSaveError.value ? mergeProductSaveMessage.value : ''), 'merge-product-save');
-watchErrorAnchor(() => saveRecipeDialog.value.error, 'save-recipe-dialog');
+watchErrorAnchor(() => (mergeWorkUploadError.value ? mergeWorkUploadMessage.value : ''), 'merge-work-upload');
 watchErrorAnchor(() => (recipeCatalogActionError.value ? recipeCatalogActionMessage.value : ''), 'recipe-catalog-action');
 watchErrorAnchor(() => (reportError.value ? reportMessage.value : ''), 'report-status');
 watchErrorAnchor(() => (recipePreviewSaveError.value ? recipePreviewSaveMessage.value : ''), 'recipe-preview-save');
@@ -5178,6 +4934,16 @@ function setMergeProductSaveMessage(message, isError = false) {
   mergeProductSaveError.value = isError;
 }
 
+function clearMergeWorkUploadMessage() {
+  mergeWorkUploadMessage.value = '';
+  mergeWorkUploadError.value = false;
+}
+
+function setMergeWorkUploadMessage(message, isError = false) {
+  mergeWorkUploadMessage.value = message;
+  mergeWorkUploadError.value = isError;
+}
+
 function isMergeProductPersisting(productName) {
   return Boolean(mergeProductSavingMap.value[productName]);
 }
@@ -5195,6 +4961,45 @@ function getPersistedMergeProductRows(productName) {
     Klasa: String(row?.Klasa ?? '').trim(),
     Stanowisko: String(row?.Stanowisko ?? '').trim(),
   }));
+}
+
+function buildWorkMainRowsFromMergeRecipe() {
+  return recipeRows.value.map((row, index) =>
+    getWorkRowPayload({
+      id: index + 1,
+      SourceProductName: row.nazwaProduktu || '',
+      Nazwa: row.nazwaSkladowej || '',
+      NazwaRec: 'Aktualna praca',
+      Material: row.material || '',
+      Grubosc: row.grubosc || 0,
+      Szerokosc: row.szerokosc || 0,
+      Dlugosc: row.dlugosc || 0,
+      Sztuk: row.ilosc || 0,
+      WykonaneSztuki: row.iloscWykonana || 0,
+      Wybijak: row.wybijak || 0,
+      TekstDoDruku: row.TekstDoDruku || '',
+      Grupa: row.grupa || '',
+      Priorytet: row.priorytet || '',
+      Klasa: row.Klasa ?? 2,
+      Usr: 'Default',
+      Stanowisko: row.Stanowisko || '',
+      zliczonaIloscIn: row.ilosc || 0,
+    }, index),
+  );
+}
+
+function requestUploadMergeToWorkMain() {
+  if (!recipeRows.value.length) return;
+  if (saveRecipeValidationError.value) {
+    setMergeWorkUploadMessage(saveRecipeValidationError.value, true);
+    return;
+  }
+
+  clearMergeWorkUploadMessage();
+  openConfirmDialog(
+    'upload-merge-to-workmain',
+    'Na pewno chcesz wgrać wybrane produkty do aktualnie ciętych? Obecna zawartość WorkMain zostanie zastąpiona.',
+  );
 }
 
 function replaceTemporaryMergeProductWithSavedFile(productName, savedFileName) {
@@ -5312,6 +5117,48 @@ async function saveTemporaryMergeProduct(productName) {
     const nextSavingMap = { ...mergeProductSavingMap.value };
     delete nextSavingMap[productName];
     mergeProductSavingMap.value = nextSavingMap;
+  }
+}
+
+async function uploadMergeToWorkMain() {
+  if (isMergeUploadingToWorkMain.value) return;
+
+  const rowsToUpload = buildWorkMainRowsFromMergeRecipe();
+  if (!rowsToUpload.length) {
+    setMergeWorkUploadMessage('Brak wierszy do wgrania.', true);
+    return;
+  }
+
+  const validationMessage = getWorkRowsValidationMessage(rowsToUpload, 'Nie można wgrać produktów do aktualnie ciętych.');
+  if (validationMessage) {
+    setMergeWorkUploadMessage(validationMessage, true);
+    return;
+  }
+
+  isMergeUploadingToWorkMain.value = true;
+  clearMergeWorkUploadMessage();
+
+  try {
+    const response = await fetch('/api/workmain/upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rows: rowsToUpload }),
+    });
+
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload.error || 'Nie udało się wgrać danych do aktualnie ciętych.');
+    }
+
+    await loadWorkMainRows({ preserveDisabled: false, preserveLocalDrafts: false });
+    workTableSourceMode.value = 'active';
+    workTableSourceName.value = 'Aktualna praca';
+    clearWorkCorrectionState();
+    setMergeWorkUploadMessage(`Wgrano ${payload.insertedRows ?? rowsToUpload.length} wierszy do aktualnie ciętych.`, false);
+  } catch (error) {
+    setMergeWorkUploadMessage(error.message || 'Nie udało się wgrać danych do aktualnie ciętych.', true);
+  } finally {
+    isMergeUploadingToWorkMain.value = false;
   }
 }
 
@@ -5566,9 +5413,17 @@ function normalizeStationValue(value) {
   return normalized === '0' ? '' : normalized;
 }
 
+function normalizeMaterialValue(value) {
+  const normalized = String(value ?? '').trim();
+  return materialOptions.includes(normalized) ? normalized : '';
+}
+
 function normalizeEditableCellValue(column, value) {
   if (column === 'Kod' || column === 'TekstDoDruku') {
     return normalizePrintTextValue(value);
+  }
+  if (column === 'Materiał' || column === 'material' || column === 'Material') {
+    return normalizeMaterialValue(value);
   }
   if (column === 'Grupa' || column === 'grupa') {
     return normalizeGroupValue(value);
@@ -5585,6 +5440,7 @@ function normalizeEditableCellValue(column, value) {
 function getDropdownOptions(column) {
   if (column === 'Grupa' || column === 'grupa') return groupOptions;
   if (column === 'Priorytet' || column === 'priorytet') return priorityOptions;
+  if (column === 'Materiał' || column === 'material' || column === 'Material') return materialOptions;
   return [];
 }
 
@@ -5795,7 +5651,7 @@ function getProductDropdownOptions(rows, row, column) {
     );
   }
   if (column === 'Priorytet' || column === 'priorytet') return getPriorityDropdownOptions(rows, row);
-  return [];
+  return getDropdownOptions(column);
 }
 
 function getMergeDropdownOptions(productName, row, column) {
@@ -5816,7 +5672,7 @@ function getMergeDropdownOptions(productName, row, column) {
     return getStationDropdownOptions(row?.[column]);
   }
 
-  return [];
+  return getDropdownOptions(column);
 }
 
 function getSequentialGroupValidationError(rows) {
@@ -5860,6 +5716,12 @@ function createMergeDraftRow(productName, sourceRow = {}) {
   const rawQuantity = sourceRow['ilość'] ?? sourceRow.ilosc ?? 0;
   const numericQuantity = Number(String(rawQuantity).replace(',', '.'));
   const baseQuantity = Number.isFinite(numericQuantity) ? numericQuantity : 0;
+  const defaultClassValue =
+    sourceRow.Klasa !== undefined || sourceRow.klasa !== undefined
+      ? normalizeDefaultClassValue(sourceRow.Klasa ?? sourceRow.klasa)
+      : isTemporaryMergeProduct(productName)
+        ? 1
+        : 2;
 
   return {
     _localId: createProductLocalId(),
@@ -5878,7 +5740,7 @@ function createMergeDraftRow(productName, sourceRow = {}) {
     priorytet: '',
     ilosc: baseQuantity,
     iloscWykonana: sourceRow.iloscWykonana ?? 0,
-    Klasa: sourceRow.Klasa ?? sourceRow.klasa ?? 2,
+    Klasa: defaultClassValue,
     Stanowisko: normalizeStationValue(sourceRow.Stanowisko ?? sourceRow.stanowisko),
     Informacje: sourceRow.Informacje ?? 'Kopia tymczasowa',
     TekstDoDruku: normalizePrintTextValue(sourceRow.Kod || sourceRow.TekstDoDruku || sourceRow.nazwaSkladowej || sourceRow.Nazwa || ''),
@@ -6624,6 +6486,7 @@ function getEditInputStyle(value, localId, column) {
   const widthConfig = {
     Nazwa: { min: 10, max: 24 },
     Kod: { min: 10, max: 24 },
+    Materiał: { min: 8, max: 12 },
     Stanowisko: { min: 14, max: 18 },
   };
   const { min = 4, max = 10 } = widthConfig[column] ?? {};
@@ -6639,9 +6502,13 @@ function getEditInputStyle(value, localId, column) {
 
 function getMergeEditInputStyle(column, value) {
   const length = String(value ?? '').length;
-  const isWideColumn = ['nazwaSkladowej', 'TekstDoDruku'].includes(column);
-  const minWidth = isWideColumn ? 10 : 4;
-  const maxWidth = isWideColumn ? 24 : 10;
+  const widthConfig = {
+    TekstDoDruku: { min: 10, max: 24 },
+    material: { min: 8, max: 12 },
+  };
+  const { min = 4, max = 10 } = widthConfig[column] ?? {};
+  const minWidth = min;
+  const maxWidth = max;
   const chWidth = Math.max(minWidth, Math.min(length + 1, maxWidth));
   return { width: `${chWidth}ch` };
 }
@@ -6654,7 +6521,7 @@ function getRecipePreviewEditInputStyle(column, value) {
   }
   const widthConfig = {
     nazwaSkladowej: { min: 14, max: 34 },
-    material: { min: 8, max: 16 },
+    material: { min: 8, max: 12 },
     TekstDoDruku: { min: 12, max: 26 },
     dlugosc: { min: 6, max: 10 },
     grubosc: { min: 6, max: 10 },
@@ -6686,7 +6553,7 @@ function getWorkEditInputStyle(column, value) {
     Dlugosc: { min: 6, max: 10 },
     Grubosc: { min: 6, max: 10 },
     Szerokosc: { min: 6, max: 10 },
-    Material: { min: 8, max: 16 },
+    Material: { min: 12, max: 16 },
     TekstDoDruku: { min: 12, max: 28 },
     Wybijak: { min: 6, max: 10 },
     Stanowisko: { min: 14, max: 18 },
@@ -6760,6 +6627,10 @@ function confirmAction() {
   }
   if (action === 'save') {
     executeSaveProductChanges();
+    return;
+  }
+  if (action === 'upload-merge-to-workmain') {
+    uploadMergeToWorkMain();
     return;
   }
   if (action === 'cancel-recipe-preview-edit') {
@@ -8260,7 +8131,6 @@ onMounted(() => {
   timerId = window.setInterval(updateClock, 1000);
   window.addEventListener('keydown', handleGlobalEscape);
   window.addEventListener('pointerdown', handleWorkRecipeMenuOutsideClick);
-  loadSavedRecipes();
   loadWorkMainRows().catch(() => {});
   loadConfig().catch(() => {});
   loadMachineStatus().catch(() => {});
@@ -8271,10 +8141,6 @@ onMounted(() => {
 });
 
 watch(activeTab, (tab) => {
-  if (tab !== 'recipes' && isSavedRecipePreviewOpen.value) {
-    closeSavedRecipePreview();
-  }
-
   if (tab === 'work') {
     loadWorkMainRows().catch(() => {});
     startWorkMainAutoRefresh();
@@ -8452,8 +8318,11 @@ const WorkTable = defineComponent({
                             ]),
                           ]);
                         }
-                        if (isStationColumn(column)) {
+                        if (isDropdownColumn(column) || isStationColumn(column)) {
                           const validationMessage = getWorkCellValidationMessage(row, column);
+                          const options = isStationColumn(column)
+                            ? getStationDropdownOptions(row[column])
+                            : getDropdownOptions(column);
                           return h('td', { key: `${row.__clientId}-${column}` }, [
                             h('div', { class: 'cell-edit-with-warning' }, [
                               h(
@@ -8466,8 +8335,15 @@ const WorkTable = defineComponent({
                                 },
                                 [
                                   h('option', { value: '' }, ''),
-                                  ...getStationDropdownOptions(row[column]).map((option) =>
-                                    h('option', { key: `${row.__clientId}-${column}-${option.value}`, value: option.value }, option.label),
+                                  ...options.map((option) =>
+                                    h(
+                                      'option',
+                                      {
+                                        key: `${row.__clientId}-${column}-${option.value ?? option}`,
+                                        value: option.value ?? option,
+                                      },
+                                      option.label ?? option,
+                                    ),
                                   ),
                                 ],
                               ),
