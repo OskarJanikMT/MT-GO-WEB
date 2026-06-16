@@ -7994,7 +7994,9 @@ function updateMergeRecipeCell(productName, localId, column, value) {
   if (column === 'ilosc') {
     const normalizedValue = Number(String(value ?? '').replace(',', '.'));
     const multiplier = Math.max(getMergeProductQuantity(productName), 1);
-    row._baseIlosc = Number.isFinite(normalizedValue) ? normalizedValue / multiplier : 0;
+    const nextBaseQuantity = Number.isFinite(normalizedValue) ? normalizedValue / multiplier : 0;
+    row._baseIlosc = nextBaseQuantity;
+    row.ilosc = Number.isFinite(normalizedValue) ? normalizedValue : 0;
     return;
   }
 
