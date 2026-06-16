@@ -2868,13 +2868,36 @@ function resolveWorkWybijakValue(stanowisko, dlugosc, wybijak) {
   return normalizeWorkCorrectionValue(getWybijakValueForStation(normalizedStation, normalizedLength));
 }
 
+function resolveStationFromWybijak(wybijak) {
+  const normalizedWybijak = String(wybijak ?? '').replace(/[^\d]/g, '').trim();
+  if (!normalizedWybijak) return '';
+
+  for (let index = 0; index < configStations.value.length; index += 1) {
+    const punchNumbers = getConfigStationOrderedPunches(configStations.value[index])
+      .map((punch) => String(punch ?? '').replace(/[^\d]/g, '').trim())
+      .filter(Boolean)
+      .slice(0, 2);
+
+    if (!punchNumbers.length) continue;
+    if (punchNumbers.length === 2 && normalizedWybijak === punchNumbers.join('')) {
+      return String(index + 1);
+    }
+    if (punchNumbers[0] === normalizedWybijak) {
+      return String(index + 1);
+    }
+  }
+
+  return '';
+}
+
 function getWorkRowPayload(row, index = 0) {
   const parsedPrzekroj = parsePrzekrojValue(row?.Przekroj);
   const grubosc = normalizeWorkCorrectionValue(row?.Grubosc ?? parsedPrzekroj.Grubosc);
   const szerokosc = normalizeWorkCorrectionValue(row?.Szerokosc ?? parsedPrzekroj.Szerokosc);
   const sztuk = normalizeWorkCorrectionValue(row?.Sztuk);
   const dlugosc = normalizeWorkCorrectionValue(row?.Dlugosc);
-  const stanowisko = normalizeStationValue(row?.Stanowisko ?? row?.stanowisko);
+  const explicitStation = normalizeStationValue(row?.Stanowisko ?? row?.stanowisko);
+  const stanowisko = explicitStation || resolveStationFromWybijak(row?.Wybijak);
   const wybijak = resolveWorkWybijakValue(stanowisko, dlugosc, row?.Wybijak);
   return {
     id: normalizeWorkCorrectionValue(row?.id || index + 1),
