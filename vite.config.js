@@ -13,6 +13,8 @@ const __dirname = path.dirname(__filename);
 const DEFAULT_PRODUCTS_DIR = path.join(__dirname, 'Produkty');
 const recipesFilePath = path.join(__dirname, 'receptury.json');
 const configFilePath = path.join(__dirname, 'config.json');
+const defaultHttpsPfxPath = path.join(__dirname, 'certs', 'mt-go-web-dev.pfx');
+const defaultHttpsPfxPassword = 'mt-go-web-local';
 const execFileAsync = promisify(execFile);
 const DEFAULT_ROW_LIMIT = 500;
 const DEFAULT_PRINT_TEXT_MAX_LENGTH = 100;
@@ -127,6 +129,32 @@ function buildSheetMatrix(headers, rows) {
 function normalizeProductsDirectory(value) {
   const rawValue = String(value ?? '').trim();
   return path.resolve(rawValue || DEFAULT_PRODUCTS_DIR);
+}
+
+function isTruthyEnv(value) {
+  return ['1', 'true', 'yes', 'on'].includes(String(value ?? '').trim().toLowerCase());
+}
+
+async function resolveHttpsOptions() {
+  const explicitHttpsEnabled = isTruthyEnv(process.env.MTGO_HTTPS_ENABLED);
+  const certificatePath = path.resolve(process.env.MTGO_HTTPS_PFX_PATH || defaultHttpsPfxPath);
+  const passphrase = String(process.env.MTGO_HTTPS_PFX_PASSWORD || defaultHttpsPfxPassword);
+
+  try {
+    const pfx = await fs.readFile(certificatePath);
+    return {
+      pfx,
+      passphrase,
+    };
+  } catch (error) {
+    if (explicitHttpsEnabled) {
+      throw new Error(
+        `Nie udało się wczytać certyfikatu HTTPS z ${certificatePath}. ` +
+        'Wygeneruj go skryptem `npm run cert:dev` albo popraw MTGO_HTTPS_PFX_PATH.',
+      );
+    }
+    return false;
+  }
 }
 
 function normalizeAppConfig(config) {
@@ -1728,14 +1756,21 @@ EXEC sp_executesql @sql;`;
   };
 }
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(async ({ mode }) => {
   Object.assign(process.env, loadEnv(mode, __dirname, ''));
+  const httpsOptions = await resolveHttpsOptions();
 
   return {
     plugins: [vue(), productSavePlugin()],
     server: {
       host: '127.0.0.1',
       port: 5174,
+      https: httpsOptions,
+    },
+    preview: {
+      host: '127.0.0.1',
+      port: 4174,
+      https: httpsOptions,
     },
   };
 });

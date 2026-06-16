@@ -27,6 +27,10 @@ vite-dev.err
 vite-dev.log
 workmain-debug.txt
 
+# local TLS certificates
+certs/
+!certs/.gitkeep
+
 # vite cache
 .vite/
 
