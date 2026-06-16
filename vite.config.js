@@ -15,6 +15,9 @@ const recipesFilePath = path.join(__dirname, 'receptury.json');
 const configFilePath = path.join(__dirname, 'config.json');
 const defaultHttpsPfxPath = path.join(__dirname, 'certs', 'mt-go-web-dev.pfx');
 const defaultHttpsPfxPassword = 'mt-go-web-local';
+const defaultDevHost = '0.0.0.0';
+const defaultDevPort = 5174;
+const defaultPreviewPort = 4174;
 const execFileAsync = promisify(execFile);
 const DEFAULT_ROW_LIMIT = 500;
 const DEFAULT_PRINT_TEXT_MAX_LENGTH = 100;
@@ -155,6 +158,16 @@ async function resolveHttpsOptions() {
     }
     return false;
   }
+}
+
+function normalizeServerHost(value) {
+  const rawValue = String(value ?? '').trim();
+  return rawValue || defaultDevHost;
+}
+
+function normalizeServerPort(value, fallbackPort) {
+  const parsedValue = Number.parseInt(String(value ?? ''), 10);
+  return Number.isFinite(parsedValue) && parsedValue > 0 ? parsedValue : fallbackPort;
 }
 
 function normalizeAppConfig(config) {
@@ -1759,17 +1772,21 @@ EXEC sp_executesql @sql;`;
 export default defineConfig(async ({ mode }) => {
   Object.assign(process.env, loadEnv(mode, __dirname, ''));
   const httpsOptions = await resolveHttpsOptions();
+  const serverHost = normalizeServerHost(process.env.MTGO_DEV_HOST);
+  const serverPort = normalizeServerPort(process.env.MTGO_DEV_PORT, defaultDevPort);
+  const previewHost = normalizeServerHost(process.env.MTGO_PREVIEW_HOST || process.env.MTGO_DEV_HOST);
+  const previewPort = normalizeServerPort(process.env.MTGO_PREVIEW_PORT, defaultPreviewPort);
 
   return {
     plugins: [vue(), productSavePlugin()],
     server: {
-      host: '127.0.0.1',
-      port: 5174,
+      host: serverHost,
+      port: serverPort,
       https: httpsOptions,
     },
     preview: {
-      host: '127.0.0.1',
-      port: 4174,
+      host: previewHost,
+      port: previewPort,
       https: httpsOptions,
     },
   };
