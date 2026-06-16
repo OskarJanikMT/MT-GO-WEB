@@ -1780,12 +1780,12 @@ export default defineConfig(async ({ mode }) => {
   return {
     plugins: [vue(), productSavePlugin()],
     server: {
-      host: serverHost,
+      host: true,
       port: serverPort,
       https: httpsOptions,
     },
     preview: {
-      host: previewHost,
+      host: true,
       port: previewPort,
       https: httpsOptions,
     },

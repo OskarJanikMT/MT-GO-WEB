@@ -5,7 +5,7 @@
       "nazwaReceptury": "testowa",
       "CzasOdloz": "2026-06-10 13:06:10",
       "createdAt": "2026-06-10 13:06:10",
-      "lastUsedAt": "2026-06-10 14:14:12",
+      "lastUsedAt": "2026-06-16 11:11:42",
       "Usr": "Default",
       "rows": [
         {
@@ -671,6 +671,7 @@
       ]
     },
     {
+<<<<<<< Updated upstream
       "idRap": 1781590401232,
       "nazwaReceptury": "testowa1",
       "CzasOdloz": "2026-06-16 08:13:21",
@@ -769,6 +770,26 @@
           "idReceptury": 26,
           "idSkladowej": 4,
           "wybijak": "12",
+=======
+      "idRap": 1781600590220,
+      "nazwaReceptury": "test",
+      "CzasOdloz": "2026-06-16 11:03:10",
+      "createdAt": "2026-06-16 11:03:10",
+      "lastUsedAt": "2026-06-16 11:03:13",
+      "Usr": "Default",
+      "rows": [
+        {
+          "nazwaReceptury": "test",
+          "nazwaProduktu": "Pusty produkt 1",
+          "nazwaSkladowej": "",
+          "dlugosc": "120",
+          "grubosc": "50",
+          "szerokosc": "60",
+          "material": "SO",
+          "idReceptury": 26,
+          "idSkladowej": 0,
+          "wybijak": "1 i 2",
+>>>>>>> Stashed changes
           "grupa": "",
           "priorytet": "",
           "ilosc": 10,
@@ -776,6 +797,7 @@
           "Klasa": 2,
           "Stanowisko": "",
           "Informacje": "Kopia tymczasowa",
+<<<<<<< Updated upstream
           "TekstDoDruku": "BIU-NOV-160"
         }
       ]
@@ -1499,11 +1521,27 @@
           "idReceptury": 26,
           "idSkladowej": 35,
           "wybijak": "1",
+=======
+          "TekstDoDruku": "test"
+        },
+        {
+          "nazwaReceptury": "test",
+          "nazwaProduktu": "Pusty produkt 1",
+          "nazwaSkladowej": "",
+          "dlugosc": "120",
+          "grubosc": "50",
+          "szerokosc": "60",
+          "material": "SO",
+          "idReceptury": 26,
+          "idSkladowej": 1,
+          "wybijak": "1 i 2",
+>>>>>>> Stashed changes
           "grupa": "",
           "priorytet": "",
           "ilosc": 10,
           "iloscWykonana": 0,
           "Klasa": 2,
+<<<<<<< Updated upstream
           "Stanowisko": "1",
           "Informacje": "Kopia tymczasowa",
           "TekstDoDruku": "BULL S 9.1"
@@ -1887,6 +1925,11 @@
           "Stanowisko": "1",
           "Informacje": "Kopia tymczasowa",
           "TekstDoDruku": "BULL S 13.1"
+=======
+          "Stanowisko": "",
+          "Informacje": "Kopia tymczasowa",
+          "TekstDoDruku": "test"
+>>>>>>> Stashed changes
         }
       ]
     }
