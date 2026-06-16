@@ -1733,6 +1733,7 @@ const TEMP_PRODUCT_KEY = '__TEMP_PRODUCT__';
 const TEMP_EMPTY_PRODUCT_PREFIX = '__TEMP_EMPTY_PRODUCT__';
 const SAVED_ROWS_STORAGE_KEY = 'mt-go-web:saved-rows';
 const UI_SETTINGS_STORAGE_KEY = 'mt-go-web:ui-settings';
+const WORK_MAIN_RECIPE_NAME = 'MT-GO-WEB';
 
 const tabs = [
   { id: 'products', label: '1. Twoje Produkty' },
@@ -2879,7 +2880,7 @@ function getWorkRowPayload(row, index = 0) {
     id: normalizeWorkCorrectionValue(row?.id || index + 1),
     SourceProductName: String(row?.SourceProductName ?? '').trim(),
     Nazwa: String(row?.Nazwa ?? '').trim(),
-    NazwaRec: String(row?.NazwaRec ?? '').trim(),
+    NazwaRec: WORK_MAIN_RECIPE_NAME,
     Material: String(row?.Material ?? '').trim(),
     Przekroj: buildPrzekrojValue(grubosc, szerokosc),
     Grubosc: grubosc,
