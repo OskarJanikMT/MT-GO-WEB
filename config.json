@@ -102,5 +102,25 @@
       "rowLimit": 500
     }
   ],
-  "favoriteElements": []
+  "favoriteElements": [
+    {
+      "id": "favorite-1781647063553-product-row-62",
+      "sourceProductName": "200-50078200.xlsx",
+      "sourceRowIndex": 0,
+      "label": "790x60x28-200 | 790 x 28 x 60 | BUK",
+      "row": {
+        "Nazwa": "",
+        "Długość": "790",
+        "Grubość": "28",
+        "Szerokość": "60",
+        "Materiał": "BUK",
+        "Kod": "790x60x28-200",
+        "Grupa": "",
+        "Priorytet": "",
+        "ilość": "2",
+        "Wybijak": "3 i 4",
+        "Stanowisko": "2"
+      }
+    }
+  ]
 }
