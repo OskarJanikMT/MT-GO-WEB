@@ -2899,10 +2899,11 @@ function getWorkRowPayload(row, index = 0) {
   const explicitStation = normalizeStationValue(row?.Stanowisko ?? row?.stanowisko);
   const stanowisko = explicitStation || resolveStationFromWybijak(row?.Wybijak);
   const wybijak = resolveWorkWybijakValue(stanowisko, dlugosc, row?.Wybijak);
+  const tekstDoDruku = normalizePrintTextValue(row?.TekstDoDruku ?? '');
   return {
     id: normalizeWorkCorrectionValue(row?.id || index + 1),
     SourceProductName: String(row?.SourceProductName ?? '').trim(),
-    Nazwa: String(row?.Nazwa ?? '').trim(),
+    Nazwa: tekstDoDruku,
     NazwaRec: WORK_MAIN_RECIPE_NAME,
     Material: String(row?.Material ?? '').trim(),
     Przekroj: buildPrzekrojValue(grubosc, szerokosc),
@@ -2912,7 +2913,7 @@ function getWorkRowPayload(row, index = 0) {
     Sztuk: sztuk,
     WykonaneSztuki: normalizeWorkCorrectionValue(row?.WykonaneSztuki),
     Wybijak: wybijak,
-    TekstDoDruku: normalizePrintTextValue(row?.TekstDoDruku ?? ''),
+    TekstDoDruku: tekstDoDruku,
     Grupa: normalizeGroupValue(row?.Grupa ?? row?.grupa ?? ''),
     Priorytet: normalizePriorityValue(row?.Priorytet ?? row?.priorytet ?? ''),
     Klasa: normalizeWorkCorrectionValue(row?.Klasa ?? row?.klasa),
