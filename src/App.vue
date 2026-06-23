@@ -1784,14 +1784,14 @@
                   </div>
                 </div>
                 <div class="single-element-summary">
-                  <span>{{ filteredWorkSourceRowOptions.length }} / {{ workSourceRowOptions.length }} elementów w produkcie</span>
+                  <span>{{ workSourceRowOptions.length }} elementów w produkcie</span>
                   <span>Zaznaczone: {{ selectedWorkRowCount }}</span>
                 </div>
                 <div v-if="workSourceRowOptions.length" class="favorite-elements-legend">
                   Kod | Długość x Grubość x Szerokość | Materiał
                 </div>
-                <div v-if="filteredWorkSourceRowOptions.length" class="single-element-list">
-                  <div v-for="row in filteredWorkSourceRowOptions" :key="row._localId" class="single-element-row">
+                <div v-if="workSourceRowOptions.length" class="single-element-list">
+                  <div v-for="row in workSourceRowOptions" :key="row._localId" class="single-element-row">
                     <label class="single-element-check">
                       <input
                         type="checkbox"
@@ -1803,9 +1803,6 @@
                     </label>
                     <span class="single-element-row-meta">{{ getWorkSourceRowQuantityLabel(row) }}</span>
                   </div>
-                </div>
-                <div v-else-if="workSourceRowOptions.length" class="expanded-empty single-element-empty">
-                  Brak elementów pasujących do wpisanej nazwy.
                 </div>
                 <div v-else class="expanded-empty single-element-empty">
                   Wybierz produkt, aby zobaczyć jego elementy.
@@ -2201,7 +2198,6 @@ const workDisableCooldownRowId = ref(null);
 const isWorkProductModalOpen = ref(false);
 const workSourceProductName = ref('');
 const workSourceProductSearch = ref('');
-const workSourceRowSearch = ref('');
 const workSourceMultiplier = ref(1);
 const workSelectedRowIds = ref({});
 const workCorrectionDrafts = ref({});
@@ -2605,25 +2601,28 @@ const filteredWorkSourceProductNames = computed(() => {
     formatProductDisplayName(productName).toLowerCase().includes(query),
   );
 });
-const filteredWorkSourceRowOptions = computed(() => {
-  const query = workSourceRowSearch.value.trim().toLowerCase();
-  if (!query) return workSourceRowOptions.value;
-  return workSourceRowOptions.value.filter((row) =>
-    String(row?.Nazwa ?? row?.nazwaSkladowej ?? '')
-      .toLowerCase()
-      .includes(query),
-  );
-});
 const selectedWorkRowCount = computed(() => Object.values(workSelectedRowIds.value).filter(Boolean).length);
 const selectedFilteredWorkRowCount = computed(() =>
-  filteredWorkSourceRowOptions.value.filter((row) => Boolean(workSelectedRowIds.value[row._localId])).length,
+  workSourceRowOptions.value.filter((row) => Boolean(workSelectedRowIds.value[row._localId])).length,
 );
 const areAllFilteredWorkRowsSelected = computed(() =>
-  filteredWorkSourceRowOptions.value.length > 0 && selectedFilteredWorkRowCount.value === filteredWorkSourceRowOptions.value.length,
+  workSourceRowOptions.value.length > 0 && selectedFilteredWorkRowCount.value === workSourceRowOptions.value.length,
 );
 const projectedWorkRowCount = computed(() => workRows.value.length + selectedWorkRowCount.value);
 const workRemainingCapacity = computed(() => Math.max(0, activeRowLimit.value - workRows.value.length));
 const workRemainingCapacityAfterSelection = computed(() => Math.max(0, activeRowLimit.value - projectedWorkRowCount.value));
+watch(filteredWorkSourceProductNames, (productNames) => {
+  if (!isWorkProductModalOpen.value) return;
+  if (!productNames.length) {
+    workSourceProductName.value = '';
+    resetWorkSourceSelection();
+    return;
+  }
+  if (!productNames.includes(workSourceProductName.value)) {
+    workSourceProductName.value = productNames[0];
+    resetWorkSourceSelection();
+  }
+});
 const hasPendingRecipePreviewChanges = computed(() => {
   if (!isRecipePreviewEditMode.value) return false;
   const normalizeRows = (rows) =>
@@ -3405,7 +3404,6 @@ async function openWorkProductModal() {
     workSourceProductName.value = availableProductNames.value[0] || '';
   }
   workSourceProductSearch.value = '';
-  workSourceRowSearch.value = '';
   workSourceMultiplier.value = 1;
   resetWorkSourceSelection();
   isWorkProductModalOpen.value = true;
@@ -3414,14 +3412,12 @@ async function openWorkProductModal() {
 function closeWorkProductModal() {
   isWorkProductModalOpen.value = false;
   workSourceProductSearch.value = '';
-  workSourceRowSearch.value = '';
   workSourceMultiplier.value = 1;
   resetWorkSourceSelection();
 }
 
 function handleWorkSourceProductChange(nextProductName) {
   workSourceProductName.value = nextProductName;
-  workSourceRowSearch.value = '';
   resetWorkSourceSelection();
 }
 
@@ -3444,7 +3440,7 @@ function handleWorkSourceRowCheckboxChange(localId, isChecked) {
 function toggleAllFilteredWorkRows(isChecked) {
   if (!isChecked) {
     const nextSelection = { ...workSelectedRowIds.value };
-    for (const row of filteredWorkSourceRowOptions.value) {
+    for (const row of workSourceRowOptions.value) {
       delete nextSelection[row._localId];
     }
     workSelectedRowIds.value = nextSelection;
@@ -3453,11 +3449,11 @@ function toggleAllFilteredWorkRows(isChecked) {
 
   const availableSlots = Math.max(0, workRemainingCapacity.value - selectedWorkRowCount.value);
   const currentlySelectedVisibleIds = new Set(
-    filteredWorkSourceRowOptions.value
+    workSourceRowOptions.value
       .filter((row) => Boolean(workSelectedRowIds.value[row._localId]))
       .map((row) => row._localId),
   );
-  const rowsToNewlySelect = filteredWorkSourceRowOptions.value.filter((row) => !currentlySelectedVisibleIds.has(row._localId));
+  const rowsToNewlySelect = workSourceRowOptions.value.filter((row) => !currentlySelectedVisibleIds.has(row._localId));
 
   if (rowsToNewlySelect.length > availableSlots) {
     showMergeLimitMessage();
@@ -3465,7 +3461,7 @@ function toggleAllFilteredWorkRows(isChecked) {
   }
 
   const nextSelection = { ...workSelectedRowIds.value };
-  for (const row of filteredWorkSourceRowOptions.value) {
+  for (const row of workSourceRowOptions.value) {
     nextSelection[row._localId] = true;
   }
   workSelectedRowIds.value = nextSelection;
