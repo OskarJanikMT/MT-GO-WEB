@@ -2707,6 +2707,21 @@ button {
   font-size: 12px;
 }
 
+.work-source-toolbar {
+  align-items: flex-end;
+}
+
+.single-element-check-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.work-source-multiplier-control {
+  align-items: center;
+}
+
 .report-saved-summary {
   margin: 8px 14px 0;
 }
@@ -2754,6 +2769,14 @@ button {
   color: var(--text-primary);
   font-size: 12px;
   line-height: 1.4;
+}
+
+.single-element-row-meta {
+  flex: 0 0 auto;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .single-element-empty {

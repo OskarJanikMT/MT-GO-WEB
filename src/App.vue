@@ -1745,18 +1745,44 @@
               </div>
               <div class="confirm-modal-body single-element-body">
                 <label class="rename-field">
+                  <span>Szukaj produktu po nazwie</span>
+                  <input v-model="workSourceProductSearch" class="text-input" placeholder="Wpisz nazwę produktu" />
+                </label>
+                <label class="rename-field">
                   <span>Produkt źródłowy</span>
                   <select :value="workSourceProductName" class="select-input" @change="handleWorkSourceProductChange($event.target.value)">
                     <option value="">Wybierz produkt</option>
-                    <option v-for="productName in availableProductNames" :key="`work-source-${productName}`" :value="productName">
+                    <option v-for="productName in filteredWorkSourceProductNames" :key="`work-source-${productName}`" :value="productName">
                       {{ formatProductDisplayName(productName) }}
                     </option>
                   </select>
                 </label>
-                <label v-if="workSourceRowOptions.length" class="rename-field">
-                  <span>Szukaj elementu po nazwie</span>
-                  <input v-model="workSourceRowSearch" class="text-input" placeholder="Wpisz nazwę elementu" />
-                </label>
+                <div v-if="workSourceRowOptions.length" class="single-element-summary work-source-toolbar">
+                  <label class="single-element-check single-element-check-inline">
+                    <input
+                      type="checkbox"
+                      :checked="areAllFilteredWorkRowsSelected"
+                      @change="toggleAllFilteredWorkRows($event.target.checked)"
+                    />
+                    <span>Zaznacz wszystkie widoczne</span>
+                  </label>
+                  <div class="product-quantity work-source-multiplier-control">
+                    <span>Mnożnik produktu</span>
+                    <div class="quantity-stepper">
+                      <button class="quantity-arrow" @click="stepWorkSourceMultiplier(-1)">-</button>
+                      <input
+                        class="quantity-input"
+                        type="number"
+                        min="1"
+                        step="1"
+                        inputmode="numeric"
+                        :value="workSourceMultiplier"
+                        @input="updateWorkSourceMultiplier($event.target.value)"
+                      />
+                      <button class="quantity-arrow" @click="stepWorkSourceMultiplier(1)">+</button>
+                    </div>
+                  </div>
+                </div>
                 <div class="single-element-summary">
                   <span>{{ filteredWorkSourceRowOptions.length }} / {{ workSourceRowOptions.length }} elementów w produkcie</span>
                   <span>Zaznaczone: {{ selectedWorkRowCount }}</span>
@@ -1775,6 +1801,7 @@
                       />
                       <span class="single-element-row-text">{{ formatTemporaryRowOption(row) }}</span>
                     </label>
+                    <span class="single-element-row-meta">{{ getWorkSourceRowQuantityLabel(row) }}</span>
                   </div>
                 </div>
                 <div v-else-if="workSourceRowOptions.length" class="expanded-empty single-element-empty">
@@ -2173,7 +2200,9 @@ const workEditingRowId = ref(null);
 const workDisableCooldownRowId = ref(null);
 const isWorkProductModalOpen = ref(false);
 const workSourceProductName = ref('');
+const workSourceProductSearch = ref('');
 const workSourceRowSearch = ref('');
+const workSourceMultiplier = ref(1);
 const workSelectedRowIds = ref({});
 const workCorrectionDrafts = ref({});
 let workDisableCooldownTimerId = null;
@@ -2569,6 +2598,13 @@ const savedWorkPreviewRows = computed(() => {
   }
 });
 const workSourceRowOptions = computed(() => productRowsByName.value[workSourceProductName.value] ?? []);
+const filteredWorkSourceProductNames = computed(() => {
+  const query = workSourceProductSearch.value.trim().toLowerCase();
+  if (!query) return availableProductNames.value;
+  return availableProductNames.value.filter((productName) =>
+    formatProductDisplayName(productName).toLowerCase().includes(query),
+  );
+});
 const filteredWorkSourceRowOptions = computed(() => {
   const query = workSourceRowSearch.value.trim().toLowerCase();
   if (!query) return workSourceRowOptions.value;
@@ -2579,6 +2615,12 @@ const filteredWorkSourceRowOptions = computed(() => {
   );
 });
 const selectedWorkRowCount = computed(() => Object.values(workSelectedRowIds.value).filter(Boolean).length);
+const selectedFilteredWorkRowCount = computed(() =>
+  filteredWorkSourceRowOptions.value.filter((row) => Boolean(workSelectedRowIds.value[row._localId])).length,
+);
+const areAllFilteredWorkRowsSelected = computed(() =>
+  filteredWorkSourceRowOptions.value.length > 0 && selectedFilteredWorkRowCount.value === filteredWorkSourceRowOptions.value.length,
+);
 const projectedWorkRowCount = computed(() => workRows.value.length + selectedWorkRowCount.value);
 const workRemainingCapacity = computed(() => Math.max(0, activeRowLimit.value - workRows.value.length));
 const workRemainingCapacityAfterSelection = computed(() => Math.max(0, activeRowLimit.value - projectedWorkRowCount.value));
@@ -3342,6 +3384,16 @@ function resetWorkSourceSelection() {
   workSelectedRowIds.value = {};
 }
 
+function updateWorkSourceMultiplier(value) {
+  const normalizedValue = Number.parseInt(String(value ?? ''), 10);
+  workSourceMultiplier.value = Number.isFinite(normalizedValue) && normalizedValue > 0 ? normalizedValue : 1;
+}
+
+function stepWorkSourceMultiplier(delta) {
+  const nextValue = Math.max(1, workSourceMultiplier.value + delta);
+  workSourceMultiplier.value = nextValue;
+}
+
 async function openWorkProductModal() {
   if (!availableProductNames.value.length) return;
   if (isWorkCorrectionSaving.value || isWorkEditPreparing.value) return;
@@ -3352,14 +3404,18 @@ async function openWorkProductModal() {
   if (!workSourceProductName.value || !availableProductNames.value.includes(workSourceProductName.value)) {
     workSourceProductName.value = availableProductNames.value[0] || '';
   }
+  workSourceProductSearch.value = '';
   workSourceRowSearch.value = '';
+  workSourceMultiplier.value = 1;
   resetWorkSourceSelection();
   isWorkProductModalOpen.value = true;
 }
 
 function closeWorkProductModal() {
   isWorkProductModalOpen.value = false;
+  workSourceProductSearch.value = '';
   workSourceRowSearch.value = '';
+  workSourceMultiplier.value = 1;
   resetWorkSourceSelection();
 }
 
@@ -3385,11 +3441,42 @@ function handleWorkSourceRowCheckboxChange(localId, isChecked) {
   };
 }
 
-function createWorkRowFromProductRow(sourceRow = {}, rowId = getNextWorkRowId()) {
+function toggleAllFilteredWorkRows(isChecked) {
+  if (!isChecked) {
+    const nextSelection = { ...workSelectedRowIds.value };
+    for (const row of filteredWorkSourceRowOptions.value) {
+      delete nextSelection[row._localId];
+    }
+    workSelectedRowIds.value = nextSelection;
+    return;
+  }
+
+  const availableSlots = Math.max(0, workRemainingCapacity.value - selectedWorkRowCount.value);
+  const currentlySelectedVisibleIds = new Set(
+    filteredWorkSourceRowOptions.value
+      .filter((row) => Boolean(workSelectedRowIds.value[row._localId]))
+      .map((row) => row._localId),
+  );
+  const rowsToNewlySelect = filteredWorkSourceRowOptions.value.filter((row) => !currentlySelectedVisibleIds.has(row._localId));
+
+  if (rowsToNewlySelect.length > availableSlots) {
+    showMergeLimitMessage();
+    return;
+  }
+
+  const nextSelection = { ...workSelectedRowIds.value };
+  for (const row of filteredWorkSourceRowOptions.value) {
+    nextSelection[row._localId] = true;
+  }
+  workSelectedRowIds.value = nextSelection;
+}
+
+function createWorkRowFromProductRow(sourceRow = {}, rowId = getNextWorkRowId(), quantityMultiplier = 1) {
   const length = normalizeWorkCorrectionValue(sourceRow['Długość'] ?? sourceRow.dlugosc);
   const thickness = normalizeWorkCorrectionValue(sourceRow['Grubość'] ?? sourceRow.grubosc);
   const width = normalizeWorkCorrectionValue(sourceRow['Szerokość'] ?? sourceRow.szerokosc);
-  const quantity = normalizeWorkCorrectionValue(sourceRow['ilość'] ?? sourceRow.ilosc ?? 0);
+  const baseQuantity = normalizeWorkCorrectionValue(sourceRow['ilość'] ?? sourceRow.ilosc ?? 0);
+  const quantity = baseQuantity * Math.max(1, normalizeWorkCorrectionValue(quantityMultiplier, 1));
   const station = normalizeStationValue(sourceRow.Stanowisko ?? sourceRow.stanowisko);
 
   return normalizeWorkRow({
@@ -3412,6 +3499,22 @@ function createWorkRowFromProductRow(sourceRow = {}, rowId = getNextWorkRowId())
   });
 }
 
+function buildWorkRowMergeKey(row) {
+  const payload = getWorkRowPayload(row);
+  return JSON.stringify({
+    SourceProductName: payload.SourceProductName,
+    Material: payload.Material,
+    Przekroj: payload.Przekroj,
+    Dlugosc: payload.Dlugosc,
+    Wybijak: payload.Wybijak,
+    TekstDoDruku: payload.TekstDoDruku,
+    Klasa: payload.Klasa,
+    Stanowisko: payload.Stanowisko,
+    Grupa: payload.Grupa,
+    Priorytet: payload.Priorytet,
+  });
+}
+
 function addSelectedWorkRows() {
   if (!selectedWorkRowCount.value) return;
   if (selectedWorkRowCount.value > workRemainingCapacity.value) {
@@ -3423,9 +3526,10 @@ function addSelectedWorkRows() {
     .filter(([, isSelected]) => isSelected)
     .map(([localId]) => localId);
   const startingRowId = getNextWorkRowId();
+  const quantityMultiplier = Math.max(1, normalizeWorkCorrectionValue(workSourceMultiplier.value, 1));
   const rowsToAdd = workSourceRowOptions.value
     .filter((row) => selectedIds.includes(row._localId))
-    .map((row, index) => createWorkRowFromProductRow(row, startingRowId + index));
+    .map((row, index) => createWorkRowFromProductRow(row, startingRowId + index, quantityMultiplier));
   const validationInfo = rowsToAdd.map((row) => ({
     row,
     missingFields: getWorkRowMissingFields(row),
@@ -3444,8 +3548,46 @@ function addSelectedWorkRows() {
     return;
   }
 
-  workRows.value = [...workRows.value, ...rowsToAdd];
-  const rowToEdit = validationInfo.find(({ missingFields }) => missingFields.includes('Wybijak'))?.row;
+  const nextWorkRows = [...workRows.value];
+  const mergeIndexByKey = new Map(
+    nextWorkRows
+      .map((row, index) => (!row.__disabled ? [buildWorkRowMergeKey(row), index] : null))
+      .filter(Boolean),
+  );
+
+  const rowsNeedingWybijakEdit = [];
+
+  for (const { row, missingFields } of validationInfo) {
+    const mergeKey = buildWorkRowMergeKey(row);
+    const existingIndex = mergeIndexByKey.get(mergeKey);
+
+    if (existingIndex !== undefined) {
+      const existingRow = nextWorkRows[existingIndex];
+      const nextQuantity = normalizeWorkCorrectionValue(existingRow.Sztuk) + normalizeWorkCorrectionValue(row.Sztuk);
+      const nextCountIn = normalizeWorkCorrectionValue(existingRow.zliczonaIloscIn) + normalizeWorkCorrectionValue(row.zliczonaIloscIn);
+
+      nextWorkRows[existingIndex] = normalizeWorkRow({
+        ...existingRow,
+        Sztuk: nextQuantity,
+        zliczonaIloscIn: nextCountIn,
+        __isLocalDraft: true,
+      });
+
+      if (missingFields.includes('Wybijak')) {
+        rowsNeedingWybijakEdit.push(nextWorkRows[existingIndex]);
+      }
+      continue;
+    }
+
+    nextWorkRows.push(row);
+    mergeIndexByKey.set(mergeKey, nextWorkRows.length - 1);
+    if (missingFields.includes('Wybijak')) {
+      rowsNeedingWybijakEdit.push(row);
+    }
+  }
+
+  workRows.value = nextWorkRows;
+  const rowToEdit = rowsNeedingWybijakEdit[0] ?? null;
   if (rowToEdit) {
     workEditingRowId.value = rowToEdit.__clientId;
   }
@@ -5128,7 +5270,7 @@ function requestUploadMergeToWorkMain() {
   clearMergeWorkUploadMessage();
   openConfirmDialog(
     'upload-merge-to-workmain',
-    'Na pewno chcesz wgrać wybrane produkty do aktualnie ciętych? Obecna zawartość WorkMain zostanie zastąpiona.',
+    'Na pewno chcesz dodać wybrane produkty do aktualnie ciętych? Nowe pozycje zostaną dopisane do bieżącego stanu WorkMain.',
   );
 }
 
@@ -5300,7 +5442,7 @@ async function uploadMergeToWorkMain() {
     workTableSourceMode.value = 'active';
     workTableSourceName.value = 'Aktualna praca';
     clearWorkCorrectionState();
-    setMergeWorkUploadMessage(`Wgrano ${payload.insertedRows ?? rowsToUpload.length} wierszy do aktualnie ciętych.`, false);
+    setMergeWorkUploadMessage(`Dodano ${payload.insertedRows ?? rowsToUpload.length} wierszy do aktualnie ciętych.`, false);
   } catch (error) {
     setMergeWorkUploadMessage(error.message || 'Nie udało się wgrać danych do aktualnie ciętych.', true);
   } finally {
@@ -5315,6 +5457,13 @@ function formatTemporaryRowOption(row) {
   const width = row['Szerokość'] ?? row.szerokosc ?? '—';
   const material = row['Materiał'] ?? row.material ?? '—';
   return `${code} | ${length} x ${thickness} x ${width} | ${material}`;
+}
+
+function getWorkSourceRowQuantityLabel(row) {
+  const baseQuantity = normalizeWorkCorrectionValue(row?.['ilość'] ?? row?.ilosc ?? 0);
+  const multiplier = Math.max(1, normalizeWorkCorrectionValue(workSourceMultiplier.value, 1));
+  const finalQuantity = baseQuantity * multiplier;
+  return `Ilość bazowa: ${baseQuantity} | Ilość wynikowa: ${finalQuantity}`;
 }
 
 function getFavoriteElementIdentity(sourceProductName, row = {}, sourceRowIndex = -1) {

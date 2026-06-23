@@ -527,8 +527,8 @@ BEGIN TRY
   )
   VALUES
   ${valuesSql};
-
-  DELETE FROM dbo.WorkMain;
+  
+  DECLARE @maxExistingId INT = ISNULL((SELECT MAX(id) FROM dbo.WorkMain), 0);
 
   DECLARE @countColumn SYSNAME =
     CASE
@@ -614,7 +614,7 @@ BEGIN TRY
       ' + QUOTENAME(@countColumn) ELSE N'' END + N'
     )
     SELECT
-      id,
+      @maxExistingId + id,
       Material,
       Przekroj,
       ' + CASE WHEN @gruboscColumn IS NOT NULL THEN N'Grubosc,
@@ -633,7 +633,8 @@ BEGIN TRY
       CONVERT(VARCHAR(19), GETDATE(), 120)' ELSE N'' END + CASE WHEN @stationColumn IS NOT NULL THEN N',
       Stanowisko' ELSE N'' END + CASE WHEN @countColumn IS NOT NULL THEN N',
       zliczonaIloscIn' ELSE N'' END + N'
-    FROM #WorkMainUpload;
+    FROM #WorkMainUpload
+    ORDER BY id;
   ';
 
   IF EXISTS (
