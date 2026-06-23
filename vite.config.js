@@ -645,7 +645,7 @@ BEGIN TRY
   )
     SET IDENTITY_INSERT dbo.WorkMain ON;
 
-  EXEC sp_executesql @sql;
+  EXEC sp_executesql @sql, N'@maxExistingId INT', @maxExistingId = @maxExistingId;
 
   IF EXISTS (
     SELECT 1
