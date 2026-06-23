@@ -2340,6 +2340,82 @@ button {
   display: none;
 }
 
+.product-image-control {
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
+  align-items: center;
+}
+
+.product-image-control-inline {
+  flex-direction: row;
+  align-items: center;
+}
+
+.button-spinner {
+  width: 14px;
+  height: 14px;
+  display: inline-block;
+  margin-right: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.28);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: button-spinner-rotate 0.8s linear infinite;
+  vertical-align: -2px;
+}
+
+.product-image-thumb {
+  width: 56px;
+  height: 56px;
+  flex: 0 0 56px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+}
+
+.product-image-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-image-thumb:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.product-image-thumb.loading img {
+  filter: brightness(0.5);
+}
+
+.product-image-thumb-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(7, 10, 17, 0.28);
+}
+
+.product-image-thumb-overlay .button-spinner {
+  margin-right: 0;
+  width: 18px;
+  height: 18px;
+}
+
+@keyframes button-spinner-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .rename-input {
   min-width: 180px;
   max-width: 260px;
@@ -2721,10 +2797,37 @@ button {
 }
 
 .merge-product-preview-modal,
-.merge-product-preview-modal.panel {
+.merge-product-preview-modal.panel,
+.product-image-preview-modal,
+.product-image-preview-modal.panel {
   width: min(1120px, calc(100vw - 56px));
   max-height: min(82vh, 920px);
   z-index: 45;
+}
+
+.product-image-preview-modal,
+.product-image-preview-modal.panel {
+  width: min(960px, calc(100vw - 56px));
+}
+
+.product-image-preview-body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px 20px;
+  max-height: calc(82vh - 140px);
+  overflow: auto;
+  box-sizing: border-box;
+}
+
+.product-image-preview-img {
+  display: block;
+  max-width: 100%;
+  max-height: calc(82vh - 176px);
+  object-fit: contain;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.34);
 }
 
 .merge-product-preview-table {
@@ -3056,6 +3159,14 @@ button {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.recipe-group-header .product-image-control .tool-btn {
+  min-width: 118px;
+}
+
+.recipe-group-header .product-image-control {
+  align-items: center;
 }
 
 .recipe-group-meta small {

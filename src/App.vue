@@ -475,6 +475,25 @@
                   >
                     Anuluj nazwę
                   </button>
+                  <div class="product-image-control product-image-control-inline">
+                    <button class="tool-btn compact" :disabled="isSelectedProductImageBusy" @click="editSelectedProductImage">
+                      <span v-if="isSelectedProductImageBusy" class="button-spinner" aria-hidden="true"></span>
+                      {{ isSelectedProductImageBusy ? 'Wczytywanie...' : 'Dodaj zdjęcie' }}
+                    </button>
+                    <button
+                      v-if="selectedProductHasImage"
+                      class="product-image-thumb"
+                      :class="{ loading: isSelectedProductImageBusy }"
+                      type="button"
+                      :title="`Powiększ zdjęcie ${formatProductDisplayName(selectedProductName)}`"
+                      @click="openSelectedProductImage"
+                    >
+                      <img :src="getProductImageUrl(selectedProductName)" :alt="`Miniatura produktu ${formatProductDisplayName(selectedProductName)}`" />
+                      <span v-if="isSelectedProductImageBusy" class="product-image-thumb-overlay" aria-hidden="true">
+                        <span class="button-spinner"></span>
+                      </span>
+                    </button>
+                  </div>
                   <button class="tool-btn compact" :disabled="isFileActionLoading" @click="exportSelectedProductFile">
                     Eksport Excel
                   </button>
@@ -598,6 +617,28 @@
               </div>
               <div v-else class="expanded-empty">
                 {{ productsLoading ? 'Wczytywanie elementów...' : 'Brak elementów w tym pliku.' }}
+              </div>
+            </div>
+
+            <div
+              v-if="productImagePreview.visible && activeTab === 'products'"
+              class="confirm-modal-overlay single-element-overlay"
+              @click.self="closeProductImagePreview"
+            >
+              <div class="confirm-modal panel product-image-preview-modal" @click.stop>
+                <div class="panel-header">
+                  <span>Zdjęcie produktu</span>
+                  <span class="panel-caption">{{ productImagePreview.title }}</span>
+                </div>
+                <div class="product-image-preview-body">
+                  <img :src="productImagePreview.url" :alt="`Zdjęcie produktu ${productImagePreview.title}`" class="product-image-preview-img" />
+                </div>
+                <div class="confirm-modal-actions merge-preview-actions">
+                  <button class="tool-btn compact" :disabled="isProductImageBusy(productImagePreview.productName)" @click="editProductImageFromPreview">
+                    Zmień zdjęcie
+                  </button>
+                  <button class="tool-btn compact" @click="closeProductImagePreview">Zamknij</button>
+                </div>
               </div>
             </div>
 
@@ -1017,6 +1058,24 @@
               </div>
             </div>
 
+            <div v-if="productImagePreview.visible" class="confirm-modal-overlay single-element-overlay" @click.self="closeProductImagePreview">
+              <div class="confirm-modal panel product-image-preview-modal" @click.stop>
+                <div class="panel-header">
+                  <span>Zdjęcie produktu</span>
+                  <span class="panel-caption">{{ productImagePreview.title }}</span>
+                </div>
+                <div class="product-image-preview-body">
+                  <img :src="productImagePreview.url" :alt="`Zdjęcie produktu ${productImagePreview.title}`" class="product-image-preview-img" />
+                </div>
+                <div class="confirm-modal-actions merge-preview-actions">
+                  <button class="tool-btn compact" :disabled="isProductImageBusy(productImagePreview.productName)" @click="editProductImageFromPreview">
+                    Zmień zdjęcie
+                  </button>
+                  <button class="tool-btn compact" @click="closeProductImagePreview">Zamknij</button>
+                </div>
+              </div>
+            </div>
+
             <div class="panel panel-wide merge-preview-panel">
               <div class="panel-header">
                 <span>Podgląd scalonej receptury</span>
@@ -1074,6 +1133,7 @@
                           v-model="mergeProductNameDraft"
                           class="text-input recipe-group-name-input"
                           @click.stop
+                          @keydown.space.stop
                           @keydown.enter.prevent.stop="saveMergeProductName(group.productName)"
                           @keydown.esc.prevent.stop="cancelMergeProductNameEdit"
                           @blur="saveMergeProductName(group.productName)"
@@ -1093,6 +1153,29 @@
                         </button>
                       </div>
                       <small>{{ group.rows.length }} pozycji, mnożnik x{{ group.multiplier }}</small>
+                    </div>
+                    <div class="product-image-control" @click.stop>
+                      <button
+                        v-if="hasProductImage(group.productName)"
+                        class="product-image-thumb"
+                        :class="{ loading: isProductImageBusy(group.productName) }"
+                        type="button"
+                        :title="`Powiększ zdjęcie ${getProductDisplayTitle(group.productName)}`"
+                        @click.stop="openGroupProductImage(group.productName)"
+                      >
+                        <img :src="getProductImageUrl(group.productName)" :alt="`Miniatura produktu ${getProductDisplayTitle(group.productName)}`" />
+                        <span v-if="isProductImageBusy(group.productName)" class="product-image-thumb-overlay" aria-hidden="true">
+                          <span class="button-spinner"></span>
+                        </span>
+                      </button>
+                      <button
+                        class="tool-btn compact"
+                        :disabled="isProductImageBusy(group.productName)"
+                        @click.stop="editGroupProductImage(group.productName)"
+                      >
+                        <span v-if="isProductImageBusy(group.productName)" class="button-spinner" aria-hidden="true"></span>
+                        {{ isProductImageBusy(group.productName) ? 'Wczytywanie...' : 'Dodaj zdjęcie' }}
+                      </button>
                     </div>
                     <div class="product-quantity recipe-group-quantity" @click.stop>
                       <span>Ilość</span>
@@ -1714,6 +1797,13 @@
           </div>
         </section>
       </main>
+      <input
+        ref="productImageInput"
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/gif"
+        class="visually-hidden"
+        @change="handleProductImageImport"
+      />
       <footer class="app-footer">
         <a class="app-footer-copy app-footer-link" href="https://metal-technika.com.pl/" target="_blank" rel="noopener noreferrer">
           © Metal-Technika
@@ -2090,12 +2180,25 @@ let workDisableCooldownTimerId = null;
 const isFileActionLoading = ref(false);
 const productFileActionMessage = ref('');
 const productFileActionError = ref(false);
+const productImageSavingMap = ref({});
+const productImageState = ref({});
+const productImagePreview = ref({
+  visible: false,
+  productName: '',
+  title: '',
+  url: '',
+});
+const pendingProductImageTarget = ref({
+  productName: '',
+  title: '',
+});
 const isRenameMode = ref(false);
 const renameDraft = ref('');
 const editingRows = ref([]);
 const activeEditCell = ref(null);
 const collapsedRecipeGroups = ref({});
 const fileImportInput = ref(null);
+const productImageInput = ref(null);
 const recipeImportInput = ref(null);
 const confirmDialog = ref({
   visible: false,
@@ -2228,6 +2331,8 @@ const savedRecipeCatalog = ref([]);
 const workRowsSnapshot = ref('[]');
 
 const selectedProductFile = computed(() => productFiles.value.find((entry) => entry.name === selectedProductName.value) || null);
+const selectedProductHasImage = computed(() => hasProductImage(selectedProductName.value));
+const isSelectedProductImageBusy = computed(() => isProductImageBusy(selectedProductName.value));
 const activeMachine = computed(
   () => configMachines.value.find((machine) => machine.id === activeMachineId.value) ?? configMachines.value[0] ?? null,
 );
@@ -5078,6 +5183,14 @@ function replaceTemporaryMergeProductWithSavedFile(productName, savedFileName) {
   delete nextNames[productName];
   temporaryMergeProductNames.value = nextNames;
 
+  const nextImages = { ...productImageState.value };
+  revokeLocalProductImage(productName);
+  delete nextImages[productName];
+  productImageState.value = nextImages;
+  if (productImagePreview.value.visible && productImagePreview.value.productName === productName) {
+    closeProductImagePreview();
+  }
+
   if (mergeProductNameEditKey.value === productName) {
     cancelMergeProductNameEdit();
   }
@@ -5132,6 +5245,14 @@ async function saveTemporaryMergeProduct(productName) {
       contentBase64,
     });
     const savedFileName = result.fileName || normalizedFileName;
+    const imageState = productImageState.value[productName];
+    if (imageState?.source === 'local' && imageState?.base64 && imageState?.mimeType) {
+      await postProductFileAction('/api/products/image', {
+        fileName: savedFileName,
+        contentBase64: imageState.base64,
+        mimeType: imageState.mimeType,
+      });
+    }
 
     await reloadProductsAfterFileAction(savedFileName);
     replaceTemporaryMergeProductWithSavedFile(productName, savedFileName);
@@ -5395,6 +5516,14 @@ function removeTemporaryMergeProduct(productName) {
     const nextNames = { ...temporaryMergeProductNames.value };
     delete nextNames[productName];
     temporaryMergeProductNames.value = nextNames;
+  }
+
+  const nextImages = { ...productImageState.value };
+  revokeLocalProductImage(productName);
+  delete nextImages[productName];
+  productImageState.value = nextImages;
+  if (productImagePreview.value.visible && productImagePreview.value.productName === productName) {
+    closeProductImagePreview();
   }
 
   if (mergeProductNameEditKey.value === productName) {
@@ -5857,6 +5986,11 @@ function setProductFileActionMessage(message, isError = false) {
   productFileActionError.value = isError;
 }
 
+function setSelectedProductMessage(message, isError = false) {
+  saveMessage.value = message;
+  saveError.value = isError;
+}
+
 function resetProductImportMappingDialogState() {
   productImportMappingDialog.value = {
     visible: false,
@@ -5949,6 +6083,230 @@ function readFileAsBase64(file) {
     reader.onerror = () => reject(reader.error || new Error('Nie udało się odczytać pliku.'));
     reader.readAsDataURL(file);
   });
+}
+
+function revokeLocalProductImage(productName) {
+  const currentImage = productImageState.value[productName];
+  if (currentImage?.source === 'local' && currentImage?.url) {
+    URL.revokeObjectURL(currentImage.url);
+  }
+}
+
+function getProductDisplayTitle(productName) {
+  if (!productName) return '';
+  return isTemporaryMergeProduct(productName)
+    ? getMergeProductDisplayName(productName)
+    : formatProductDisplayName(productName);
+}
+
+function hasProductImage(productName) {
+  return Boolean(productImageState.value[productName]?.url);
+}
+
+function getProductImageUrl(productName) {
+  return productImageState.value[productName]?.url || '';
+}
+
+function isProductImageBusy(productName) {
+  return Boolean(productName && productImageSavingMap.value[productName]);
+}
+
+function setProductImageBusy(productName, isBusy) {
+  if (!productName) return;
+  const nextSavingMap = { ...productImageSavingMap.value };
+  if (isBusy) {
+    nextSavingMap[productName] = true;
+  } else {
+    delete nextSavingMap[productName];
+  }
+  productImageSavingMap.value = nextSavingMap;
+}
+
+function buildProductImageUrl(fileName) {
+  return `/api/products/image?fileName=${encodeURIComponent(fileName)}&t=${Date.now()}`;
+}
+
+function normalizeProductFileEntry(fileEntry) {
+  if (typeof fileEntry === 'string') {
+    return {
+      name: fileEntry,
+      url: buildProductFileUrl(fileEntry),
+      hasImage: false,
+      imageUrl: '',
+    };
+  }
+
+  const name = String(fileEntry?.name || '');
+  const hasImage = Boolean(fileEntry?.hasImage);
+  return {
+    name,
+    url: buildProductFileUrl(name),
+    hasImage,
+    imageUrl: hasImage ? buildProductImageUrl(name) : '',
+  };
+}
+
+function syncProductImageStateWithFiles(files) {
+  const nextState = Object.fromEntries(
+    Object.entries(productImageState.value).filter(([, image]) => image?.source === 'local'),
+  );
+
+  for (const file of files) {
+    if (file.hasImage) {
+      nextState[file.name] = {
+        source: 'server',
+        url: file.imageUrl,
+      };
+    }
+  }
+
+  productImageState.value = nextState;
+}
+
+function openProductImagePicker(productName, title = getProductDisplayTitle(productName)) {
+  if (!productName) return;
+  pendingProductImageTarget.value = {
+    productName,
+    title,
+  };
+  if (productImageInput.value) {
+    productImageInput.value.value = '';
+    productImageInput.value.click();
+  }
+}
+
+function openProductImagePreview(productName, title = getProductDisplayTitle(productName)) {
+  const imageUrl = productImageState.value[productName]?.url || '';
+  if (!imageUrl) {
+    openProductImagePicker(productName, title);
+    return;
+  }
+
+  productImagePreview.value = {
+    visible: true,
+    productName,
+    title,
+    url: imageUrl,
+  };
+}
+
+function closeProductImagePreview() {
+  productImagePreview.value = {
+    visible: false,
+    productName: '',
+    title: '',
+    url: '',
+  };
+}
+
+function openSelectedProductImage() {
+  if (!selectedProductName.value) return;
+  openProductImagePreview(selectedProductName.value, formatProductDisplayName(selectedProductName.value));
+}
+
+function editSelectedProductImage() {
+  if (!selectedProductName.value) return;
+  openProductImagePicker(selectedProductName.value, formatProductDisplayName(selectedProductName.value));
+}
+
+function openGroupProductImage(productName) {
+  openProductImagePreview(productName, getProductDisplayTitle(productName));
+}
+
+function editGroupProductImage(productName) {
+  openProductImagePicker(productName, getProductDisplayTitle(productName));
+}
+
+function editProductImageFromPreview() {
+  if (!productImagePreview.value.productName) return;
+  openProductImagePicker(productImagePreview.value.productName, productImagePreview.value.title);
+}
+
+async function saveLocalProductImage(productName, file, title) {
+  revokeLocalProductImage(productName);
+  const base64 = await readFileAsBase64(file);
+  const objectUrl = URL.createObjectURL(file);
+  productImageState.value = {
+    ...productImageState.value,
+    [productName]: {
+      source: 'local',
+      url: objectUrl,
+      base64,
+      mimeType: file.type,
+      title,
+    },
+  };
+}
+
+async function uploadProductImageToServer(fileName, file) {
+  const contentBase64 = await readFileAsBase64(file);
+  await postProductFileAction('/api/products/image', {
+    fileName,
+    contentBase64,
+    mimeType: file.type,
+  });
+  productImageState.value = {
+    ...productImageState.value,
+    [fileName]: {
+      source: 'server',
+      url: buildProductImageUrl(fileName),
+    },
+  };
+}
+
+async function handleProductImageImport(event) {
+  const [file] = Array.from(event.target.files || []);
+  event.target.value = '';
+  const productName = pendingProductImageTarget.value.productName;
+  const title = pendingProductImageTarget.value.title || getProductDisplayTitle(productName);
+  pendingProductImageTarget.value = { productName: '', title: '' };
+
+  if (!file || !productName) return;
+  if (!file.type.startsWith('image/')) {
+    if (productName === selectedProductName.value) {
+      setSelectedProductMessage('Wybierz plik obrazu w formacie PNG, JPG, WEBP lub GIF.', true);
+    } else {
+      setProductFileActionMessage('Wybierz plik obrazu w formacie PNG, JPG, WEBP lub GIF.', true);
+    }
+    return;
+  }
+
+  setProductImageBusy(productName, true);
+  try {
+    if (isTemporaryMergeProduct(productName)) {
+      await saveLocalProductImage(productName, file, title);
+      setMergeProductSaveMessage(`Dodano zdjęcie dla produktu ${title}.`, false);
+      if (productImagePreview.value.visible && productImagePreview.value.productName === productName) {
+        openProductImagePreview(productName, title);
+      }
+      return;
+    }
+
+    await uploadProductImageToServer(productName, file);
+    if (productName === selectedProductName.value) {
+      setSelectedProductMessage(`Zapisano zdjęcie dla produktu ${formatProductDisplayName(productName)}.`, false);
+    } else {
+      setProductFileActionMessage(`Zapisano zdjęcie dla produktu ${formatProductDisplayName(productName)}.`, false);
+    }
+    if (productImagePreview.value.visible && productImagePreview.value.productName === productName) {
+      openProductImagePreview(productName, title);
+    }
+    productFiles.value = productFiles.value.map((entry) =>
+      entry.name === productName
+        ? { ...entry, hasImage: true, imageUrl: buildProductImageUrl(productName) }
+        : entry,
+    );
+  } catch (error) {
+    if (isTemporaryMergeProduct(productName)) {
+      setMergeProductSaveMessage(error.message || 'Nie udało się dodać zdjęcia produktu.', true);
+    } else if (productName === selectedProductName.value) {
+      setSelectedProductMessage(error.message || 'Nie udało się zapisać zdjęcia produktu.', true);
+    } else {
+      setProductFileActionMessage(error.message || 'Nie udało się zapisać zdjęcia produktu.', true);
+    }
+  } finally {
+    setProductImageBusy(productName, false);
+  }
 }
 
 function readFileAsText(file) {
@@ -6071,10 +6429,10 @@ async function loadProductFiles() {
       throw new Error(listPayload.error || 'Nie udało się pobrać listy plików.');
     }
 
-    productFiles.value = (Array.isArray(listPayload.files) ? listPayload.files : []).map((fileName) => ({
-      name: fileName,
-      url: buildProductFileUrl(fileName),
-    }));
+    productFiles.value = (Array.isArray(listPayload.files) ? listPayload.files : [])
+      .map((fileEntry) => normalizeProductFileEntry(fileEntry))
+      .filter((file) => file.name);
+    syncProductImageStateWithFiles(productFiles.value);
 
     for (const file of productFiles.value) {
       const requestUrl = `${file.url}&t=${Date.now()}`;
@@ -6193,6 +6551,9 @@ function cancelConfirmAction() {
 }
 
 function resetProductModalState() {
+  if (productImagePreview.value.visible && productImagePreview.value.productName === selectedProductName.value) {
+    closeProductImagePreview();
+  }
   selectedProductName.value = '';
   isEditMode.value = false;
   editingRows.value = [];
@@ -8187,6 +8548,7 @@ onUnmounted(() => {
   stopMachineStatusAutoRefresh();
   mergeQuantityPulseTimers.forEach((pulseTimerId) => window.clearTimeout(pulseTimerId));
   mergeQuantityPulseTimers.clear();
+  Object.keys(productImageState.value).forEach((productName) => revokeLocalProductImage(productName));
   if (workDisableCooldownTimerId) {
     window.clearTimeout(workDisableCooldownTimerId);
   }

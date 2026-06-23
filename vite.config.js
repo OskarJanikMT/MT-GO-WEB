@@ -19,6 +19,14 @@ const defaultDevHost = '0.0.0.0';
 const defaultDevPort = 5174;
 const defaultPreviewPort = 4174;
 const execFileAsync = promisify(execFile);
+const PRODUCT_IMAGE_SUFFIX = '.product-image';
+const PRODUCT_IMAGE_MIME_TYPES = {
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
+  '.gif': 'image/gif',
+};
 const DEFAULT_ROW_LIMIT = 500;
 const DEFAULT_PRINT_TEXT_MAX_LENGTH = 100;
 const DEFAULT_BOARD_MAX_LENGTH = 3500;
@@ -99,6 +107,79 @@ function normalizeCellValue(_column, value) {
   return String(value);
 }
 
+function filterRowsToClassOne(rows) {
+  return rows.filter((row) => Number(row?.Klasa ?? row?.klasa) === 1);
+}
+
+function getProductImageBaseName(fileName) {
+  return `${path.parse(fileName).name}${PRODUCT_IMAGE_SUFFIX}`;
+}
+
+function getProductImageBaseNameFromEntry(entryName) {
+  const parsed = path.parse(entryName);
+  if (!(parsed.name || '').endsWith(PRODUCT_IMAGE_SUFFIX)) return '';
+  const extension = parsed.ext.toLowerCase();
+  if (!PRODUCT_IMAGE_MIME_TYPES[extension]) return '';
+  return parsed.name.slice(0, -PRODUCT_IMAGE_SUFFIX.length);
+}
+
+function getProductImageExtensionFromMimeType(mimeType) {
+  const normalizedMimeType = String(mimeType || '').toLowerCase();
+  if (normalizedMimeType === 'image/png') return '.png';
+  if (normalizedMimeType === 'image/jpeg' || normalizedMimeType === 'image/jpg') return '.jpg';
+  if (normalizedMimeType === 'image/webp') return '.webp';
+  if (normalizedMimeType === 'image/gif') return '.gif';
+  return '';
+}
+
+async function getProductImagePath(fileName, productsDirectory) {
+  const imageBaseName = getProductImageBaseName(fileName).toLowerCase();
+  const entries = await fs.readdir(productsDirectory, { withFileTypes: true });
+  const match = entries.find((entry) => {
+    if (!entry.isFile()) return false;
+    const parsed = path.parse(entry.name);
+    return parsed.name.toLowerCase() === imageBaseName && Boolean(PRODUCT_IMAGE_MIME_TYPES[parsed.ext.toLowerCase()]);
+  });
+  return match ? path.join(productsDirectory, match.name) : '';
+}
+
+async function deleteProductImageIfExists(fileName, productsDirectory) {
+  const imagePath = await getProductImagePath(fileName, productsDirectory);
+  if (!imagePath) return;
+  await fs.unlink(imagePath).catch(() => {});
+}
+
+async function copyProductImageIfExists(sourceFileName, targetFileName, productsDirectory) {
+  const sourceImagePath = await getProductImagePath(sourceFileName, productsDirectory);
+  if (!sourceImagePath) return;
+  const extension = path.extname(sourceImagePath);
+  const targetImagePath = path.join(productsDirectory, `${getProductImageBaseName(targetFileName)}${extension}`);
+  await fs.copyFile(sourceImagePath, targetImagePath);
+}
+
+async function renameProductImageIfExists(sourceFileName, targetFileName, productsDirectory) {
+  const sourceImagePath = await getProductImagePath(sourceFileName, productsDirectory);
+  if (!sourceImagePath) return;
+  const extension = path.extname(sourceImagePath);
+  const targetImagePath = path.join(productsDirectory, `${getProductImageBaseName(targetFileName)}${extension}`);
+  await fs.rename(sourceImagePath, targetImagePath);
+}
+
+async function saveProductImageFile(fileName, productsDirectory, contentBase64, mimeType) {
+  const extension = getProductImageExtensionFromMimeType(mimeType);
+  if (!extension) {
+    throw new Error('Obsługiwane formaty zdjęć: PNG, JPG, WEBP, GIF.');
+  }
+
+  if (!contentBase64) {
+    throw new Error('Brak zawartości zdjęcia do zapisu.');
+  }
+
+  await deleteProductImageIfExists(fileName, productsDirectory);
+  const targetImagePath = path.join(productsDirectory, `${getProductImageBaseName(fileName)}${extension}`);
+  await fs.writeFile(targetImagePath, Buffer.from(contentBase64, 'base64'));
+}
+
 function resolveHeaderName(headers, aliases) {
   return headers.find((header) => aliases.includes(header));
 }
@@ -138,26 +219,12 @@ function isTruthyEnv(value) {
   return ['1', 'true', 'yes', 'on'].includes(String(value ?? '').trim().toLowerCase());
 }
 
-async function resolveHttpsOptions() {
-  const explicitHttpsEnabled = isTruthyEnv(process.env.MTGO_HTTPS_ENABLED);
-  const certificatePath = path.resolve(process.env.MTGO_HTTPS_PFX_PATH || defaultHttpsPfxPath);
-  const passphrase = String(process.env.MTGO_HTTPS_PFX_PASSWORD || defaultHttpsPfxPassword);
+function hasEnvValue(value) {
+  return String(value ?? '').trim() !== '';
+}
 
-  try {
-    const pfx = await fs.readFile(certificatePath);
-    return {
-      pfx,
-      passphrase,
-    };
-  } catch (error) {
-    if (explicitHttpsEnabled) {
-      throw new Error(
-        `Nie udało się wczytać certyfikatu HTTPS z ${certificatePath}. ` +
-        'Wygeneruj go skryptem `npm run cert:dev` albo popraw MTGO_HTTPS_PFX_PATH.',
-      );
-    }
-    return false;
-  }
+async function resolveHttpsOptions() {
+  return false;
 }
 
 function normalizeServerHost(value) {
@@ -932,10 +999,19 @@ function productSavePlugin() {
         try {
           const productsDirectory = await getProductsDirectory();
           const entries = await fs.readdir(productsDirectory, { withFileTypes: true });
+          const productImageBaseNames = new Set(
+            entries
+              .filter((entry) => entry.isFile())
+              .map((entry) => getProductImageBaseNameFromEntry(entry.name))
+              .filter(Boolean),
+          );
           const files = entries
             .filter((entry) => entry.isFile() && entry.name.toLowerCase().endsWith('.xlsx'))
-            .map((entry) => entry.name)
-            .sort((left, right) => left.localeCompare(right, 'pl'));
+            .map((entry) => ({
+              name: entry.name,
+              hasImage: productImageBaseNames.has(path.parse(entry.name).name),
+            }))
+            .sort((left, right) => left.name.localeCompare(right.name, 'pl'));
           sendJson(res, 200, { files, productsDirectory });
         } catch (error) {
           sendJson(res, 500, { error: error.message || 'Błąd odczytu listy plików.' });
@@ -967,6 +1043,61 @@ function productSavePlugin() {
         } catch (error) {
           sendJson(res, 500, { error: error.message || 'Błąd odczytu pliku.' });
         }
+      });
+
+      server.middlewares.use('/api/products/image', async (req, res) => {
+        if (req.method === 'GET') {
+          try {
+            const productsDirectory = await getProductsDirectory();
+            const requestUrl = new URL(req.url || '', 'http://127.0.0.1');
+            const fileName = path.basename(requestUrl.searchParams.get('fileName') || '');
+
+            if (!fileName.endsWith('.xlsx')) {
+              sendJson(res, 400, { error: 'Nieprawidłowa nazwa pliku.' });
+              return;
+            }
+
+            const imagePath = await getProductImagePath(fileName, productsDirectory);
+            if (!imagePath) {
+              sendJson(res, 404, { error: 'Zdjęcie produktu nie istnieje.' });
+              return;
+            }
+
+            const content = await fs.readFile(imagePath);
+            const extension = path.extname(imagePath).toLowerCase();
+            res.statusCode = 200;
+            res.setHeader('Content-Type', PRODUCT_IMAGE_MIME_TYPES[extension] || 'application/octet-stream');
+            res.setHeader('Cache-Control', 'no-store');
+            res.end(content);
+          } catch (error) {
+            sendJson(res, 500, { error: error.message || 'Błąd odczytu zdjęcia produktu.' });
+          }
+          return;
+        }
+
+        if (req.method === 'POST') {
+          try {
+            const productsDirectory = await getProductsDirectory();
+            const body = await readJsonBody(req);
+            const fileName = path.basename(body.fileName || '');
+            const contentBase64 = String(body.contentBase64 || '');
+            const mimeType = String(body.mimeType || '');
+
+            if (!fileName.endsWith('.xlsx')) {
+              sendJson(res, 400, { error: 'Nieprawidłowa nazwa pliku.' });
+              return;
+            }
+
+            await fs.access(path.join(productsDirectory, fileName));
+            await saveProductImageFile(fileName, productsDirectory, contentBase64, mimeType);
+            sendJson(res, 200, { ok: true });
+          } catch (error) {
+            sendJson(res, 500, { error: error.message || 'Błąd zapisu zdjęcia produktu.' });
+          }
+          return;
+        }
+
+        sendJson(res, 405, { error: 'Method not allowed' });
       });
 
       server.middlewares.use('/api/products/save', async (req, res) => {
@@ -1106,6 +1237,7 @@ function productSavePlugin() {
           const sourcePath = path.join(productsDirectory, fileName);
           const targetPath = await resolveUniqueProductFilePath(path.join(path.parse(fileName).name + ' kopia.xlsx'), productsDirectory);
           await fs.copyFile(sourcePath, targetPath);
+          await copyProductImageIfExists(fileName, path.basename(targetPath), productsDirectory);
           sendJson(res, 200, { ok: true, fileName: path.basename(targetPath) });
         } catch (error) {
           sendJson(res, 500, { error: error.message || 'Błąd duplikowania pliku.' });
@@ -1146,6 +1278,7 @@ function productSavePlugin() {
           }
 
           await fs.rename(sourcePath, targetPath);
+          await renameProductImageIfExists(fileName, nextFileName, productsDirectory);
           sendJson(res, 200, { ok: true, fileName: nextFileName });
         } catch (error) {
           sendJson(res, 500, { error: error.message || 'Błąd zmiany nazwy pliku.' });
@@ -1169,6 +1302,7 @@ function productSavePlugin() {
           }
 
           await fs.unlink(path.join(productsDirectory, fileName));
+          await deleteProductImageIfExists(fileName, productsDirectory);
           sendJson(res, 200, { ok: true });
         } catch (error) {
           sendJson(res, 500, { error: error.message || 'Błąd usuwania pliku.' });
@@ -1504,10 +1638,10 @@ function productSavePlugin() {
 
         try {
           const body = await readJsonBody(req);
-          const rows = Array.isArray(body.rows) ? body.rows : [];
+          const rows = filterRowsToClassOne(Array.isArray(body.rows) ? body.rows : []);
 
           if (!rows.length) {
-            sendJson(res, 400, { error: 'Brak wierszy do wgrania do WorkMain.' });
+            sendJson(res, 400, { error: 'Brak wierszy z klasą 1 do wgrania do WorkMain.' });
             return;
           }
 
@@ -1550,7 +1684,7 @@ function productSavePlugin() {
 
         try {
           const body = await readJsonBody(req);
-          const rows = Array.isArray(body.rows) ? body.rows : [];
+          const rows = filterRowsToClassOne(Array.isArray(body.rows) ? body.rows : []);
 
           const sqlText = buildWorkMainSaveSql(rows);
           await executeSqlFile(sqlText);
