@@ -527,8 +527,8 @@ BEGIN TRY
   )
   VALUES
   ${valuesSql};
-  
-  DECLARE @maxExistingId INT = ISNULL((SELECT MAX(id) FROM dbo.WorkMain), 0);
+
+  DELETE FROM dbo.WorkMain;
 
   DECLARE @countColumn SYSNAME =
     CASE
@@ -614,7 +614,7 @@ BEGIN TRY
       ' + QUOTENAME(@countColumn) ELSE N'' END + N'
     )
     SELECT
-      @maxExistingId + id,
+      id,
       Material,
       Przekroj,
       ' + CASE WHEN @gruboscColumn IS NOT NULL THEN N'Grubosc,
@@ -645,7 +645,7 @@ BEGIN TRY
   )
     SET IDENTITY_INSERT dbo.WorkMain ON;
 
-  EXEC sp_executesql @sql, N'@maxExistingId INT', @maxExistingId = @maxExistingId;
+  EXEC sp_executesql @sql;
 
   IF EXISTS (
     SELECT 1

@@ -5266,7 +5266,7 @@ function requestUploadMergeToWorkMain() {
   clearMergeWorkUploadMessage();
   openConfirmDialog(
     'upload-merge-to-workmain',
-    'Na pewno chcesz dodać wybrane produkty do aktualnie ciętych? Nowe pozycje zostaną dopisane do bieżącego stanu WorkMain.',
+    'Na pewno chcesz wgrać wybrane produkty do aktualnie ciętych? Obecna zawartość WorkMain zostanie zastąpiona.',
   );
 }
 
@@ -5438,7 +5438,7 @@ async function uploadMergeToWorkMain() {
     workTableSourceMode.value = 'active';
     workTableSourceName.value = 'Aktualna praca';
     clearWorkCorrectionState();
-    setMergeWorkUploadMessage(`Dodano ${payload.insertedRows ?? rowsToUpload.length} wierszy do aktualnie ciętych.`, false);
+    setMergeWorkUploadMessage(`Wgrano ${payload.insertedRows ?? rowsToUpload.length} wierszy do aktualnie ciętych.`, false);
   } catch (error) {
     setMergeWorkUploadMessage(error.message || 'Nie udało się wgrać danych do aktualnie ciętych.', true);
   } finally {
