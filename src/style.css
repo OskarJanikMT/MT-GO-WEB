@@ -314,7 +314,7 @@ button {
   display: flex;
   align-items: stretch;
   gap: 12px;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   min-width: 0;
 }
 
@@ -341,7 +341,7 @@ button {
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   margin: 12px 0 14px;
   padding: 0;
   border: 0;
@@ -356,7 +356,7 @@ button {
 }
 
 .work-topbar .work-summary-group {
-  flex: 0 1 520px;
+  flex: 1 1 780px;
   min-width: 0;
 }
 
@@ -421,6 +421,172 @@ button {
   color: var(--text-secondary);
   font-size: 12px;
   font-weight: 700;
+}
+
+.work-przekroj-panel {
+  flex: 1 1 320px;
+  min-width: 280px;
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-card);
+}
+
+.work-przekroj-progress-list {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(118px, 132px);
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-gutter: stable;
+}
+
+.work-przekroj-progress-item {
+  min-width: 0;
+  height: 44px;
+  display: grid;
+  grid-template-rows: auto 6px;
+  gap: 7px;
+  padding: 7px 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(15, 23, 42, 0.18);
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 140ms ease, background 140ms ease, color 140ms ease;
+}
+
+.work-przekroj-progress-item:hover,
+.work-przekroj-progress-item.active {
+  border-color: var(--accent);
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--text-heading);
+}
+
+.work-przekroj-progress-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.work-przekroj-progress-meta span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.work-przekroj-progress-meta strong {
+  flex: 0 0 auto;
+  color: var(--text-heading);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.work-przekroj-progress-track {
+  position: relative;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.16);
+}
+
+.work-przekroj-progress-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: var(--accent);
+}
+
+.work-przekroj-alert {
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 2147483000;
+  width: min(360px, calc(100vw - 32px));
+  min-height: 104px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  padding: 16px 14px 15px 16px;
+  border: 1px solid rgba(251, 191, 36, 0.56);
+  border-left: 5px solid #f59e0b;
+  border-radius: 10px;
+  background: rgba(24, 24, 36, 0.96);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.42), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+  backdrop-filter: blur(14px);
+}
+
+.work-przekroj-alert-content {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.work-przekroj-alert-kicker {
+  color: #fbbf24;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.work-przekroj-alert strong {
+  color: var(--text-heading);
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.work-przekroj-alert p {
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.work-przekroj-alert-close {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(251, 191, 36, 0.24);
+  border-radius: 8px;
+  background: rgba(251, 191, 36, 0.08);
+  color: #fde68a;
+  font-size: 18px;
+  font-weight: 900;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 140ms ease, background 140ms ease, color 140ms ease;
+}
+
+.work-przekroj-alert-close:hover {
+  border-color: rgba(251, 191, 36, 0.55);
+  background: rgba(251, 191, 36, 0.16);
+  color: #ffffff;
+}
+
+.work-przekroj-alert-enter-active,
+.work-przekroj-alert-leave-active {
+  transition: opacity 220ms ease, transform 260ms cubic-bezier(0.2, 0.8, 0.2, 1), filter 220ms ease;
+}
+
+.work-przekroj-alert-enter-from,
+.work-przekroj-alert-leave-to {
+  opacity: 0;
+  transform: translate3d(28px, 18px, 0) scale(0.96);
+  filter: blur(4px);
 }
 
 .work-topbar .work-actions {
@@ -504,6 +670,42 @@ button {
   justify-content: flex-end;
   gap: 8px;
   flex: 0 0 auto;
+  flex-wrap: wrap;
+}
+
+.work-table-przekroj-filter {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.work-table-przekroj-filter span {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.work-table-przekroj-filter strong {
+  color: var(--text-heading);
+  font-size: 11px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.work-table-przekroj-select {
+  width: auto;
+  min-width: 124px;
+  height: 26px;
+  padding: 0 28px 0 8px;
+  border-radius: 6px;
+  font-size: 11px;
 }
 
 .work-table-source-status {
@@ -3367,6 +3569,20 @@ button {
     padding: 18px;
   }
 
+  .work-topbar .work-summary-group,
+  .work-topbar .work-actions {
+    flex-basis: 100%;
+  }
+
+  .work-topbar .work-actions,
+  .work-actions-stack {
+    align-items: stretch;
+  }
+
+  .work-actions-row {
+    width: 100%;
+  }
+
   .recipe-library-filters {
     align-items: stretch;
   }
@@ -3421,6 +3637,38 @@ button {
   .toolbar-actions,
   .work-actions {
     width: 100%;
+  }
+
+  .work-summary-card,
+  .work-overall-progress-card,
+  .work-przekroj-panel {
+    flex: 1 1 100%;
+    max-width: none;
+    min-width: 0;
+  }
+
+  .work-przekroj-progress-list {
+    grid-auto-columns: minmax(108px, 1fr);
+  }
+
+  .work-table-source-banner,
+  .work-table-source-actions,
+  .work-table-przekroj-filter,
+  .work-table-przekroj-select {
+    width: 100%;
+  }
+
+  .work-table-source-banner,
+  .work-table-source-actions {
+    align-items: stretch;
+  }
+
+  .work-table-przekroj-filter {
+    justify-content: space-between;
+  }
+
+  .work-actions-row {
+    grid-template-columns: 1fr;
   }
 
   .work-recipe-picker {

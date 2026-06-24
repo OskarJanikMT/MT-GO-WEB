@@ -1504,6 +1504,27 @@
                   </div>
                 </div>
               </div>
+              <div v-if="workPrzekrojSummaries.length" class="work-przekroj-panel">
+                <div class="work-przekroj-progress-list">
+                  <button
+                    v-for="summary in workPrzekrojSummaries"
+                    :key="`work-przekroj-${summary.key}`"
+                    type="button"
+                    class="work-przekroj-progress-item"
+                    :class="{ active: selectedWorkPrzekrojFilter === summary.key }"
+                    :title="`${summary.label}: ${summary.done}/${summary.total}`"
+                    @click="toggleWorkPrzekrojFilter(summary.key)"
+                  >
+                    <span class="work-przekroj-progress-meta">
+                      <span>{{ summary.label }}</span>
+                      <strong>{{ formatProgressPercent(summary.percent) }}%</strong>
+                    </span>
+                    <span class="work-przekroj-progress-track">
+                      <span class="work-przekroj-progress-fill" :style="{ width: `${summary.percent}%` }"></span>
+                    </span>
+                  </button>
+                </div>
+              </div>
             </div>
             <div class="work-actions">
               <div class="work-actions-stack">
@@ -1559,6 +1580,16 @@
                   </div>
                 </div>
                 <div class="work-table-source-actions">
+                  <label v-if="workPrzekrojSummaries.length" class="work-table-przekroj-filter">
+                    <span>Przekrój</span>
+                    <select v-model="selectedWorkPrzekrojFilter" class="select-input work-table-przekroj-select">
+                      <option value="">Wszystkie</option>
+                      <option v-for="summary in workPrzekrojSummaries" :key="`source-filter-${summary.key}`" :value="summary.key">
+                        {{ summary.label }} ({{ summary.rowCount }})
+                      </option>
+                    </select>
+                    <strong v-if="selectedWorkPrzekrojFilter">{{ visibleActiveWorkRows.length }}/{{ activeWorkRows.length }}</strong>
+                  </label>
                   <button
                     class="tool-btn compact"
                     :disabled="!hasPendingWorkChanges || isWorkCorrectionSaving || isWorkEditPreparing"
@@ -1833,6 +1864,34 @@
           © Metal-Technika
         </a>
       </footer>
+      <Transition name="work-przekroj-alert">
+        <div
+          v-if="workPrzekrojAlert.visible"
+          ref="workPrzekrojAlertRef"
+          class="work-przekroj-alert"
+          role="status"
+          aria-live="polite"
+          @click.stop
+        >
+          <button
+            class="work-przekroj-alert-close"
+            type="button"
+            title="Zamknij alert"
+            aria-label="Zamknij alert"
+            @click="closeWorkPrzekrojAlert"
+          >
+            ×
+          </button>
+          <div class="work-przekroj-alert-content">
+            <span class="work-przekroj-alert-kicker">Końcówka przekroju</span>
+            <strong>{{ workPrzekrojAlert.label }}</strong>
+            <p>
+              Postęp osiągnął {{ formatProgressPercent(workPrzekrojAlert.percent) }}%
+              ({{ workPrzekrojAlert.done }}/{{ workPrzekrojAlert.total }}).
+            </p>
+          </div>
+        </div>
+      </Transition>
     </div>
   </div>
 </template>
@@ -1842,6 +1901,8 @@ import { computed, defineComponent, h, nextTick, onMounted, onUnmounted, ref, wa
 import * as XLSX from 'xlsx';
 
 const DEFAULT_ROW_LIMIT = 500;
+const WORK_PRZEKROJ_ALERT_THRESHOLD = 90;
+const WORK_PRZEKROJ_ALERT_TIMEOUT_MS = 15000;
 const PRODUCT_PREVIEW_STORAGE_KEY = 'mt-go-web:selected-product-preview';
 const TEMP_PRODUCT_KEY = '__TEMP_PRODUCT__';
 const TEMP_EMPTY_PRODUCT_PREFIX = '__TEMP_EMPTY_PRODUCT__';
@@ -2172,6 +2233,16 @@ const workTableSourceName = ref('');
 const workTableSourceMode = ref('active');
 const workMainLastRefreshAt = ref(null);
 const isWorkMainManualRefreshLoading = ref(false);
+const selectedWorkPrzekrojFilter = ref('');
+const workPrzekrojAlertRef = ref(null);
+const workPrzekrojAlert = ref({
+  visible: false,
+  key: '',
+  label: '',
+  percent: 0,
+  done: 0,
+  total: 0,
+});
 const selectedProductName = ref('');
 const productsLoading = ref(false);
 const productFiles = ref([]);
@@ -2281,7 +2352,9 @@ let timerId = null;
 let workRefreshTimerId = null;
 let machineStatusTimerId = null;
 let recipePreviewMessageTimerId = null;
+let workPrzekrojAlertTimerId = null;
 const mergeQuantityPulseTimers = new Map();
+const alertedWorkPrzekrojKeys = new Set();
 let productLocalIdCounter = 1;
 let workRowClientIdCounter = 1;
 let configStationIdCounter = 1;
@@ -2735,6 +2808,39 @@ const savedWorkRowsById = computed(
     ),
 );
 const activeWorkRows = computed(() => workRows.value.filter((row) => !row.__disabled));
+const workPrzekrojSummaries = computed(() => {
+  const groups = new Map();
+
+  activeWorkRows.value.forEach((row, index) => {
+    const meta = getWorkPrzekrojMeta(row, index);
+    if (!groups.has(meta.key)) {
+      groups.set(meta.key, {
+        ...meta,
+        rowCount: 0,
+        done: 0,
+        total: 0,
+        percent: 0,
+      });
+    }
+
+    const group = groups.get(meta.key);
+    group.rowCount += 1;
+    group.done += normalizeWorkCorrectionValue(row?.WykonaneSztuki);
+    group.total += normalizeWorkCorrectionValue(row?.Sztuk);
+  });
+
+  return [...groups.values()]
+    .map((group) => ({
+      ...group,
+      percent: getWorkProgressPercent(group.done, group.total),
+    }))
+    .sort(compareWorkPrzekrojGroups);
+});
+const filteredWorkRows = computed(() => {
+  if (!selectedWorkPrzekrojFilter.value) return workRows.value;
+  return workRows.value.filter((row, index) => getWorkPrzekrojMeta(row, index).key === selectedWorkPrzekrojFilter.value);
+});
+const visibleActiveWorkRows = computed(() => filteredWorkRows.value.filter((row) => !row.__disabled));
 const overallWorkDone = computed(() =>
   activeWorkRows.value.reduce((sum, row) => sum + normalizeWorkCorrectionValue(row?.WykonaneSztuki), 0),
 );
@@ -2764,9 +2870,10 @@ const isWorkMainManualRefreshDisabled = computed(
 );
 
 const workDisplayRows = computed(() =>
-  workRows.value.map((row) => ({
+  filteredWorkRows.value.map((row) => ({
     __clientId: row.__clientId,
     __disabled: Boolean(row.__disabled),
+    __isLocalDraft: Boolean(row.__isLocalDraft),
     __isPendingSync: isWorkRowPendingSync(row),
     id: row.id ?? '',
     Nazwa: row.Nazwa ?? '',
@@ -2783,8 +2890,104 @@ const workDisplayRows = computed(() =>
     Klasa: row.Klasa ?? '',
     Sztuk: row.Sztuk ?? '',
     Stanowisko: row.Stanowisko ?? '',
+    Przekroj: row.Przekroj ?? '',
   })),
 );
+
+function getWorkPrzekrojMeta(row, index = 0) {
+  const payload = getWorkRowPayload(row, index);
+  const przekroj = String(payload.Przekroj ?? '').trim();
+  if (!przekroj) {
+    return {
+      key: '__empty__',
+      label: 'Brak przekroju',
+      sortGrubosc: Number.MAX_SAFE_INTEGER,
+      sortSzerokosc: Number.MAX_SAFE_INTEGER,
+    };
+  }
+
+  const parsed = parsePrzekrojValue(przekroj);
+  const label =
+    parsed.Grubosc || parsed.Szerokosc
+      ? `${parsed.Grubosc} x ${parsed.Szerokosc}`
+      : przekroj;
+
+  return {
+    key: przekroj,
+    label,
+    sortGrubosc: parsed.Grubosc,
+    sortSzerokosc: parsed.Szerokosc,
+  };
+}
+
+function compareWorkPrzekrojGroups(left, right) {
+  if (left.sortGrubosc !== right.sortGrubosc) return left.sortGrubosc - right.sortGrubosc;
+  if (left.sortSzerokosc !== right.sortSzerokosc) return left.sortSzerokosc - right.sortSzerokosc;
+  return String(left.label).localeCompare(String(right.label), 'pl', { numeric: true });
+}
+
+function toggleWorkPrzekrojFilter(key) {
+  selectedWorkPrzekrojFilter.value = selectedWorkPrzekrojFilter.value === key ? '' : key;
+}
+
+function clearWorkPrzekrojAlertTimer() {
+  if (!workPrzekrojAlertTimerId) return;
+  window.clearTimeout(workPrzekrojAlertTimerId);
+  workPrzekrojAlertTimerId = null;
+}
+
+function closeWorkPrzekrojAlert() {
+  clearWorkPrzekrojAlertTimer();
+  workPrzekrojAlert.value = {
+    ...workPrzekrojAlert.value,
+    visible: false,
+  };
+}
+
+function showWorkPrzekrojAlert(summary) {
+  clearWorkPrzekrojAlertTimer();
+  workPrzekrojAlert.value = {
+    visible: true,
+    key: summary.key,
+    label: summary.label,
+    percent: summary.percent,
+    done: summary.done,
+    total: summary.total,
+  };
+  workPrzekrojAlertTimerId = window.setTimeout(() => {
+    closeWorkPrzekrojAlert();
+  }, WORK_PRZEKROJ_ALERT_TIMEOUT_MS);
+}
+
+function syncWorkPrzekrojProgressAlerts(summaries = []) {
+  summaries.forEach((summary) => {
+    if (summary.percent < WORK_PRZEKROJ_ALERT_THRESHOLD || summary.percent >= 100) {
+      alertedWorkPrzekrojKeys.delete(summary.key);
+    }
+  });
+
+  const nextAlert = summaries
+    .filter(
+      (summary) =>
+        summary.total > 0 &&
+        summary.percent >= WORK_PRZEKROJ_ALERT_THRESHOLD &&
+        summary.percent < 100 &&
+        !alertedWorkPrzekrojKeys.has(summary.key),
+    )
+    .sort((left, right) => right.percent - left.percent)[0];
+
+  if (!nextAlert) return;
+
+  alertedWorkPrzekrojKeys.add(nextAlert.key);
+  showWorkPrzekrojAlert(nextAlert);
+}
+
+function handleWorkPrzekrojAlertOutsideClick(event) {
+  if (!workPrzekrojAlert.value.visible) return;
+  const alertElement = workPrzekrojAlertRef.value;
+  if (alertElement instanceof HTMLElement && alertElement.contains(event.target)) return;
+  closeWorkPrzekrojAlert();
+}
 
 function isWorkRowPendingSync(row, index = 0) {
   if (row?.__isLocalDraft) return true;
@@ -3583,6 +3786,7 @@ function addSelectedWorkRows() {
   }
 
   workRows.value = nextWorkRows;
+  selectedWorkPrzekrojFilter.value = '';
   const rowToEdit = rowsNeedingWybijakEdit[0] ?? null;
   if (rowToEdit) {
     workEditingRowId.value = rowToEdit.__clientId;
@@ -8662,6 +8866,7 @@ onMounted(() => {
   timerId = window.setInterval(updateClock, 1000);
   window.addEventListener('keydown', handleGlobalEscape);
   window.addEventListener('pointerdown', handleWorkRecipeMenuOutsideClick);
+  window.addEventListener('pointerdown', handleWorkPrzekrojAlertOutsideClick);
   loadWorkMainRows().catch(() => {});
   loadConfig().catch(() => {});
   loadMachineStatus().catch(() => {});
@@ -8687,6 +8892,13 @@ watch(availableMergeGroups, (groups) => {
   }
 });
 
+watch(workPrzekrojSummaries, (summaries) => {
+  if (selectedWorkPrzekrojFilter.value && !summaries.some((summary) => summary.key === selectedWorkPrzekrojFilter.value)) {
+    selectedWorkPrzekrojFilter.value = '';
+  }
+  syncWorkPrzekrojProgressAlerts(summaries);
+});
+
 onUnmounted(() => {
   window.clearInterval(timerId);
   stopWorkMainAutoRefresh();
@@ -8700,8 +8912,10 @@ onUnmounted(() => {
   if (recipePreviewMessageTimerId) {
     window.clearTimeout(recipePreviewMessageTimerId);
   }
+  clearWorkPrzekrojAlertTimer();
   window.removeEventListener('keydown', handleGlobalEscape);
   window.removeEventListener('pointerdown', handleWorkRecipeMenuOutsideClick);
+  window.removeEventListener('pointerdown', handleWorkPrzekrojAlertOutsideClick);
 });
 
 const StatPill = defineComponent({
@@ -8738,10 +8952,15 @@ const WorkTable = defineComponent({
         rows.sort((a, b) => compareValues(a[sortKey.value], b[sortKey.value]) * sortDirection.value);
       }
 
+      const localDraftRows = [];
       const activeRows = [];
       const completedRows = [];
 
       rows.forEach((row) => {
+        if (row.__isLocalDraft && !row.__disabled) {
+          localDraftRows.push(row);
+          return;
+        }
         if (isCompletedProgressRow(row)) {
           completedRows.push(row);
           return;
@@ -8749,7 +8968,7 @@ const WorkTable = defineComponent({
         activeRows.push(row);
       });
 
-      return [...activeRows, ...completedRows];
+      return [...localDraftRows, ...activeRows, ...completedRows];
     });
 
     function sortBy(column) {
