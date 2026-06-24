@@ -509,7 +509,7 @@ button {
 
 .work-przekroj-alert {
   position: fixed;
-  right: 22px;
+  left: 22px;
   bottom: 22px;
   z-index: 2147483000;
   width: min(360px, calc(100vw - 32px));
@@ -585,7 +585,7 @@ button {
 .work-przekroj-alert-enter-from,
 .work-przekroj-alert-leave-to {
   opacity: 0;
-  transform: translate3d(28px, 18px, 0) scale(0.96);
+  transform: translate3d(-28px, 18px, 0) scale(0.96);
   filter: blur(4px);
 }
 
