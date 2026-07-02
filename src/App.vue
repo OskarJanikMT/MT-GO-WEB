@@ -559,7 +559,7 @@
                           @blur="activeEditCell = null"
                           @input="updateEditedCell(item._localId, column, $event.target.value)"
                         >
-                          <option value=""></option>
+                          <option v-if="allowsEmptyDropdownValue(column)" value=""></option>
                           <option
                             v-for="option in isStationColumn(column) ? getStationDropdownOptions(item[column]) : getProductDropdownOptions(editingRows, item, column)"
                             :key="`${column}-${item._localId}-${option.value ?? option}`"
@@ -1253,7 +1253,7 @@
                                   @blur="mergeEditingCell = null"
                                   @input="updateMergeRecipeCell(group.productName, row._localId, column, $event.target.value)"
                                 >
-                                  <option value=""></option>
+                                  <option v-if="allowsEmptyDropdownValue(column)" value=""></option>
                                   <option
                                     v-for="option in getMergeDropdownOptions(group.productName, row, column)"
                                     :key="`${column}-${row._localId}-${option.value ?? option}`"
@@ -1512,6 +1512,7 @@
                     type="button"
                     class="work-przekroj-progress-item"
                     :class="{ active: selectedWorkPrzekrojFilter === summary.key }"
+                    :disabled="workEditingRowId !== null"
                     :title="`${summary.label}: ${summary.done}/${summary.total}`"
                     @click="toggleWorkPrzekrojFilter(summary.key)"
                   >
@@ -1582,7 +1583,7 @@
                 <div class="work-table-source-actions">
                   <label v-if="workPrzekrojSummaries.length" class="work-table-przekroj-filter">
                     <span>Przekrój</span>
-                    <select v-model="selectedWorkPrzekrojFilter" class="select-input work-table-przekroj-select">
+                    <select v-model="selectedWorkPrzekrojFilter" class="select-input work-table-przekroj-select" :disabled="workEditingRowId !== null">
                       <option value="">Wszystkie</option>
                       <option v-for="summary in workPrzekrojSummaries" :key="`source-filter-${summary.key}`" :value="summary.key">
                         {{ summary.label }} ({{ summary.rowCount }})
@@ -1930,7 +1931,7 @@ const productSummaryLabels = {
   ostatniaAktualizacja: 'Źródło',
 };
 
-const productColumns = ['Nr', 'Kod', 'Długość', 'Grubość', 'Szerokość', 'Materiał', 'ilość', 'Wybijak'];
+const productColumns = ['Nr', 'Kod', 'Długość', 'Grubość', 'Szerokość', 'Materiał', 'ilość', 'Wybijak', 'Klasa'];
 const productImportFieldDefinitions = [
   {
     key: 'Nazwa',
@@ -1997,6 +1998,7 @@ const productImportExportColumns = productImportFieldDefinitions.map((field) => 
 const groupOptions = Array.from({ length: 26 }, (_, index) => String.fromCharCode(65 + index));
 const priorityOptions = Array.from({ length: 10 }, (_, index) => String(index));
 const materialOptions = ['BUK', 'So'];
+const classOptions = ['1', '2', '3'];
 const productColumnLabels = {
   Nr: 'Nr',
   Kod: 'Tekst do druku',
@@ -2006,8 +2008,9 @@ const productColumnLabels = {
   'Materiał': 'Materiał',
   'ilość': 'ilość',
   Wybijak: 'Wybijak',
+  Klasa: 'Klasa',
 };
-const editableProductColumns = ['Długość', 'Grubość', 'Szerokość', 'Materiał', 'Kod', 'ilość', 'Wybijak'];
+const editableProductColumns = ['Długość', 'Grubość', 'Szerokość', 'Materiał', 'Kod', 'ilość', 'Wybijak', 'Klasa'];
 
 const recipeSummaryColumns = ['nazwaReceptury', 'liczbaPozycji', 'sumaElementow', 'materialy', 'createdAt', 'lastUsedAt'];
 const recipeCatalogColumns = ['nazwaReceptury', 'liczbaPozycji', 'sumaElementow', 'materialy', 'createdAt', 'lastUsedAt'];
@@ -2838,7 +2841,11 @@ const workPrzekrojSummaries = computed(() => {
 });
 const filteredWorkRows = computed(() => {
   if (!selectedWorkPrzekrojFilter.value) return workRows.value;
-  return workRows.value.filter((row, index) => getWorkPrzekrojMeta(row, index).key === selectedWorkPrzekrojFilter.value);
+  return workRows.value.filter(
+    (row, index) =>
+      getWorkPrzekrojMeta(row, index).key === selectedWorkPrzekrojFilter.value ||
+      (workEditingRowId.value !== null && row.__clientId === workEditingRowId.value),
+  );
 });
 const visibleActiveWorkRows = computed(() => filteredWorkRows.value.filter((row) => !row.__disabled));
 const overallWorkDone = computed(() =>
@@ -2927,6 +2934,7 @@ function compareWorkPrzekrojGroups(left, right) {
 }
 
 function toggleWorkPrzekrojFilter(key) {
+  if (workEditingRowId.value !== null) return;
   selectedWorkPrzekrojFilter.value = selectedWorkPrzekrojFilter.value === key ? '' : key;
 }
 
@@ -3265,18 +3273,15 @@ function getWorkRowPayload(row, index = 0) {
     TekstDoDruku: tekstDoDruku,
     Grupa: normalizeGroupValue(row?.Grupa ?? row?.grupa ?? ''),
     Priorytet: normalizePriorityValue(row?.Priorytet ?? row?.priorytet ?? ''),
-    Klasa: normalizeWorkCorrectionValue(row?.Klasa ?? row?.klasa),
+    Klasa: normalizeClassValue(row?.Klasa ?? row?.klasa),
     Usr: String(row?.Usr ?? 'Default').trim() || 'Default',
     zliczonaIloscIn: sztuk,
     Stanowisko: stanowisko,
   };
 }
 
-function normalizeDefaultClassValue(value, fallback = 2) {
-  if (value === null || value === undefined) return fallback;
-  if (typeof value === 'string' && !value.trim()) return fallback;
-  const normalizedValue = normalizeWorkCorrectionValue(value);
-  return normalizedValue > 0 ? normalizedValue : fallback;
+function normalizeDefaultClassValue(value, fallback = 1) {
+  return normalizeClassValue(value, fallback);
 }
 
 function serializeWorkRows(rows) {
@@ -3322,7 +3327,7 @@ function createEmptyWorkRow(rowId = getNextWorkRowId()) {
     WykonaneSztuki: 0,
     Wybijak: 0,
     TekstDoDruku: '',
-    Klasa: 2,
+    Klasa: 1,
     zliczonaIloscIn: 0,
     Stanowisko: '',
   });
@@ -3473,6 +3478,11 @@ function updateWorkCell(rowId, column, value) {
     return;
   }
 
+  if (column === 'Klasa') {
+    row[column] = normalizeClassValue(value);
+    return;
+  }
+
   if (['Dlugosc', 'Grubosc', 'Szerokosc', 'Sztuk'].includes(column)) {
     row[column] = normalizeWorkCorrectionValue(value);
     if (column === 'Grubosc' || column === 'Szerokosc') {
@@ -3558,6 +3568,7 @@ async function addWorkRow() {
 
   const newRow = createEmptyWorkRow();
   workRows.value = [...workRows.value, newRow];
+  selectedWorkPrzekrojFilter.value = '';
   workEditingRowId.value = newRow.__clientId;
 }
 
@@ -5452,7 +5463,7 @@ function buildWorkMainRowsFromMergeRecipe() {
       TekstDoDruku: row.TekstDoDruku || '',
       Grupa: row.grupa || '',
       Priorytet: row.priorytet || '',
-      Klasa: row.Klasa ?? 2,
+      Klasa: row.Klasa ?? 1,
       Usr: 'Default',
       Stanowisko: row.Stanowisko || '',
       zliczonaIloscIn: row.ilosc || 0,
@@ -5921,6 +5932,13 @@ function normalizeMaterialValue(value) {
   return materialOptions.includes(normalized) ? normalized : '';
 }
 
+function normalizeClassValue(value, fallback = 1) {
+  if (value === null || value === undefined) return fallback;
+  if (typeof value === 'string' && !value.trim()) return fallback;
+  const normalizedValue = normalizeWorkCorrectionValue(value);
+  return [1, 2, 3].includes(normalizedValue) ? normalizedValue : fallback;
+}
+
 function normalizeEditableCellValue(column, value) {
   if (column === 'Kod' || column === 'TekstDoDruku') {
     return normalizePrintTextValue(value);
@@ -5937,6 +5955,9 @@ function normalizeEditableCellValue(column, value) {
   if (column === 'Stanowisko' || column === 'stanowisko') {
     return normalizeStationValue(value);
   }
+  if (column === 'Klasa' || column === 'klasa') {
+    return String(normalizeClassValue(value));
+  }
   return value;
 }
 
@@ -5944,11 +5965,16 @@ function getDropdownOptions(column) {
   if (column === 'Grupa' || column === 'grupa') return groupOptions;
   if (column === 'Priorytet' || column === 'priorytet') return priorityOptions;
   if (column === 'Materiał' || column === 'material' || column === 'Material') return materialOptions;
+  if (column === 'Klasa' || column === 'klasa') return classOptions;
   return [];
 }
 
 function isDropdownColumn(column) {
   return getDropdownOptions(column).length > 0;
+}
+
+function allowsEmptyDropdownValue(column) {
+  return column !== 'Klasa' && column !== 'klasa';
 }
 
 function isStationColumn(column) {
@@ -6224,7 +6250,7 @@ function createMergeDraftRow(productName, sourceRow = {}) {
       ? normalizeDefaultClassValue(sourceRow.Klasa ?? sourceRow.klasa)
       : isTemporaryMergeProduct(productName)
         ? 1
-        : 2;
+        : 1;
 
   return {
     _localId: createProductLocalId(),
@@ -6265,7 +6291,7 @@ function createRecipePreviewDraftRow(sourceRow = {}) {
     priorytet: '',
     ilosc: sourceRow.ilosc ?? 0,
     iloscWykonana: sourceRow.iloscWykonana ?? 0,
-    Klasa: sourceRow.Klasa ?? sourceRow.klasa ?? 0,
+    Klasa: normalizeDefaultClassValue(sourceRow.Klasa ?? sourceRow.klasa),
     Stanowisko: normalizeStationValue(sourceRow.Stanowisko ?? sourceRow.stanowisko),
     Informacje: sourceRow.Informacje ?? '',
     TekstDoDruku: normalizePrintTextValue(sourceRow.TekstDoDruku ?? ''),
@@ -6724,6 +6750,7 @@ function createEditableProductRow(fileName = "") {
     Priorytet: '',
     'ilość': '',
     Wybijak: '',
+    Klasa: 1,
     Stanowisko: '',
     _sourceFile: fileName,
     _localId: createProductLocalId(),
@@ -7219,18 +7246,25 @@ function getEditInputStyle(value, localId, column) {
   }
   const isActive = activeEditCell.value === `${localId}:${column}`;
   const widthConfig = {
-    Nazwa: { min: 10, max: 24 },
-    Kod: { min: 10, max: 24 },
-    Materiał: { min: 8, max: 12 },
-    Stanowisko: { min: 14, max: 18 },
+    Nazwa: { min: 12, max: 28 },
+    Kod: { min: 14, max: 30 },
+    'Długość': { min: 7, max: 12 },
+    'Grubość': { min: 7, max: 12 },
+    'Szerokość': { min: 7, max: 12 },
+    Materiał: { min: 10, max: 16 },
+    ilość: { min: 6, max: 10 },
+    Wybijak: { min: 7, max: 11 },
+    Stanowisko: { min: 16, max: 20 },
+    Klasa: { min: 7, max: 10 },
   };
-  const { min = 4, max = 10 } = widthConfig[column] ?? {};
+  const { min = 6, max = 12 } = widthConfig[column] ?? {};
   const activePadding = column === 'Nazwa' || column === 'Kod' ? 2 : 1;
   const chWidth = isActive
     ? Math.max(min, Math.min(contentLength + activePadding, max + 4))
     : Math.max(min, Math.min(contentLength + 1, max));
+  const selectExtraWidth = isStationColumn(column) || isDropdownColumn(column) ? 28 : 0;
   return {
-    width: isStationColumn(column) ? `calc(${chWidth}ch + 20px)` : `${chWidth}ch`,
+    width: selectExtraWidth ? `calc(${chWidth}ch + ${selectExtraWidth}px)` : `${chWidth}ch`,
     minWidth: `${min}ch`,
   };
 }
@@ -7292,15 +7326,16 @@ function getWorkEditInputStyle(column, value) {
     TekstDoDruku: { min: 12, max: 28 },
     Wybijak: { min: 6, max: 10 },
     Stanowisko: { min: 14, max: 18 },
-    Klasa: { min: 5, max: 8 },
+    Klasa: { min: 7, max: 10 },
     Sztuk: { min: 5, max: 8 },
   };
 
   const { min = 7, max = 14 } = widthConfig[column] ?? {};
   const chWidth = Math.max(min, Math.min(contentLength + 2, max));
+  const selectExtraWidth = isStationColumn(column) || isDropdownColumn(column) ? 28 : 0;
 
   return {
-    width: isStationColumn(column) ? `calc(${chWidth}ch + 20px)` : `${chWidth}ch`,
+    width: selectExtraWidth ? `calc(${chWidth}ch + ${selectExtraWidth}px)` : `${chWidth}ch`,
     minWidth: `${min}ch`,
   };
 }
@@ -8945,18 +8980,19 @@ const WorkTable = defineComponent({
 
     const sortKey = ref('');
     const sortDirection = ref(1);
+    const editStableRowIds = ref([]);
 
-    const sortedRows = computed(() => {
-      const rows = [...props.rows];
+    function getSortedWorkRows(rows) {
+      const nextRows = [...rows];
       if (sortKey.value) {
-        rows.sort((a, b) => compareValues(a[sortKey.value], b[sortKey.value]) * sortDirection.value);
+        nextRows.sort((a, b) => compareValues(a[sortKey.value], b[sortKey.value]) * sortDirection.value);
       }
 
       const localDraftRows = [];
       const activeRows = [];
       const completedRows = [];
 
-      rows.forEach((row) => {
+      nextRows.forEach((row) => {
         if (row.__isLocalDraft && !row.__disabled) {
           localDraftRows.push(row);
           return;
@@ -8969,9 +9005,37 @@ const WorkTable = defineComponent({
       });
 
       return [...localDraftRows, ...activeRows, ...completedRows];
+    }
+
+    function getRowsInStableEditOrder(rows) {
+      if (!editStableRowIds.value.length) return rows;
+      const rowById = new Map(rows.map((row) => [row.__clientId, row]));
+      const orderedRows = editStableRowIds.value.map((rowId) => rowById.get(rowId)).filter(Boolean);
+      const orderedIds = new Set(orderedRows.map((row) => row.__clientId));
+      return [...orderedRows, ...rows.filter((row) => !orderedIds.has(row.__clientId))];
+    }
+
+    const sortedRows = computed(() => {
+      const rows = [...props.rows];
+      if (workEditingRowId.value !== null) {
+        return getRowsInStableEditOrder(rows);
+      }
+
+      return getSortedWorkRows(rows);
+    });
+
+    watch(workEditingRowId, (nextRowId, previousRowId) => {
+      if (nextRowId !== null && previousRowId === null) {
+        editStableRowIds.value = getSortedWorkRows(props.rows).map((row) => row.__clientId);
+        return;
+      }
+      if (nextRowId === null) {
+        editStableRowIds.value = [];
+      }
     });
 
     function sortBy(column) {
+      if (workEditingRowId.value !== null) return;
       if (sortKey.value !== column) {
         sortKey.value = column;
         sortDirection.value = 1;
@@ -9085,7 +9149,7 @@ const WorkTable = defineComponent({
                                   onInput: (event) => updateWorkCell(row.__clientId, column, event.target.value),
                                 },
                                 [
-                                  h('option', { value: '' }, ''),
+                                  ...(allowsEmptyDropdownValue(column) ? [h('option', { value: '' }, '')] : []),
                                   ...options.map((option) =>
                                     h(
                                       'option',
@@ -9372,7 +9436,7 @@ const RecipePreviewTable = defineComponent({
                                 onInput: (event) => updateRecipePreviewCell(row._localId, column, event.target.value),
                               },
                               [
-                                h('option', { value: '' }, ''),
+                                ...(allowsEmptyDropdownValue(column) ? [h('option', { value: '' }, '')] : []),
                                 ...options.map((option) =>
                                   h('option', { value: option.value ?? option }, option.label ?? option),
                                 ),

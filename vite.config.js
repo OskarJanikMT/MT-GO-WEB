@@ -107,10 +107,6 @@ function normalizeCellValue(_column, value) {
   return String(value);
 }
 
-function filterRowsToClassOne(rows) {
-  return rows.filter((row) => Number(row?.Klasa ?? row?.klasa) === 1);
-}
-
 function getProductImageBaseName(fileName) {
   return `${path.parse(fileName).name}${PRODUCT_IMAGE_SUFFIX}`;
 }
@@ -1639,10 +1635,10 @@ function productSavePlugin() {
 
         try {
           const body = await readJsonBody(req);
-          const rows = filterRowsToClassOne(Array.isArray(body.rows) ? body.rows : []);
+          const rows = Array.isArray(body.rows) ? body.rows : [];
 
           if (!rows.length) {
-            sendJson(res, 400, { error: 'Brak wierszy z klasą 1 do wgrania do WorkMain.' });
+            sendJson(res, 400, { error: 'Brak wierszy do wgrania do WorkMain.' });
             return;
           }
 
@@ -1685,7 +1681,7 @@ function productSavePlugin() {
 
         try {
           const body = await readJsonBody(req);
-          const rows = filterRowsToClassOne(Array.isArray(body.rows) ? body.rows : []);
+          const rows = Array.isArray(body.rows) ? body.rows : [];
 
           const sqlText = buildWorkMainSaveSql(rows);
           await executeSqlFile(sqlText);
