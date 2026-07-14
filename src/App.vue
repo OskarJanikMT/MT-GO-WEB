@@ -3038,6 +3038,10 @@ function normalizeWybijakPartInputValue(value) {
     .slice(0, 1);
 }
 
+function hasWybijakDigitValue(value) {
+  return String(value ?? '').replace(/[^\d]/g, '').trim().length > 0;
+}
+
 function getRecipeWybijakValidationIssue(row, rowIndex = null) {
   const maxPunchCount = Math.max(1, normalizeWorkCorrectionValue(configSettings.value.machinePunchCount || DEFAULT_MACHINE_PUNCH_COUNT));
   const rowPrefix = rowIndex === null ? '' : `Wiersz ${rowIndex + 1}: `;
@@ -3058,11 +3062,11 @@ function getRecipeWybijakValidationIssue(row, rowIndex = null) {
     if (normalizedFirstPart.length > 1 || normalizedSecondPart.length > 1) {
       return `${rowPrefix}każdy wybijak może mieć tylko jedną cyfrę.`;
     }
-    if (normalizedFirstPart === '0' || Number(normalizedFirstPart) > maxPunchCount) {
-      return `${rowPrefix}pierwszy wybijak musi być w zakresie 1-${maxPunchCount}.`;
+    if (Number(normalizedFirstPart) > maxPunchCount) {
+      return `${rowPrefix}pierwszy wybijak musi być w zakresie 0-${maxPunchCount}.`;
     }
-    if (normalizedSecondPart === '0' || Number(normalizedSecondPart) > maxPunchCount) {
-      return `${rowPrefix}drugi wybijak musi być w zakresie 1-${maxPunchCount}.`;
+    if (Number(normalizedSecondPart) > maxPunchCount) {
+      return `${rowPrefix}drugi wybijak musi być w zakresie 0-${maxPunchCount}.`;
     }
     return '';
   }
@@ -3076,12 +3080,12 @@ function getRecipeWybijakValidationIssue(row, rowIndex = null) {
   const digitFirstPart = rawDigits[0] ?? '';
   const digitSecondPart = rawDigits[1] ?? '';
 
-  if (digitFirstPart === '0' || Number(digitFirstPart) > maxPunchCount) {
-    return `${rowPrefix}pierwszy wybijak musi być w zakresie 1-${maxPunchCount}.`;
+  if (Number(digitFirstPart) > maxPunchCount) {
+    return `${rowPrefix}pierwszy wybijak musi być w zakresie 0-${maxPunchCount}.`;
   }
 
-  if (rawDigits.length === 2 && (digitSecondPart === '0' || Number(digitSecondPart) > maxPunchCount)) {
-    return `${rowPrefix}drugi wybijak musi być w zakresie 1-${maxPunchCount}.`;
+  if (rawDigits.length === 2 && Number(digitSecondPart) > maxPunchCount) {
+    return `${rowPrefix}drugi wybijak musi być w zakresie 0-${maxPunchCount}.`;
   }
 
   return '';
@@ -3155,7 +3159,7 @@ function getMergeCellValidationCriteria(column) {
     case 'ilosc':
       return `Wymagane pole. Liczba całkowita. Zakres: 1-${maxQuantity}.`;
     case 'wybijak':
-      return `Wymagane pole. 1 lub 2 wybijaki. Każdy wybijak musi mieć 1 cyfrę i być w zakresie 1-${maxPunchCount}.`;
+      return `Wymagane pole. 1 lub 2 wybijaki. Każdy wybijak musi mieć 1 cyfrę i być w zakresie 0-${maxPunchCount}.`;
     default:
       return '';
   }
@@ -3215,9 +3219,11 @@ function parsePrzekrojValue(przekroj) {
 }
 
 function resolveWorkWybijakValue(stanowisko, dlugosc, wybijak) {
-  const explicitWybijak = normalizeWorkCorrectionValue(wybijak);
-  if (explicitWybijak > 0) return explicitWybijak;
+  if (hasWybijakDigitValue(wybijak)) {
+    return normalizeWorkCorrectionValue(wybijak);
+  }
 
+  const explicitWybijak = normalizeWorkCorrectionValue(wybijak);
   const normalizedStation = normalizeStationValue(stanowisko);
   const normalizedLength = normalizeWorkCorrectionValue(dlugosc);
   if (!normalizedStation || !normalizedLength) return explicitWybijak;
@@ -4034,7 +4040,7 @@ function getWorkRowMissingFields(row) {
   if (payload.Dlugosc > boardMaxLength) missingFields.push(`Długość > ${boardMaxLength} mm`);
   if (!payload.Grubosc) missingFields.push('Grubość');
   if (!payload.Szerokosc) missingFields.push('Szerokość');
-  if (!payload.Wybijak) missingFields.push('Wybijak');
+  if (!hasWybijakDigitValue(row?.Wybijak)) missingFields.push('Wybijak');
   if (!payload.Sztuk) missingFields.push('Ilość');
   if (payload.Sztuk > maxQuantity) missingFields.push(`Ilość > ${maxQuantity}`);
 

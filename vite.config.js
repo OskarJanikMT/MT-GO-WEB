@@ -348,12 +348,12 @@ function getRecipeWybijakValidationError(rows, machinePunchCount) {
     const firstPunch = digits[0] ?? '';
     const secondPunch = digits[1] ?? '';
 
-    if (!firstPunch || firstPunch === '0' || Number(firstPunch) > maxPunchCount) {
-      return `Wiersz ${rowIndex + 1}: pierwszy wybijak musi być w zakresie 1-${maxPunchCount}.`;
+    if (!firstPunch || Number(firstPunch) > maxPunchCount) {
+      return `Wiersz ${rowIndex + 1}: pierwszy wybijak musi być w zakresie 0-${maxPunchCount}.`;
     }
 
-    if (secondPunch && (secondPunch === '0' || Number(secondPunch) > maxPunchCount)) {
-      return `Wiersz ${rowIndex + 1}: drugi wybijak musi być w zakresie 1-${maxPunchCount}.`;
+    if (secondPunch && Number(secondPunch) > maxPunchCount) {
+      return `Wiersz ${rowIndex + 1}: drugi wybijak musi być w zakresie 0-${maxPunchCount}.`;
     }
   }
 
