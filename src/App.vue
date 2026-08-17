@@ -78,6 +78,9 @@
             </template>
           </div>
           <div class="filter-actions">
+            <button class="tool-btn" :class="{ primary: activeTab === 'recipes' }" @click="activeTab = 'recipes'">
+              Receptury
+            </button>
             <button class="tool-btn" :class="{ primary: activeTab === 'reports' }" @click="activeTab = 'reports'">
               Raporty
             </button>
@@ -1406,13 +1409,175 @@
                 {{ mergeWorkUploadMessage }}
               </div>
               <div class="merge-preview-footer">
-                <button class="tool-btn primary merge-save-btn" :disabled="!recipeRows.length || !!saveRecipeValidationError || isMergeUploadingToWorkMain" @click="requestUploadMergeToWorkMain">
-                  {{ isMergeUploadingToWorkMain ? 'Wgrywanie...' : 'Wgraj do aktualnie ciętych' }}
+                <button class="tool-btn primary merge-save-btn" :disabled="!recipeRows.length || !!saveRecipeValidationError || isMergeUploadingToWorkMain" @click="openMergeRecipeActionDialog">
+                  {{ isMergeUploadingToWorkMain ? 'Wgrywanie...' : 'Utwórz recepturę' }}
                 </button>
               </div>
             </div>
           </div>
 
+          <div
+            v-if="mergeRecipeActionDialog.visible"
+            class="confirm-modal-overlay"
+            @click.self="closeMergeRecipeActionDialog"
+          >
+            <div class="confirm-modal panel" @click.stop>
+              <div class="panel-header">
+                <span>Co zrobić z recepturą?</span>
+              </div>
+              <div class="confirm-modal-body">
+                <p>Wybierz, czy zapisać recepturę do katalogu, czy od razu wgrać ją do bazy danych.</p>
+                <div class="confirm-modal-actions">
+                  <button class="tool-btn compact" @click="closeMergeRecipeActionDialog">Anuluj</button>
+                  <button class="tool-btn compact" @click="openSaveRecipeDialog">Zapisz recepturę</button>
+                  <button class="tool-btn compact primary" @click="requestUploadMergeToWorkMain">Wgraj do bazy danych</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            v-if="saveRecipeDialog.visible"
+            class="confirm-modal-overlay"
+            @click.self="closeSaveRecipeDialog"
+          >
+            <div class="confirm-modal panel save-recipe-modal" @click.stop>
+              <div class="panel-header">
+                <span>Zapisz recepturę</span>
+              </div>
+              <div class="confirm-modal-body">
+                <label class="rename-field">
+                  <span>Nazwa receptury</span>
+                  <input
+                    v-model="saveRecipeDialog.name"
+                    class="text-input"
+                    maxlength="120"
+                    placeholder="Podaj nazwę receptury"
+                    @keydown.enter.prevent="submitSaveRecipe"
+                  />
+                </label>
+                <div v-if="saveRecipeDialog.error" class="save-status error">{{ saveRecipeDialog.error }}</div>
+                <div class="confirm-modal-actions">
+                  <button class="tool-btn compact" @click="closeSaveRecipeDialog">Anuluj</button>
+                  <button class="tool-btn compact primary" @click="submitSaveRecipe">Zapisz</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+        <section v-if="activeTab === 'recipes'" class="section">
+          <div class="section-header">
+            <div>
+              <h2 class="section-title">Receptury</h2>
+              <p class="section-subtitle">Podgląd zapisanych receptur, ich edycja oraz usuwanie z katalogu.</p>
+            </div>
+          </div>
+
+          <div class="panel recipe-library-panel">
+            <div class="panel-header">
+              <span>Katalog receptur</span>
+              <div class="panel-actions">
+                <button class="tool-btn compact" :disabled="isRecipeCatalogActionLoading" @click="triggerRecipeImport">Importuj JSON</button>
+                <button class="tool-btn compact" :disabled="isRecipeCatalogActionLoading" @click="exportRecipeCatalog">Eksportuj wszystko</button>
+                <button class="tool-btn compact" :disabled="isRecipeCatalogActionLoading || !selectedRecipeCatalogCount" @click="exportSelectedRecipes">
+                  Eksportuj zaznaczone
+                </button>
+                <button class="tool-btn compact danger" :disabled="isRecipeCatalogActionLoading || !selectedRecipeCatalogCount" @click="requestDeleteSelectedRecipes">
+                  Usuń zaznaczone
+                </button>
+              </div>
+            </div>
+
+            <div v-if="recipeCatalogActionMessage" data-error-anchor="recipe-catalog-action" class="save-status" :class="{ error: recipeCatalogActionError }">
+              {{ recipeCatalogActionMessage }}
+            </div>
+
+            <div class="recipe-library-filters">
+              <label class="recipe-library-search">
+                <span class="visually-hidden">Szukaj receptury</span>
+                <div class="search-input-wrap">
+                  <input v-model="recipeCatalogSearch" class="text-input merge-search-input" placeholder="Szukaj receptury" />
+                </div>
+              </label>
+              <select v-model="recipeCatalogMaterialFilter" class="select-input recipe-filter-select">
+                <option value="">Wszystkie materiały</option>
+                <option v-for="material in recipeCatalogMaterials" :key="`recipe-material-${material}`" :value="material">
+                  {{ material }}
+                </option>
+              </select>
+              <select v-model="recipeCatalogUsageFilter" class="select-input recipe-filter-select">
+                <option value="all">Wszystkie</option>
+                <option value="used">Używane</option>
+                <option value="unused">Nie używane</option>
+              </select>
+              <button class="tool-btn compact" @click="resetRecipeCatalogFilters">Wyczyść filtry</button>
+            </div>
+
+            <DataTable
+              :columns="recipeCatalogColumns"
+              :rows="filteredRecipeCatalog"
+              :labels="recipeSummaryLabels"
+              :selectable="true"
+              selection-key="nazwaReceptury"
+              :selected-keys="selectedRecipeNames"
+              empty-text="Brak zapisanych receptur"
+              @row-click="selectRecipePreview"
+              @toggle-row="toggleRecipeCatalogSelection"
+              @toggle-all="toggleAllRecipeCatalogSelection"
+            />
+          </div>
+
+          <div v-if="isSavedRecipePreviewOpen" class="confirm-modal-overlay saved-recipe-preview-overlay" @click.self="closeSavedRecipePreview">
+            <div class="confirm-modal panel panel-wide saved-recipe-preview-modal" @click.stop>
+              <div class="panel-header">
+                <span>Podgląd receptury</span>
+                <div class="panel-actions">
+                  <span class="panel-caption">{{ selectedRecipePreviewName || 'Bez nazwy' }}</span>
+                  <button class="tool-btn compact" type="button" @click.stop="closeSavedRecipePreview">Zamknij</button>
+                </div>
+              </div>
+
+              <div class="confirm-modal-body">
+                <div v-if="recipePreviewSaveMessage" class="save-status" :class="{ error: recipePreviewSaveError }">
+                  {{ recipePreviewSaveMessage }}
+                </div>
+
+                <RecipePreviewTable
+                  :columns="savedRecipePreviewColumns"
+                  :rows="recipePreviewRows"
+                  :labels="recipeColumnLabels"
+                  :is-edit-mode="isRecipePreviewEditMode"
+                  empty-text="Brak pozycji w recepturze"
+                />
+
+                <div class="confirm-modal-actions">
+                  <button v-if="isRecipePreviewEditMode" class="tool-btn compact" @click="addRecipePreviewRow">Dodaj wiersz</button>
+                  <button v-if="!isRecipePreviewEditMode" class="tool-btn compact" @click="startRecipePreviewEdit">Edytuj</button>
+                  <button v-if="isRecipePreviewEditMode" class="tool-btn compact" @click="requestCancelRecipePreviewEdit">Anuluj edycję</button>
+                  <button v-if="isRecipePreviewEditMode" class="tool-btn compact primary" @click="saveRecipePreviewChanges">Zapisz zmiany</button>
+                  <button v-if="!isRecipePreviewEditMode" class="tool-btn compact danger" @click="requestDeleteRecipePreview">Usuń recepturę</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="recipeImportConflictDialog.visible" class="confirm-modal-overlay" @click.self="cancelRecipeImportConflict">
+            <div class="confirm-modal panel" @click.stop>
+              <div class="panel-header">
+                <span>Nadpisać istniejące receptury?</span>
+              </div>
+              <div class="confirm-modal-body">
+                <p>W pliku są receptury o nazwach już istniejących w katalogu:</p>
+                <p class="panel-caption">{{ recipeImportConflictDialog.duplicateNames.join(', ') }}</p>
+                <div class="confirm-modal-actions">
+                  <button class="tool-btn compact" @click="cancelRecipeImportConflict">Anuluj</button>
+                  <button class="tool-btn compact primary" :disabled="isRecipeCatalogActionLoading" @click="confirmRecipeImportConflict">Nadpisz i importuj</button>
+                </div>
+              </div>
+            </div>
+          </div>
         </section>
 
         <section v-if="activeTab === 'reports'" class="section">
@@ -1529,6 +1694,23 @@
             </div>
             <div class="work-actions">
               <div class="work-actions-stack">
+                <div class="work-actions-row work-recipe-select-row">
+                  <div class="work-recipe-select-combo">
+                    <select v-model="selectedRecipe" class="select-input work-recipe-select-input">
+                      <option value="">Wybierz recepturę</option>
+                      <option v-for="recipeName in recipeNames" :key="`work-recipe-select-${recipeName}`" :value="recipeName">
+                        {{ recipeName }}
+                      </option>
+                    </select>
+                    <button
+                      class="tool-btn work-recipe-select-btn"
+                      :disabled="!selectedRecipe || isWorkCorrectionSaving || isWorkEditPreparing || workEditingRowId !== null"
+                      @click="loadRecipeToWorkMain"
+                    >
+                      Wczytaj do podglądu
+                    </button>
+                  </div>
+                </div>
                 <div class="work-actions-row">
                   <button
                     class="tool-btn"
@@ -1860,6 +2042,13 @@
         class="visually-hidden"
         @change="handleProductImageImport"
       />
+      <input
+        ref="recipeImportInput"
+        type="file"
+        accept=".json,application/json"
+        class="visually-hidden"
+        @change="handleRecipeImport"
+      />
       <footer class="app-footer">
         <a class="app-footer-copy app-footer-link" href="https://metal-technika.com.pl/" target="_blank" rel="noopener noreferrer">
           © Metal-Technika
@@ -1909,6 +2098,7 @@ const TEMP_PRODUCT_KEY = '__TEMP_PRODUCT__';
 const TEMP_EMPTY_PRODUCT_PREFIX = '__TEMP_EMPTY_PRODUCT__';
 const SAVED_ROWS_STORAGE_KEY = 'mt-go-web:saved-rows';
 const UI_SETTINGS_STORAGE_KEY = 'mt-go-web:ui-settings';
+const ACTIVE_WORK_METADATA_STORAGE_KEY = 'mt-go-web:active-work-metadata';
 const WORK_MAIN_RECIPE_NAME = 'MT-GO-WEB';
 
 const tabs = [
@@ -2041,6 +2231,9 @@ const recipeColumns = [
   'iloscWykonana',
   'Informacje',
 ];
+const savedRecipePreviewColumns = recipeColumns.filter(
+  (column) => !['nazwaSkladowej', 'grupa', 'priorytet', 'iloscWykonana'].includes(column),
+);
 const workRecipePreviewColumns = recipeColumns.filter(
   (column) => !['nazwaSkladowej', 'idReceptury', 'idSkladowej', 'iloscWykonana', 'Informacje', 'grupa', 'priorytet'].includes(column),
 );
@@ -2194,6 +2387,9 @@ const mergeProductSavingMap = ref({});
 const mergeWorkUploadMessage = ref('');
 const mergeWorkUploadError = ref(false);
 const isMergeUploadingToWorkMain = ref(false);
+const mergeRecipeActionDialog = ref({
+  visible: false,
+});
 const mergePreviewProductName = ref('');
 const isFavoriteElementsModalOpen = ref(false);
 const isFavoriteSourceModalOpen = ref(false);
@@ -2218,6 +2414,11 @@ const reportMessage = ref('');
 const reportError = ref(false);
 const isReportExportLoading = ref(false);
 const selectedRecipeNames = ref([]);
+const saveRecipeDialog = ref({
+  visible: false,
+  name: '',
+  error: '',
+});
 const recipeCatalogActionMessage = ref('');
 const recipeCatalogActionError = ref(false);
 const isRecipeCatalogActionLoading = ref(false);
@@ -2370,6 +2571,7 @@ const workRows = ref([]);
 
 const defaultSavedRows = [];
 const savedRows = ref(loadSavedRows());
+const activeWorkMetadata = ref(loadActiveWorkMetadata());
 
 function isElementVisible(element) {
   if (!(element instanceof HTMLElement)) return false;
@@ -2858,6 +3060,19 @@ const overallWorkProgressPercent = computed(() => getWorkProgressPercent(overall
 const workTableSourceNameLabel = computed(() => workTableSourceName.value || 'Aktualna praca');
 const workTableSourceStatusLabel = computed(() => (workTableSourceMode.value === 'preview' ? 'podgląd' : 'aktywna'));
 const isWorkTableSourceActive = computed(() => workTableSourceMode.value === 'active');
+function getWorkProductGroupName(row) {
+  return String(row?.SourceProductName ?? '').trim() || 'Produkt bez nazwy';
+}
+function isCompletedWorkProgress(doneValue, totalValue) {
+  const normalizedDone = normalizeWorkCorrectionValue(doneValue);
+  const normalizedTotal = normalizeWorkCorrectionValue(totalValue);
+  return normalizedTotal > 0 && normalizedDone >= normalizedTotal;
+}
+
+function isCompletedWorkRow(row) {
+  return isCompletedWorkProgress(row?.WykonaneSztuki, row?.Sztuk);
+}
+
 const workMainLastRefreshLabel = computed(() => {
   if (!(workMainLastRefreshAt.value instanceof Date)) return 'Ostatnia aktualizacja : --:--:--';
   return `Ostatnia aktualizacja : ${workMainLastRefreshAt.value.toLocaleTimeString('pl-PL', {
@@ -2876,30 +3091,82 @@ const isWorkMainManualRefreshDisabled = computed(
     isWorkEditPreparing.value,
 );
 
-const workDisplayRows = computed(() =>
-  filteredWorkRows.value.map((row) => ({
-    __clientId: row.__clientId,
-    __disabled: Boolean(row.__disabled),
-    __isLocalDraft: Boolean(row.__isLocalDraft),
-    __isPendingSync: isWorkRowPendingSync(row),
-    id: row.id ?? '',
-    Nazwa: row.Nazwa ?? '',
-    Material: row.Material ?? '',
-    Grubosc: row.Grubosc ?? '',
-    Szerokosc: row.Szerokosc ?? '',
-    Dlugosc: row.Dlugosc ?? '',
-    Progress: {
-      done: row.WykonaneSztuki ?? 0,
-      total: row.Sztuk ?? 0,
-    },
-    Wybijak: row.Wybijak ?? '',
-    TekstDoDruku: row.TekstDoDruku ?? '',
-    Klasa: row.Klasa ?? '',
-    Sztuk: row.Sztuk ?? '',
-    Stanowisko: row.Stanowisko ?? '',
-    Przekroj: row.Przekroj ?? '',
-  })),
-);
+const workDisplayRows = computed(() => {
+  const displayRows = [];
+  const groupedRows = new Map();
+
+  filteredWorkRows.value.forEach((row) => {
+    const groupName = getWorkProductGroupName(row);
+    if (!groupedRows.has(groupName)) {
+      groupedRows.set(groupName, []);
+    }
+    groupedRows.get(groupName).push(row);
+  });
+
+  const orderedGroups = [...groupedRows.entries()]
+    .map(([groupName, rows], order) => ({ groupName, rows, order }))
+    .sort((left, right) => {
+      const leftDone = left.rows.reduce((sum, row) => sum + normalizeWorkCorrectionValue(row?.WykonaneSztuki), 0);
+      const leftTotal = left.rows.reduce((sum, row) => sum + normalizeWorkCorrectionValue(row?.Sztuk), 0);
+      const rightDone = right.rows.reduce((sum, row) => sum + normalizeWorkCorrectionValue(row?.WykonaneSztuki), 0);
+      const rightTotal = right.rows.reduce((sum, row) => sum + normalizeWorkCorrectionValue(row?.Sztuk), 0);
+      const leftCompleted = isCompletedWorkProgress(leftDone, leftTotal);
+      const rightCompleted = isCompletedWorkProgress(rightDone, rightTotal);
+
+      if (leftCompleted !== rightCompleted) return leftCompleted ? 1 : -1;
+      return left.order - right.order;
+    });
+
+  orderedGroups.forEach(({ rows, groupName }) => {
+    const orderedRows = rows
+      .map((row, order) => ({ row, order }))
+      .sort((left, right) => {
+        const leftCompleted = isCompletedWorkRow(left.row);
+        const rightCompleted = isCompletedWorkRow(right.row);
+        if (leftCompleted !== rightCompleted) return leftCompleted ? 1 : -1;
+        return left.order - right.order;
+      })
+      .map(({ row }) => row);
+
+    const groupDone = orderedRows.reduce((sum, row) => sum + normalizeWorkCorrectionValue(row?.WykonaneSztuki), 0);
+    const groupTotal = orderedRows.reduce((sum, row) => sum + normalizeWorkCorrectionValue(row?.Sztuk), 0);
+    displayRows.push({
+      __clientId: `work-group-${groupName}`,
+      __groupTitle: true,
+      __groupLabel: groupName,
+      __groupProgressLabel: `${groupDone}/${groupTotal}`,
+      __groupProgressPercent: getWorkProgressPercent(groupDone, groupTotal),
+    });
+
+    orderedRows.forEach((row) => {
+      displayRows.push({
+        __clientId: row.__clientId,
+        __disabled: Boolean(row.__disabled),
+        __isLocalDraft: Boolean(row.__isLocalDraft),
+        __isPendingSync: isWorkRowPendingSync(row),
+        id: row.id ?? '',
+        SourceProductName: row.SourceProductName ?? '',
+        Nazwa: row.Nazwa ?? '',
+        Material: row.Material ?? '',
+        Grubosc: row.Grubosc ?? '',
+        Szerokosc: row.Szerokosc ?? '',
+        Dlugosc: row.Dlugosc ?? '',
+        Progress: {
+          done: row.WykonaneSztuki ?? 0,
+          total: row.Sztuk ?? 0,
+        },
+        Wybijak: row.Wybijak ?? '',
+        TekstDoDruku: row.TekstDoDruku ?? '',
+        Klasa: row.Klasa ?? '',
+        Sztuk: row.Sztuk ?? '',
+        Stanowisko: row.Stanowisko ?? '',
+        Przekroj: row.Przekroj ?? '',
+      });
+    });
+  });
+
+  return displayRows;
+});
 
 function getWorkPrzekrojMeta(row, index = 0) {
   const payload = getWorkRowPayload(row, index);
@@ -3011,6 +3278,15 @@ function isWorkRowPendingSync(row, index = 0) {
 }
 
 function syncWorkTableSourceFromRows(rows = []) {
+  const metadataRecipeName = String(activeWorkMetadata.value?.selectedRecipe ?? '').trim();
+  if (metadataRecipeName) {
+    workTableSourceName.value = metadataRecipeName;
+    if (workTableSourceMode.value !== 'preview') {
+      workTableSourceMode.value = 'active';
+    }
+    return;
+  }
+
   const uniqueNames = [...new Set(rows.map((row) => String(row?.NazwaRec ?? '').trim()).filter(Boolean))];
   if (!uniqueNames.length) {
     workTableSourceName.value = '';
@@ -3263,11 +3539,14 @@ function getWorkRowPayload(row, index = 0) {
   const stanowisko = explicitStation || resolveStationFromWybijak(row?.Wybijak);
   const wybijak = resolveWorkWybijakValue(stanowisko, dlugosc, row?.Wybijak);
   const tekstDoDruku = normalizePrintTextValue(row?.TekstDoDruku ?? '');
+  const nazwaReceptury = String(
+    row?.NazwaRec ?? activeWorkMetadata.value?.selectedRecipe ?? selectedRecipe.value ?? workTableSourceName.value ?? WORK_MAIN_RECIPE_NAME,
+  ).trim() || WORK_MAIN_RECIPE_NAME;
   return {
     id: normalizeWorkCorrectionValue(row?.id || index + 1),
     SourceProductName: String(row?.SourceProductName ?? '').trim(),
     Nazwa: tekstDoDruku,
-    NazwaRec: WORK_MAIN_RECIPE_NAME,
+    NazwaRec: nazwaReceptury,
     Material: String(row?.Material ?? '').trim(),
     Przekroj: buildPrzekrojValue(grubosc, szerokosc),
     Grubosc: grubosc,
@@ -3715,22 +3994,6 @@ function createWorkRowFromProductRow(sourceRow = {}, rowId = getNextWorkRowId(),
   });
 }
 
-function buildWorkRowMergeKey(row) {
-  const payload = getWorkRowPayload(row);
-  return JSON.stringify({
-    SourceProductName: payload.SourceProductName,
-    Material: payload.Material,
-    Przekroj: payload.Przekroj,
-    Dlugosc: payload.Dlugosc,
-    Wybijak: payload.Wybijak,
-    TekstDoDruku: payload.TekstDoDruku,
-    Klasa: payload.Klasa,
-    Stanowisko: payload.Stanowisko,
-    Grupa: payload.Grupa,
-    Priorytet: payload.Priorytet,
-  });
-}
-
 function addSelectedWorkRows() {
   if (!selectedWorkRowCount.value) return;
   if (selectedWorkRowCount.value > workRemainingCapacity.value) {
@@ -3765,38 +4028,10 @@ function addSelectedWorkRows() {
   }
 
   const nextWorkRows = [...workRows.value];
-  const mergeIndexByKey = new Map(
-    nextWorkRows
-      .map((row, index) => (!row.__disabled ? [buildWorkRowMergeKey(row), index] : null))
-      .filter(Boolean),
-  );
-
   const rowsNeedingWybijakEdit = [];
 
   for (const { row, missingFields } of validationInfo) {
-    const mergeKey = buildWorkRowMergeKey(row);
-    const existingIndex = mergeIndexByKey.get(mergeKey);
-
-    if (existingIndex !== undefined) {
-      const existingRow = nextWorkRows[existingIndex];
-      const nextQuantity = normalizeWorkCorrectionValue(existingRow.Sztuk) + normalizeWorkCorrectionValue(row.Sztuk);
-      const nextCountIn = normalizeWorkCorrectionValue(existingRow.zliczonaIloscIn) + normalizeWorkCorrectionValue(row.zliczonaIloscIn);
-
-      nextWorkRows[existingIndex] = normalizeWorkRow({
-        ...existingRow,
-        Sztuk: nextQuantity,
-        zliczonaIloscIn: nextCountIn,
-        __isLocalDraft: true,
-      });
-
-      if (missingFields.includes('Wybijak')) {
-        rowsNeedingWybijakEdit.push(nextWorkRows[existingIndex]);
-      }
-      continue;
-    }
-
     nextWorkRows.push(row);
-    mergeIndexByKey.set(mergeKey, nextWorkRows.length - 1);
     if (missingFields.includes('Wybijak')) {
       rowsNeedingWybijakEdit.push(row);
     }
@@ -3950,6 +4185,34 @@ function loadSavedRows() {
   }
 }
 
+function loadActiveWorkMetadata() {
+  try {
+    const rawValue = window.localStorage.getItem(ACTIVE_WORK_METADATA_STORAGE_KEY);
+    if (!rawValue) {
+      return {
+        rowCount: 0,
+        selectedRecipe: '',
+        rowsById: {},
+        disabledRows: [],
+      };
+    }
+    const parsedValue = JSON.parse(rawValue);
+    return {
+      rowCount: normalizeWorkCorrectionValue(parsedValue?.rowCount ?? 0),
+      selectedRecipe: String(parsedValue?.selectedRecipe ?? '').trim(),
+      rowsById: parsedValue?.rowsById && typeof parsedValue.rowsById === 'object' ? parsedValue.rowsById : {},
+      disabledRows: Array.isArray(parsedValue?.disabledRows) ? parsedValue.disabledRows : [],
+    };
+  } catch {
+    return {
+      rowCount: 0,
+      selectedRecipe: '',
+      rowsById: {},
+      disabledRows: [],
+    };
+  }
+}
+
 function loadAnimationsEnabledSetting() {
   try {
     const rawValue = window.localStorage.getItem(UI_SETTINGS_STORAGE_KEY);
@@ -3983,6 +4246,62 @@ function persistSavedRows() {
   } catch {
     // Ignore storage errors.
   }
+}
+
+function persistActiveWorkMetadata() {
+  try {
+    window.localStorage.setItem(ACTIVE_WORK_METADATA_STORAGE_KEY, JSON.stringify(activeWorkMetadata.value));
+  } catch {
+    // Ignore storage errors.
+  }
+}
+
+function updateActiveWorkMetadata(rows = [], selectedRecipeName = selectedRecipe.value, disabledRowsInput = []) {
+  const rowsById = {};
+  rows.forEach((row, index) => {
+    const payload = getWorkRowPayload(row, index);
+    const rowId = Number(payload.id);
+    if (!Number.isFinite(rowId) || rowId <= 0) return;
+    rowsById[String(rowId)] = {
+      SourceProductName: String(row?.SourceProductName ?? payload.SourceProductName ?? '').trim(),
+    };
+  });
+
+  const disabledRows = disabledRowsInput.map((row, index) => {
+    const payload = getWorkRowPayload(row, index);
+    return {
+      ...payload,
+      SourceProductName: String(row?.SourceProductName ?? payload.SourceProductName ?? '').trim(),
+      __disabled: true,
+      __isLocalDraft: Boolean(row?.__isLocalDraft),
+    };
+  });
+
+  activeWorkMetadata.value = {
+    rowCount: rows.length,
+    selectedRecipe: String(selectedRecipeName ?? '').trim(),
+    rowsById,
+    disabledRows,
+  };
+  persistActiveWorkMetadata();
+}
+
+function applyActiveWorkMetadata(rows = []) {
+  if (!Array.isArray(rows) || !rows.length) return [];
+  const metadata = activeWorkMetadata.value;
+  if (!metadata?.rowsById || typeof metadata.rowsById !== 'object') return rows;
+  if (normalizeWorkCorrectionValue(metadata.rowCount) !== rows.length) return rows;
+
+  return rows.map((row, index) => {
+    const payload = getWorkRowPayload(row, index);
+    const rowId = String(Number(payload.id));
+    const sourceProductName = String(metadata.rowsById?.[rowId]?.SourceProductName ?? '').trim();
+    if (!sourceProductName) return row;
+    return {
+      ...row,
+      SourceProductName: sourceProductName,
+    };
+  });
 }
 
 function openPostponeWorkDialog() {
@@ -4183,11 +4502,18 @@ function removeWorkRow(rowId) {
 }
 
 async function loadWorkMainRows({ preserveDisabled = true, preserveLocalDrafts = true } = {}) {
+  const persistedDisabledRows = Array.isArray(activeWorkMetadata.value?.disabledRows)
+    ? activeWorkMetadata.value.disabledRows.map((row, index) => normalizeWorkRow(row, index))
+    : [];
   const disabledRows = preserveDisabled
-    ? workRows.value.filter((row) => row.__disabled && !row.__isLocalDraft).map((row) => normalizeWorkRow(row))
+    ? (
+        workRows.value.some((row) => row.__disabled)
+          ? workRows.value.filter((row) => row.__disabled).map((row) => normalizeWorkRow(row))
+          : persistedDisabledRows
+      )
     : [];
   const localDraftRows = preserveLocalDrafts
-    ? workRows.value.filter((row) => row.__isLocalDraft).map((row) => normalizeWorkRow(row))
+    ? workRows.value.filter((row) => row.__isLocalDraft && !row.__disabled).map((row) => normalizeWorkRow(row))
     : [];
 
   const response = await fetch(`/api/workmain?t=${Date.now()}`, { cache: 'no-store' });
@@ -4197,7 +4523,8 @@ async function loadWorkMainRows({ preserveDisabled = true, preserveLocalDrafts =
     throw new Error(payload.error || 'Nie udało się pobrać danych WorkMain.');
   }
 
-  const activeRows = Array.isArray(payload.rows) ? payload.rows.map((row, index) => normalizeWorkRow(row, index)) : [];
+  const rowsWithMetadata = Array.isArray(payload.rows) ? applyActiveWorkMetadata(payload.rows) : [];
+  const activeRows = rowsWithMetadata.map((row, index) => normalizeWorkRow(row, index));
   const disabledRowIds = new Set(disabledRows.map((row, index) => Number(getWorkRowPayload(row, index).id)).filter((id) => Number.isFinite(id) && id > 0));
   const visibleDatabaseRows = disabledRowIds.size
     ? activeRows.filter((row, index) => !disabledRowIds.has(Number(getWorkRowPayload(row, index).id)))
@@ -5477,7 +5804,7 @@ function buildWorkMainRowsFromMergeRecipe() {
   );
 }
 
-function requestUploadMergeToWorkMain() {
+function openMergeRecipeActionDialog() {
   if (!recipeRows.value.length) return;
   if (saveRecipeValidationError.value) {
     setMergeWorkUploadMessage(saveRecipeValidationError.value, true);
@@ -5485,6 +5812,19 @@ function requestUploadMergeToWorkMain() {
   }
 
   clearMergeWorkUploadMessage();
+  mergeRecipeActionDialog.value = {
+    visible: true,
+  };
+}
+
+function closeMergeRecipeActionDialog() {
+  mergeRecipeActionDialog.value = {
+    visible: false,
+  };
+}
+
+function requestUploadMergeToWorkMain() {
+  closeMergeRecipeActionDialog();
   openConfirmDialog(
     'upload-merge-to-workmain',
     'Na pewno chcesz wgrać wybrane produkty do aktualnie ciętych? Obecna zawartość WorkMain zostanie zastąpiona.',
@@ -7421,6 +7761,10 @@ function confirmAction() {
     executeDeleteRecipePreview();
     return;
   }
+  if (action === 'delete-selected-recipes') {
+    executeDeleteSelectedRecipes();
+    return;
+  }
   if (action.startsWith('delete-saved-row:')) {
     removeSavedRow(action.slice('delete-saved-row:'.length));
     return;
@@ -7481,11 +7825,66 @@ function openSaveRecipeDialog() {
     return;
   }
 
+  closeMergeRecipeActionDialog();
   saveRecipeDialog.value = {
     visible: true,
     name: '',
     error: '',
   };
+}
+
+function getSavedRecipeRowsByName(recipeName) {
+  return recipeCatalogEntries.value.find((entry) => entry.nazwaReceptury === recipeName)?.rows ?? [];
+}
+
+function buildWorkRowsFromSavedRecipe(recipeName) {
+  return getSavedRecipeRowsByName(recipeName).map((row, index) =>
+    normalizeWorkRow({
+      id: index + 1,
+      Kod: row.Kod || '',
+      SourceProductName: row.nazwaProduktu || row.SourceProductName || '',
+      Nazwa: row.nazwaSkladowej || row.Nazwa || row.nazwaProduktu || row.SourceProductName || '',
+      Material: row.material || row.Material,
+      Przekroj: buildPrzekrojValue(row.grubosc || row.gr || 0, row.szerokosc || row.szer || 0),
+      Grubosc: normalizeWorkCorrectionValue(row.grubosc || row.gr || 0),
+      Szerokosc: normalizeWorkCorrectionValue(row.szerokosc || row.szer || 0),
+      Dlugosc: row.dlugosc || row.Dlugosc,
+      Sztuk: row.ilosc || row.Sztuk,
+      WykonaneSztuki: row.iloscWykonana ?? row.WykonaneSztuki ?? 0,
+      Wybijak: row.wybijak ?? row.Wybijak ?? 0,
+      Rodzaj: row.rodzaj || row.Rodzaj || '',
+      TekstDoDruku: row.TekstDoDruku,
+      idrec: row.idReceptury || row.idrec || 0,
+      ids: row.idSkladowej ?? row.ids ?? index,
+      CzasUtw: new Date().toLocaleString('pl-PL'),
+      Usr: 'Default',
+      NazwaRec: recipeName,
+      gr: row.grubosc || row.gr,
+      szer: row.szerokosc || row.szer,
+      Grupa: row.grupa || row.Grupa || '',
+      Priorytet: row.priorytet || row.Priorytet || '',
+      Klasa: row.Klasa ?? row.klasa,
+      Stanowisko: row.Stanowisko ?? row.stanowisko,
+      Informacje: row.Informacje,
+    }),
+  );
+}
+
+async function markRecipeAsUsed(recipeName) {
+  const response = await fetch('/api/recipes/mark-used', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ recipeName }),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload.error || 'Nie udało się zaktualizować czasu użycia receptury.');
+  }
+  if (payload.recipe) {
+    savedRecipeCatalog.value = savedRecipeCatalog.value.map((entry) =>
+      entry.nazwaReceptury === payload.recipe.nazwaReceptury ? payload.recipe : entry,
+    );
+  }
 }
 
 function closeSaveRecipeDialog() {
@@ -8026,6 +8425,57 @@ function exportSelectedRecipes() {
     `receptury-zaznaczone-${new Date().toISOString().slice(0, 10)}.json`,
   );
   recipeCatalogActionMessage.value = `Wyeksportowano ${selectedRecipeCatalogCount.value} zaznaczonych receptur.`;
+}
+
+function requestDeleteSelectedRecipes() {
+  if (isRecipeCatalogActionLoading.value || !selectedRecipeCatalogCount.value) return;
+  const count = selectedRecipeCatalogCount.value;
+  openConfirmDialog(
+    'delete-selected-recipes',
+    count === 1
+      ? `Na pewno chcesz usunąć 1 zaznaczoną recepturę?`
+      : `Na pewno chcesz usunąć ${count} zaznaczone receptury?`,
+  );
+}
+
+async function executeDeleteSelectedRecipes() {
+  if (isRecipeCatalogActionLoading.value || !selectedRecipeCatalogCount.value) return;
+
+  isRecipeCatalogActionLoading.value = true;
+  clearRecipeCatalogActionMessage();
+
+  const recipeNamesToDelete = [...selectedRecipeNames.value];
+
+  try {
+    for (const recipeName of recipeNamesToDelete) {
+      const response = await fetch('/api/recipes/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ recipeName }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload.error || `Nie udało się usunąć receptury "${recipeName}".`);
+      }
+    }
+
+    await loadSavedRecipes();
+    selectedRecipeNames.value = [];
+    if (recipeNamesToDelete.includes(selectedRecipePreviewName.value)) {
+      isSavedRecipePreviewOpen.value = false;
+      cancelRecipePreviewEdit();
+    }
+    recipeCatalogActionError.value = false;
+    recipeCatalogActionMessage.value =
+      recipeNamesToDelete.length === 1
+        ? 'Usunięto 1 zaznaczoną recepturę.'
+        : `Usunięto ${recipeNamesToDelete.length} zaznaczonych receptur.`;
+  } catch (error) {
+    recipeCatalogActionError.value = true;
+    recipeCatalogActionMessage.value = error.message || 'Nie udało się usunąć zaznaczonych receptur.';
+  } finally {
+    isRecipeCatalogActionLoading.value = false;
+  }
 }
 
 async function importRecipesFromContent(contentText) {
@@ -8748,43 +9198,14 @@ async function loadRecipeToWorkMain() {
 
   const sourceRecipeName =
     isWorkRecipePreviewOpen.value && selectedRecipePreviewName.value ? selectedRecipePreviewName.value : selectedRecipe.value;
-  const savedRecipeRows = recipeCatalogEntries.value.find((entry) => entry.nazwaReceptury === sourceRecipeName)?.rows ?? [];
-  if (!savedRecipeRows.length) {
+  const nextWorkRows = buildWorkRowsFromSavedRecipe(sourceRecipeName);
+  if (!nextWorkRows.length) {
     workUploadError.value = true;
     workUploadMessage.value = 'Nie znaleziono wybranej receptury do wczytania.';
     return;
   }
 
-  workRows.value = savedRecipeRows.map((row, index) =>
-    normalizeWorkRow({
-      id: index + 1,
-      Kod: row.Kod || '',
-      SourceProductName: row.nazwaProduktu || row.SourceProductName || '',
-      Nazwa: row.nazwaSkladowej || row.Nazwa || row.nazwaProduktu || row.SourceProductName || '',
-      Material: row.material || row.Material,
-      Przekroj: buildPrzekrojValue(row.grubosc || row.gr || 0, row.szerokosc || row.szer || 0),
-      Grubosc: normalizeWorkCorrectionValue(row.grubosc || row.gr || 0),
-      Szerokosc: normalizeWorkCorrectionValue(row.szerokosc || row.szer || 0),
-      Dlugosc: row.dlugosc || row.Dlugosc,
-      Sztuk: row.ilosc || row.Sztuk,
-      WykonaneSztuki: row.iloscWykonana ?? row.WykonaneSztuki ?? 0,
-      Wybijak: row.wybijak ?? row.Wybijak ?? 0,
-      Rodzaj: row.rodzaj || row.Rodzaj || '',
-      TekstDoDruku: row.TekstDoDruku,
-      idrec: row.idReceptury || row.idrec || 0,
-      ids: row.idSkladowej ?? row.ids ?? index,
-      CzasUtw: new Date().toLocaleString('pl-PL'),
-      Usr: 'Default',
-      NazwaRec: sourceRecipeName,
-      gr: row.grubosc || row.gr,
-      szer: row.szerokosc || row.szer,
-      Grupa: row.grupa || row.Grupa || '',
-      Priorytet: row.priorytet || row.Priorytet || '',
-      Klasa: row.Klasa ?? row.klasa,
-      Stanowisko: row.Stanowisko ?? row.stanowisko,
-      Informacje: row.Informacje,
-    }),
-  );
+  workRows.value = nextWorkRows;
   workTableSourceName.value = sourceRecipeName;
   workTableSourceMode.value = 'preview';
   selectedRecipe.value = sourceRecipeName;
@@ -8793,20 +9214,7 @@ async function loadRecipeToWorkMain() {
   workUploadMessage.value = `Wczytano recepturę "${sourceRecipeName}" do podglądu. Wartości możesz teraz skorygować ręcznie, a zapis wykonać później do bazy danych.`;
 
   try {
-    const response = await fetch('/api/recipes/mark-used', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ recipeName: sourceRecipeName }),
-    });
-    const payload = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      throw new Error(payload.error || 'Nie udało się zaktualizować czasu użycia receptury.');
-    }
-    if (payload.recipe) {
-      savedRecipeCatalog.value = savedRecipeCatalog.value.map((entry) =>
-        entry.nazwaReceptury === payload.recipe.nazwaReceptury ? payload.recipe : entry,
-      );
-    }
+    await markRecipeAsUsed(sourceRecipeName);
   } catch (error) {
     console.error(error);
   }
@@ -8829,6 +9237,13 @@ async function persistWorkRowsToDatabase(rowsToSave) {
       throw new Error(payload.error || 'Nie udało się zapisać zmian WorkMain.');
     }
 
+    updateActiveWorkMetadata(
+      rowsToSave,
+      selectedRecipe.value || workTableSourceName.value || 'Aktualna praca',
+      workRows.value.filter((row) => row.__disabled),
+    );
+    workTableSourceMode.value = 'active';
+    workTableSourceName.value = String(activeWorkMetadata.value?.selectedRecipe || workTableSourceName.value || 'Aktualna praca');
     clearWorkCorrectionState();
     await loadWorkMainRows({ preserveLocalDrafts: false });
     return payload;
@@ -8909,6 +9324,7 @@ onMounted(() => {
   window.addEventListener('pointerdown', handleWorkRecipeMenuOutsideClick);
   window.addEventListener('pointerdown', handleWorkPrzekrojAlertOutsideClick);
   loadWorkMainRows().catch(() => {});
+  loadSavedRecipes().catch(() => {});
   loadConfig().catch(() => {});
   loadMachineStatus().catch(() => {});
   loadDatabaseConnectionStatus().catch(() => {
@@ -8918,8 +9334,15 @@ onMounted(() => {
 });
 
 watch(activeTab, (tab) => {
+  if (tab === 'recipes') {
+    loadSavedRecipes().catch(() => {});
+    stopWorkMainAutoRefresh();
+    return;
+  }
+
   if (tab === 'work') {
     loadWorkMainRows().catch(() => {});
+    loadSavedRecipes().catch(() => {});
     startWorkMainAutoRefresh();
     return;
   }
@@ -8989,6 +9412,9 @@ const WorkTable = defineComponent({
     const editStableRowIds = ref([]);
 
     function getSortedWorkRows(rows) {
+      if (rows.some((row) => row?.__groupTitle)) {
+        return rows;
+      }
       const nextRows = [...rows];
       if (sortKey.value) {
         nextRows.sort((a, b) => compareValues(a[sortKey.value], b[sortKey.value]) * sortDirection.value);
@@ -9091,6 +9517,37 @@ const WorkTable = defineComponent({
             'tbody',
                 sortedRows.value.length
                   ? sortedRows.value.map((row) => {
+                      if (row.__groupTitle) {
+                        return h(
+                          'tr',
+                          {
+                            key: row.__clientId,
+                            class: 'work-group-row',
+                          },
+                          [
+                            h('td', { colspan: props.columns.length + 1, class: 'work-group-title-cell' }, [
+                              h('div', { class: 'work-group-title-content' }, [
+                                h('strong', row.__groupLabel),
+                                h('div', { class: 'work-group-progress-summary' }, [
+                                  h('div', { class: 'work-group-progress-bar-wrap' }, [
+                                    h('div', { class: 'work-progress-bar-track work-group-progress-bar-track' }, [
+                                      h('div', {
+                                        class: ['work-progress-bar-fill', { complete: row.__groupProgressPercent >= 100 }],
+                                        style: { width: `${row.__groupProgressPercent}%` },
+                                      }),
+                                      h('div', { class: 'work-progress-bar-content' }, [
+                                        h('span', { class: 'work-progress-value' }, row.__groupProgressLabel),
+                                      ]),
+                                    ]),
+                                  ]),
+                                  h('span', { class: 'work-group-progress-percent' }, `${formatProgressPercent(row.__groupProgressPercent)}%`),
+                                ]),
+                              ]),
+                            ]),
+                          ],
+                        );
+                      }
+
                       const rowCells = props.columns.map((column) => {
                       if (column === 'id') {
                         return h('td', { key: `${row.__clientId}-${column}` }, row.id ?? '');

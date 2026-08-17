@@ -615,7 +615,7 @@ button {
   align-items: flex-end;
   min-width: 0;
   flex: 0 1 760px;
-  width: fit-content;
+  width: min(100%, 760px);
 }
 
 .work-topbar .work-actions > * {
@@ -628,6 +628,7 @@ button {
   gap: 10px;
   min-width: 0;
   align-items: flex-end;
+  width: 100%;
 }
 
 .work-actions-row {
@@ -635,7 +636,7 @@ button {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   min-width: 0;
-  width: fit-content;
+  width: 100%;
 }
 
 .work-topbar .work-actions .tool-btn {
@@ -695,7 +696,7 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 0 8px 0 10px;
+  padding: 0 0 0 10px;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--bg-card);
@@ -1810,6 +1811,58 @@ button {
   background: rgba(180, 83, 9, 0.16);
 }
 
+.work-group-row td {
+  background: rgba(15, 23, 42, 0.88);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+.work-group-title-cell {
+  padding: 10px 14px;
+}
+
+.work-group-title-content {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  color: #e2e8f0;
+}
+
+.work-group-title-content strong {
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  flex: 0 1 auto;
+}
+
+.work-group-progress-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1 1 420px;
+  min-width: 240px;
+  justify-content: flex-end;
+}
+
+.work-group-progress-bar-wrap {
+  flex: 1 1 auto;
+  min-width: 180px;
+  max-width: 420px;
+}
+
+.work-group-progress-bar-track {
+  height: 18px;
+}
+
+.work-group-progress-percent {
+  color: #94a3b8;
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  font-weight: 800;
+  min-width: 46px;
+  text-align: right;
+}
+
 .work-table-footer {
   display: flex;
   justify-content: center;
@@ -2047,6 +2100,30 @@ button {
   min-width: 0;
   flex: 1 1 0;
   max-width: 100%;
+}
+
+.work-recipe-select-row {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: flex-end;
+}
+
+.work-recipe-select-combo {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(220px, 1fr);
+  gap: 0;
+  width: 100%;
+}
+
+.work-recipe-select-combo .work-recipe-select-input.select-input {
+  min-width: 0;
+  border-top-right-radius: 0 !important;
+  border-bottom-right-radius: 0 !important;
+}
+
+.work-recipe-select-btn {
+  border-radius: 0 8px 8px 0;
+  border-left-width: 0;
 }
 
 .work-recipe-picker-bar {
