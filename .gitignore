@@ -26,6 +26,8 @@ pnpm-debug.log*
 vite-dev.err
 vite-dev.log
 workmain-debug.txt
+active-work-metadata.json
+saved-work.json
 
 # local TLS certificates
 certs/

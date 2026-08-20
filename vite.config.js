@@ -13,6 +13,8 @@ const __dirname = path.dirname(__filename);
 const DEFAULT_PRODUCTS_DIR = path.join(__dirname, 'Produkty');
 const recipesFilePath = path.join(__dirname, 'receptury.json');
 const configFilePath = path.join(__dirname, 'config.json');
+const activeWorkMetadataFilePath = path.join(__dirname, 'active-work-metadata.json');
+const savedWorkFilePath = path.join(__dirname, 'saved-work.json');
 const defaultHttpsPfxPath = path.join(__dirname, 'certs', 'mt-go-web-dev.pfx');
 const defaultHttpsPfxPassword = 'mt-go-web-local';
 const defaultDevHost = '0.0.0.0';
@@ -109,6 +111,66 @@ function normalizeCellValue(_column, value) {
 
 function getProductImageBaseName(fileName) {
   return `${path.parse(fileName).name}${PRODUCT_IMAGE_SUFFIX}`;
+}
+
+function normalizeActiveWorkMetadata(rows = []) {
+  const rowsById = {};
+  for (const [index, row] of rows.entries()) {
+    const id = toSqlNumber(row?.id, index + 1);
+    const sourceProductName = String(row?.SourceProductName ?? '').trim();
+    if (id > 0 && sourceProductName) {
+      rowsById[String(id)] = { SourceProductName: sourceProductName };
+    }
+  }
+  const recipeNames = [...new Set(rows.map((row) => String(row?.NazwaRec ?? '').trim()).filter(Boolean))];
+  return { rowCount: Array.isArray(rows) ? rows.length : 0, selectedRecipe: recipeNames.length === 1 ? recipeNames[0] : '', rowsById };
+}
+
+async function readActiveWorkMetadata() {
+  try {
+    const content = await fs.readFile(activeWorkMetadataFilePath, 'utf8');
+    const payload = JSON.parse(content);
+    return {
+      rowCount: toSqlNumber(payload?.rowCount, 0),
+      selectedRecipe: String(payload?.selectedRecipe ?? '').trim(),
+      rowsById: payload?.rowsById && typeof payload.rowsById === 'object' ? payload.rowsById : {},
+    };
+  } catch (error) {
+    if (error?.code === 'ENOENT') return { rowCount: 0, rowsById: {} };
+    throw error;
+  }
+}
+
+async function readSavedWorkRows() {
+  try {
+    const content = await fs.readFile(savedWorkFilePath, 'utf8');
+    const payload = JSON.parse(content);
+    return Array.isArray(payload?.rows) ? payload.rows : [];
+  } catch (error) {
+    if (error?.code === 'ENOENT') return [];
+    throw error;
+  }
+}
+
+async function writeSavedWorkRows(rows) {
+  const normalizedRows = Array.isArray(rows) ? rows : [];
+  await fs.writeFile(savedWorkFilePath, JSON.stringify({ rows: normalizedRows }, null, 2), 'utf8');
+  return normalizedRows;
+}
+
+async function writeActiveWorkMetadata(rows) {
+  const metadata = normalizeActiveWorkMetadata(rows);
+  await fs.writeFile(activeWorkMetadataFilePath, JSON.stringify(metadata, null, 2), 'utf8');
+  return metadata;
+}
+
+function applyServerActiveWorkMetadata(rows, metadata) {
+  if (!Array.isArray(rows) || metadata?.rowCount !== rows.length || !metadata?.rowsById) return rows;
+  return rows.map((row, index) => {
+    const id = String(toSqlNumber(row?.id, index + 1));
+    const sourceProductName = String(metadata.rowsById[id]?.SourceProductName ?? '').trim();
+    return sourceProductName ? { ...row, SourceProductName: sourceProductName } : row;
+  });
 }
 
 function getProductImageBaseNameFromEntry(entryName) {
@@ -1644,6 +1706,7 @@ function productSavePlugin() {
 
           const sqlText = buildWorkMainUploadSql(rows);
           await executeSqlFile(sqlText);
+          await writeActiveWorkMetadata(rows);
           sendJson(res, 200, { ok: true, insertedRows: rows.length });
         } catch (error) {
           sendJson(res, 500, { error: error.message || 'Błąd wgrywania danych do WorkMain.' });
@@ -1685,9 +1748,49 @@ function productSavePlugin() {
 
           const sqlText = buildWorkMainSaveSql(rows);
           await executeSqlFile(sqlText);
+          await writeActiveWorkMetadata(rows);
           sendJson(res, 200, { ok: true, updatedRows: rows.length });
         } catch (error) {
           sendJson(res, 500, { error: error.message || 'Błąd zapisu zmian WorkMain.' });
+        }
+      });
+
+      // Migrates metadata created by older application versions, which kept it
+      // only in the browser that uploaded the recipe.
+      server.middlewares.use('/api/workmain/metadata', async (req, res) => {
+        if (req.method !== 'POST') {
+          sendJson(res, 405, { error: 'Method not allowed' });
+          return;
+        }
+
+        try {
+          const body = await readJsonBody(req);
+          const rows = Array.isArray(body?.rows) ? body.rows : [];
+          if (!rows.length || !rows.some((row) => String(row?.SourceProductName ?? '').trim())) {
+            sendJson(res, 400, { error: 'Brak danych produktów źródłowych.' });
+            return;
+          }
+          await writeActiveWorkMetadata(rows);
+          sendJson(res, 200, { ok: true });
+        } catch (error) {
+          sendJson(res, 500, { error: error.message || 'Błąd zapisu metadanych aktualnej pracy.' });
+        }
+      });
+
+      server.middlewares.use('/api/workmain/saved', async (req, res) => {
+        try {
+          if (req.method === 'GET') {
+            sendJson(res, 200, { rows: await readSavedWorkRows() });
+            return;
+          }
+          if (req.method === 'POST') {
+            const body = await readJsonBody(req);
+            sendJson(res, 200, { rows: await writeSavedWorkRows(body?.rows) });
+            return;
+          }
+          sendJson(res, 405, { error: 'Method not allowed' });
+        } catch (error) {
+          sendJson(res, 500, { error: error.message || 'Błąd zapisu odłożonych prac.' });
         }
       });
 
@@ -1811,7 +1914,11 @@ FOR JSON PATH, INCLUDE_NULL_VALUES;`;
               }
             } catch {}
           }
-          sendJson(res, 200, { rows: normalizedRows });
+          const metadata = await readActiveWorkMetadata();
+          sendJson(res, 200, {
+            rows: applyServerActiveWorkMetadata(normalizedRows, metadata),
+            selectedRecipe: metadata.selectedRecipe || '',
+          });
         } catch (error) {
           sendJson(res, 500, { error: error.message || 'Błąd odczytu WorkMain.' });
         }

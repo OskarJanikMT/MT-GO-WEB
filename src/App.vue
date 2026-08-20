@@ -2566,6 +2566,7 @@ let configPunchIdCounter = 1;
 let configDistanceIdCounter = 1;
 let configLengthRangeIdCounter = 1;
 let configMachineIdCounter = 2;
+let hasSyncedLocalActiveWorkMetadata = false;
 
 const workRows = ref([]);
 
@@ -4060,6 +4061,7 @@ function removeSavedRow(idRap) {
   }
   savedRows.value = savedRows.value.filter((row) => String(row.idRap) !== String(idRap));
   persistSavedRows();
+  syncSavedRowsToServer().catch(() => {});
 }
 
 function requestRemoveSavedRow(idRap) {
@@ -4248,6 +4250,30 @@ function persistSavedRows() {
   }
 }
 
+async function syncSavedRowsToServer() {
+  const response = await fetch('/api/workmain/saved', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ rows: savedRows.value }),
+  });
+  if (!response.ok) throw new Error('Nie udało się zapisać odłożonych prac na serwerze.');
+}
+
+async function loadSharedSavedRows() {
+  const localRows = [...savedRows.value];
+  const response = await fetch(`/api/workmain/saved?t=${Date.now()}`, { cache: 'no-store' });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(payload.error || 'Nie udało się pobrać odłożonych prac.');
+
+  const serverRows = Array.isArray(payload.rows) ? payload.rows : [];
+  if (serverRows.length) {
+    savedRows.value = serverRows;
+    persistSavedRows();
+  } else if (localRows.length) {
+    await syncSavedRowsToServer();
+  }
+}
+
 function persistActiveWorkMetadata() {
   try {
     window.localStorage.setItem(ACTIVE_WORK_METADATA_STORAGE_KEY, JSON.stringify(activeWorkMetadata.value));
@@ -4304,6 +4330,21 @@ function applyActiveWorkMetadata(rows = []) {
   });
 }
 
+async function syncLocalActiveWorkMetadataToServer(rows = []) {
+  if (hasSyncedLocalActiveWorkMetadata || !rows.some((row) => String(row?.SourceProductName ?? '').trim())) return;
+
+  const response = await fetch('/api/workmain/metadata', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ rows: rows.map((row, index) => getWorkRowPayload(row, index)) }),
+  });
+  if (!response.ok) {
+    const payload = await response.json().catch(() => ({}));
+    throw new Error(payload.error || 'Nie udało się zsynchronizować produktów aktualnej pracy.');
+  }
+  hasSyncedLocalActiveWorkMetadata = true;
+}
+
 function openPostponeWorkDialog() {
   if (workEditingRowId.value !== null || hasPendingWorkChanges.value) {
     workUploadError.value = true;
@@ -4343,6 +4384,7 @@ function createWorkSnapshot(note = '') {
 function addWorkSnapshot(snapshot) {
   savedRows.value = [snapshot, ...savedRows.value.filter((row) => String(row.idRap) !== String(snapshot.idRap))];
   persistSavedRows();
+  syncSavedRowsToServer().catch(() => {});
 }
 
 function getWorkRowMissingFields(row) {
@@ -4525,6 +4567,11 @@ async function loadWorkMainRows({ preserveDisabled = true, preserveLocalDrafts =
 
   const rowsWithMetadata = Array.isArray(payload.rows) ? applyActiveWorkMetadata(payload.rows) : [];
   const activeRows = rowsWithMetadata.map((row, index) => normalizeWorkRow(row, index));
+  if (payload.selectedRecipe) {
+    activeWorkMetadata.value = { ...activeWorkMetadata.value, selectedRecipe: String(payload.selectedRecipe).trim() };
+    persistActiveWorkMetadata();
+  }
+  syncLocalActiveWorkMetadataToServer(activeRows).catch(() => {});
   const disabledRowIds = new Set(disabledRows.map((row, index) => Number(getWorkRowPayload(row, index).id)).filter((id) => Number.isFinite(id) && id > 0));
   const visibleDatabaseRows = disabledRowIds.size
     ? activeRows.filter((row, index) => !disabledRowIds.has(Number(getWorkRowPayload(row, index).id)))
@@ -9324,6 +9371,7 @@ onMounted(() => {
   window.addEventListener('pointerdown', handleWorkRecipeMenuOutsideClick);
   window.addEventListener('pointerdown', handleWorkPrzekrojAlertOutsideClick);
   loadWorkMainRows().catch(() => {});
+  loadSharedSavedRows().catch(() => {});
   loadSavedRecipes().catch(() => {});
   loadConfig().catch(() => {});
   loadMachineStatus().catch(() => {});
