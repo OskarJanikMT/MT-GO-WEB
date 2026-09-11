@@ -1635,6 +1635,27 @@
               </div>
               <div v-else class="expanded-empty">Brak odłożonych prac do raportu.</div>
             </div>
+
+            <div v-if="reportPreviewFrames.length" class="report-preview">
+              <div class="report-preview-heading">
+                <strong>Podgląd raportu według ram / produktów</strong>
+                <span>{{ reportPreviewFrames.length }} {{ reportPreviewFrames.length === 1 ? 'rama' : 'ram' }}</span>
+              </div>
+              <div v-for="frame in reportPreviewFrames" :key="frame.name" class="report-preview-frame">
+                <div class="report-preview-frame-title">
+                  <strong>Rama: {{ frame.name }}</strong>
+                  <span>{{ frame.items.length }} {{ frame.items.length === 1 ? 'wycięty element' : 'wyciętych elementów' }}</span>
+                </div>
+                <div v-if="frame.items.length" class="report-preview-items">
+                  <div v-for="item in frame.items" :key="`${frame.name}-${item.code}-${item.dimensions}`" class="report-preview-item">
+                    <span>{{ item.code }}</span>
+                    <span>{{ item.dimensions }}</span>
+                    <strong>{{ item.done }}/{{ item.total }}</strong>
+                  </div>
+                </div>
+                <div v-else class="report-preview-empty">Brak wyciętych elementów dla tej ramy.</div>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -2854,6 +2875,7 @@ const selectedReportSavedWorkCount = computed(() => selectedReportSavedWorkRows.
 const canExportReport = computed(() =>
   reportSourceMode.value === 'current' ? activeWorkRows.value.length > 0 : selectedReportSavedWorkCount.value > 0,
 );
+const reportPreviewFrames = computed(() => buildReportFramesPreview(getReportSourceRows()));
 const savedWorkPreviewRows = computed(() => {
   if (!selectedSavedWorkPreview.value?.rows) return [];
   try {
@@ -8296,16 +8318,22 @@ function buildReportDimensionLabel(row = {}) {
   return `[${dlugosc} x ${szerokosc} x ${grubosc}]`;
 }
 
+function getReportFrameName(row = {}) {
+  return formatProductDisplayName(String(row?.SourceProductName ?? '').trim()) || 'Produkt / rama bez nazwy';
+}
+
 function aggregateReportRows(rows = []) {
   const reportMap = new Map();
 
   rows.forEach((row) => {
+    const frameName = getReportFrameName(row);
     const code = String(row?.TekstDoDruku ?? row?.Kod ?? '').trim() || '—';
     const dimensions = buildReportDimensionLabel(row);
     const total = normalizeWorkCorrectionValue(row?.Sztuk ?? row?.ilosc ?? row?.Progress?.total ?? 0);
     const done = normalizeWorkCorrectionValue(row?.WykonaneSztuki ?? row?.iloscWykonana ?? row?.Progress?.done ?? 0);
-    const key = `${code}__${dimensions}`;
+    const key = `${frameName}__${code}__${dimensions}`;
     const current = reportMap.get(key) || {
+      'Produkt / rama': frameName,
       'Kod / Tekst do druku': code,
       'Wymiar [długość x szerokość x grubość]': dimensions,
       'Ilość sztuk wyciętych': 0,
@@ -8318,14 +8346,142 @@ function aggregateReportRows(rows = []) {
   });
 
   return [...reportMap.values()].sort((left, right) => {
+    const frameCompare = String(left['Produkt / rama']).localeCompare(String(right['Produkt / rama']), 'pl', { sensitivity: 'base' });
+    if (frameCompare !== 0) return frameCompare;
     const codeCompare = String(left['Kod / Tekst do druku']).localeCompare(String(right['Kod / Tekst do druku']), 'pl', { sensitivity: 'base' });
     if (codeCompare !== 0) return codeCompare;
     return String(left['Wymiar [długość x szerokość x grubość]']).localeCompare(String(right['Wymiar [długość x szerokość x grubość]']), 'pl', { sensitivity: 'base' });
   });
 }
 
+function buildReportFramesPreview(rows = []) {
+  const frames = new Map();
+
+  rows.forEach((row) => {
+    const name = getReportFrameName(row);
+    const frame = frames.get(name) || new Map();
+    const done = normalizeWorkCorrectionValue(row?.WykonaneSztuki ?? row?.iloscWykonana ?? row?.Progress?.done ?? 0);
+    if (done > 0) {
+      const code = String(row?.TekstDoDruku ?? row?.Kod ?? row?.Nazwa ?? '').trim() || '—';
+      const dimensions = buildReportDimensionLabel(row);
+      const total = normalizeWorkCorrectionValue(row?.Sztuk ?? row?.ilosc ?? row?.Progress?.total ?? 0);
+      const key = `${code}__${dimensions}`;
+      const item = frame.get(key) || { code, dimensions, done: 0, total: 0 };
+      item.done += done;
+      item.total += total;
+      frame.set(key, item);
+    }
+    frames.set(name, frame);
+  });
+
+  return [...frames.entries()]
+    .map(([name, items]) => ({
+      name,
+      items: [...items.values()].sort((left, right) =>
+        String(left.code).localeCompare(String(right.code), 'pl', { sensitivity: 'base' }) ||
+        String(left.dimensions).localeCompare(String(right.dimensions), 'pl', { sensitivity: 'base' }),
+      ),
+    }))
+    .sort((left, right) => left.name.localeCompare(right.name, 'pl', { sensitivity: 'base' }));
+}
+
+function buildFramesReportMatrix(rows = []) {
+  const frames = new Map();
+
+  rows.forEach((row) => {
+    const frameName = getReportFrameName(row);
+    const frame = frames.get(frameName) || new Map();
+    const done = normalizeWorkCorrectionValue(row?.WykonaneSztuki ?? row?.iloscWykonana ?? row?.Progress?.done ?? 0);
+    if (done <= 0) {
+      frames.set(frameName, frame);
+      return;
+    }
+
+    const code = String(row?.TekstDoDruku ?? row?.Kod ?? row?.Nazwa ?? '').trim() || '—';
+    const dimensions = buildReportDimensionLabel(row);
+    const total = normalizeWorkCorrectionValue(row?.Sztuk ?? row?.ilosc ?? row?.Progress?.total ?? 0);
+    const itemKey = `${code}__${dimensions}`;
+    const item = frame.get(itemKey) || [code, dimensions, 0, 0];
+
+    item[2] += done;
+    item[3] += total;
+    frame.set(itemKey, item);
+    frames.set(frameName, frame);
+  });
+
+  const matrix = [];
+  const frameRowIndexes = [];
+  const headerRowIndexes = [];
+  const itemRowIndexes = [];
+  const sortedFrames = [...frames.entries()].sort(([left], [right]) => left.localeCompare(right, 'pl', { sensitivity: 'base' }));
+
+  sortedFrames.forEach(([frameName, items]) => {
+    frameRowIndexes.push(matrix.length);
+    matrix.push([`Produkt / rama: ${frameName}`, '', '', '']);
+    headerRowIndexes.push(matrix.length);
+    matrix.push([
+      'Kod / Tekst do druku',
+      'Wymiar [długość x szerokość x grubość]',
+      'Ilość sztuk wyciętych',
+      'Cel sztuk',
+    ]);
+    const frameItems = [...items.values()]
+      .sort((left, right) => {
+        const codeCompare = String(left[0]).localeCompare(String(right[0]), 'pl', { sensitivity: 'base' });
+        return codeCompare || String(left[1]).localeCompare(String(right[1]), 'pl', { sensitivity: 'base' });
+      });
+    if (!frameItems.length) {
+      itemRowIndexes.push(matrix.length);
+      matrix.push(['Brak wyciętych elementów dla tej ramy.', '', '', '']);
+    }
+    frameItems.forEach((item) => {
+      itemRowIndexes.push(matrix.length);
+      matrix.push(item);
+    });
+    matrix.push(['', '', '', '']);
+  });
+
+  return { matrix, frameRowIndexes, headerRowIndexes, itemRowIndexes };
+}
+
+function applyFramesReportWorksheetStyles(worksheet, reportData) {
+  const frameStyle = {
+    font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 14 },
+    fill: { fgColor: { rgb: '163A63' } },
+    alignment: { horizontal: 'left', vertical: 'center' },
+  };
+  const headerStyle = {
+    font: { bold: true, color: { rgb: 'FFFFFF' } },
+    fill: { fgColor: { rgb: '315D8A' } },
+    alignment: { horizontal: 'center', vertical: 'center' },
+  };
+  const itemStyle = {
+    fill: { fgColor: { rgb: 'F2F4F7' } },
+    alignment: { horizontal: 'center', vertical: 'center' },
+  };
+
+  reportData.frameRowIndexes.forEach((rowIndex) => {
+    const cell = worksheet[XLSX.utils.encode_cell({ r: rowIndex, c: 0 })];
+    if (cell) cell.s = frameStyle;
+  });
+  reportData.headerRowIndexes.forEach((rowIndex) => {
+    for (let columnIndex = 0; columnIndex < 4; columnIndex += 1) {
+      const cell = worksheet[XLSX.utils.encode_cell({ r: rowIndex, c: columnIndex })];
+      if (cell) cell.s = headerStyle;
+    }
+  });
+  reportData.itemRowIndexes.forEach((rowIndex) => {
+    for (let columnIndex = 0; columnIndex < 4; columnIndex += 1) {
+      const cell = worksheet[XLSX.utils.encode_cell({ r: rowIndex, c: columnIndex })];
+      if (cell) cell.s = itemStyle;
+    }
+  });
+  worksheet['!merges'] = reportData.frameRowIndexes.map((rowIndex) => ({ s: { r: rowIndex, c: 0 }, e: { r: rowIndex, c: 3 } }));
+}
+
 function applyReportWorksheetStyles(worksheet, rows) {
   const columns = [
+    'Produkt / rama',
     'Kod / Tekst do druku',
     'Wymiar [długość x szerokość x grubość]',
     'Ilość sztuk wyciętych',
@@ -8391,20 +8547,20 @@ async function exportReportToExcel() {
 
   try {
     const sourceRows = getReportSourceRows();
-    const aggregatedRows = aggregateReportRows(sourceRows);
+    const framesReportData = buildFramesReportMatrix(sourceRows);
 
-    if (!aggregatedRows.length) {
+    if (!framesReportData.matrix.length) {
       throw new Error('Brak danych do wygenerowania raportu.');
     }
 
     const XLSXStyle = await getStyledXlsx();
     const workbook = XLSXStyle.utils.book_new();
-    const worksheet = XLSXStyle.utils.json_to_sheet(aggregatedRows);
-    applyReportWorksheetStyles(worksheet, aggregatedRows);
+    const worksheet = XLSXStyle.utils.aoa_to_sheet(framesReportData.matrix);
+    applyFramesReportWorksheetStyles(worksheet, framesReportData);
     worksheet['!cols'] = [
       { wch: 28 },
-      { wch: 28 },
-      { wch: 18 },
+      { wch: 38 },
+      { wch: 22 },
       { wch: 14 },
     ];
     XLSXStyle.utils.book_append_sheet(workbook, worksheet, 'Raport');
